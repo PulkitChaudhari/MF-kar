@@ -1,30 +1,48 @@
-# Step 1: Use a Node.js image to build the Angular app
-FROM node:22.12
+# # Step 1: Use a Node.js image to build the Angular app
+# FROM node:22.12
 
-# Set the working directory
+# # Set the working directory
+# WORKDIR /app
+
+# # Copy the rest of the application source code
+# COPY . .
+
+# # Installing dependencies
+# RUN npm install
+
+# # Build the NextJS application
+# RUN npm run build
+
+# EXPOSE 3000
+
+# CMD ["npm","start"]
+
+# # # Step 2: Use an Nginx image to serve the built app
+# # FROM nginx:alpine
+
+# # # Copy the Angular build output to Nginx's html directory
+# # COPY --from=build /app/dist/frontend /usr/share/nginx/html
+
+# # # Expose port 80 to serve the app
+# # EXPOSE 80
+
+# # # Start Nginx server
+# # CMD ["nginx", "-g", "daemon off;"]
+
+
+# Stage 1: Build
+FROM node:22.12 as builder
 WORKDIR /app
-
-# Copy the rest of the application source code
-COPY . .
-
-# Installing dependencies
+COPY package.json package-lock.json ./
 RUN npm install
-
-# Build the NextJS application
+COPY . .
 RUN npm run build
 
+# Stage 2: Production
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json /app/package-lock.json ./
+RUN npm install --production
 EXPOSE 3000
-
-CMD ["npm","start"]
-
-# # Step 2: Use an Nginx image to serve the built app
-# FROM nginx:alpine
-
-# # Copy the Angular build output to Nginx's html directory
-# COPY --from=build /app/dist/frontend /usr/share/nginx/html
-
-# # Expose port 80 to serve the app
-# EXPOSE 80
-
-# # Start Nginx server
-# CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "run", "start"]
