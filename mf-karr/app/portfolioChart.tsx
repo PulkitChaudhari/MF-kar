@@ -87,9 +87,8 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
 
         for (let idx = 0; idx < dateArray.length; idx++) {
           const currentDate = dateArray[idx];
-          console.log(currentDate);
           if (myMap[currentDate] === undefined)
-            myMap[currentDate] = [currentDate];
+            myMap[currentDate] = schemeDataAsObj[currentDate];
           else
             myMap[currentDate] =
               myMap[currentDate] + schemeDataAsObj[currentDate];
@@ -97,15 +96,11 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
       });
 
       const tempChartData: any[] = [];
-      let firstValue = 1;
       Object.keys(myMap).forEach((key) => {
         tempChartData.push({
           date: key,
           nav: myMap[key],
         });
-        // if (firstValue == 1) {
-        //   (firstValue = myMap[key]), (tempChartData[0].nav = 1);
-        // }
       });
       setFinalChartData(tempChartData);
     }

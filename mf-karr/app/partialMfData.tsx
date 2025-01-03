@@ -1,6 +1,6 @@
 import MFund from "./interfaces";
 
-export const partialMfData: MFund[] = [
+export const partialMfData: any[] = [
   {
     schemeCode: 100027,
     schemeName: "Grindlays Super Saver Income Fund-GSSIF-Half Yearly Dividend",
