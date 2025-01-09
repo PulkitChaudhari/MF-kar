@@ -13,12 +13,18 @@ import {
   AutocompleteItem,
   Tooltip,
 } from "@nextui-org/react";
-import MFund from "./interfaces";
-import { partialMfData } from "./partialMfData";
-import { IconSvgProps } from "@/types";
 
 import { TrendingUp } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+} from "recharts";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 import {
   Card,
@@ -34,6 +40,8 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Button } from "@nextui-org/button";
+import { monthMapping } from "./constants";
 
 export default function PortfolioChart({ chartData }: { chartData: any }) {
   const chartConfig = {
@@ -43,26 +51,45 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
     },
   } satisfies ChartConfig;
 
-  const chartIndexOptions = [{ value: "nifty50", label: "Nifty 50" }];
-
-  const [finalChartData, setFinalChartData] = useState<any[]>([]);
-
-  const chartData1 = useState<any[]>([
+  const chartData1 = [
     { month: "January", desktop: 186, mobile: 80 },
     { month: "February", desktop: 305, mobile: 200 },
     { month: "March", desktop: 237, mobile: 120 },
     { month: "April", desktop: 73, mobile: 190 },
     { month: "May", desktop: 209, mobile: 130 },
     { month: "June", desktop: 214, mobile: 140 },
-    { month: "June", desktop: 214, mobile: 140 },
-    { month: "June", desktop: 214, mobile: 140 },
-    { month: "June", desktop: 214, mobile: 140 },
-    { month: "June", desktop: 214, mobile: 140 },
-    { month: "June", desktop: 214, mobile: 140 },
-    { month: "June", desktop: 214, mobile: 140 },
-  ]);
+  ];
+  const chartConfig1 = {
+    desktop: {
+      label: "Desktop",
+      color: "hsl(var(--chart-1))",
+    },
+    mobile: {
+      label: "Mobile",
+      color: "hsl(var(--chart-2))",
+    },
+  } satisfies ChartConfig;
+
+  const chartIndexOptions = [{ value: "nifty50", label: "Nifty 50" }];
+
+  const [finalChartData, setFinalChartData] = useState<any[]>([]);
+
+  const [showLineChart, setShowLineChart] = useState<boolean>(true);
+
+  function formatDate(date: string) {
+    const tempDate = new Date(date);
+    console.log(tempDate);
+    return (
+      tempDate.getDay() +
+      " " +
+      monthMapping[tempDate.getMonth()] +
+      ", " +
+      tempDate.getFullYear()
+    );
+  }
 
   useEffect(() => {
+    console.log(chartData);
     if (chartData !== undefined) {
       let myMap: any = {};
       const dateArray: any[] = generateDateArray();
@@ -98,8 +125,8 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
       const tempChartData: any[] = [];
       Object.keys(myMap).forEach((key) => {
         tempChartData.push({
-          date: key,
-          nav: myMap[key],
+          date: formatDate(key),
+          nav: myMap[key] === undefined ? 0 : myMap[key],
         });
       });
       setFinalChartData(tempChartData);
@@ -135,13 +162,7 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
   return (
     <div className="flex gap-2 flex-col">
       <div className="mx-10 my-10">
-        {/* <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-          <BarChart accessibilityLayer data={chartData}>
-            <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
-            <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
-          </BarChart>
-        </ChartContainer> */}
-
+        {/* {chartData !== undefined ? chartData["120828"][0].date : "nope"} */}
         <Card>
           <CardHeader>
             <CardTitle className="flex gap-2 items-center">
@@ -154,6 +175,7 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
                 menuTrigger="input"
                 placeholder="Search an animal"
                 label="Select Index"
+                className="w-3/4"
               >
                 {(item) => (
                   <AutocompleteItem key={item.value}>
@@ -161,52 +183,88 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
                   </AutocompleteItem>
                 )}
               </Autocomplete>
+              <div className="flex items-center space-x-2">
+                <Label className="w-min">Line Graph</Label>
+                <Switch
+                  id="line-graph"
+                  onClick={() => setShowLineChart(!showLineChart)}
+                />
+                <Label className="w-min" htmlFor="line-graph">
+                  Area Graph
+                </Label>
+              </div>
             </CardTitle>
             <CardDescription>
               Showing total visitors for the last 6 months
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig}>
-              <AreaChart
-                accessibilityLayer
-                data={finalChartData}
-                margin={{
-                  left: 12,
-                  right: 12,
-                }}
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  //   tickFormatter={(value) => value.slice(0, 3)}
-                />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                {/* <Area
-                  dataKey="mobile"
-                  type="natural"
-                  fill="var(--color-mobile)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-mobile)"
-                  stackId="a"
-                /> */}
-                <Area
-                  dataKey="nav"
-                  type="natural"
-                  fill="var(--color-desktop)"
-                  fillOpacity={0.4}
-                  stroke="var(--color-desktop)"
-                  stackId="a"
-                />
-              </AreaChart>
-            </ChartContainer>
-          </CardContent>
+          {showLineChart ? (
+            <CardContent>
+              <ChartContainer config={chartConfig}>
+                <LineChart
+                  accessibilityLayer
+                  data={finalChartData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                  }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    // tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Line
+                    dataKey="nav"
+                    type="monotone"
+                    stroke="var(--color-desktop)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ChartContainer>
+            </CardContent>
+          ) : (
+            <CardContent>
+              <ChartContainer config={chartConfig}>
+                <AreaChart
+                  accessibilityLayer
+                  data={finalChartData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                  }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Area
+                    dataKey="nav"
+                    type="natural"
+                    fill="var(--color-desktop)"
+                    fillOpacity={0.4}
+                    stroke="var(--color-desktop)"
+                    stackId="a"
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </CardContent>
+          )}
           <CardFooter>
             <div className="flex w-full items-start gap-2 text-sm">
               <div className="grid gap-2">
@@ -215,7 +273,7 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
                   <TrendingUp className="h-4 w-4" />
                 </div>
                 <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                  January - June 2024
+                  Showing total visitors for the last 6 months
                 </div>
               </div>
             </div>

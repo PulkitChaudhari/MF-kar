@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { Key, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -12,14 +12,24 @@ import {
   Autocomplete,
   AutocompleteItem,
   Tooltip,
+  Dropdown,
+  DropdownTrigger,
+  Button,
+  DropdownMenu,
+  DropdownItem,
 } from "@nextui-org/react";
-import MFund from "./interfaces";
 
 import { ChartConfig } from "@/components/ui/chart";
 import PortfolioChart from "./portfolioChart";
 import { mfData } from "./allMfData";
 import { EditIcon } from "./EditIcon";
 import { DeleteIcon } from "./DeleteIcon";
+import PortfolioTable from "./portfolioTable";
+import { apiResponse, navData, tableColumn } from "./interfaces/interfaces";
+import { cagrValues } from "./constants";
+import { Label } from "@/components/ui/label";
+import { CancelIcon } from "./CancelIcon";
+import { SaveIcon } from "./SaveIcon";
 
 const columns = [
   {
@@ -46,15 +56,22 @@ export default function Home() {
 
   const [availableWeightage, setAvailableWeightage] = useState<number>(100);
   const [addedMutualFunds, setAddedMutualFunds] = useState<number>(0);
+  const [isEditingWeight, setIsEditingWeight] = useState<boolean>(false);
+  const [ogNAVData, setOgNAVData] = useState<{
+    [schemeCode: string]: { nav: number; date: Date }[];
+  }>({});
 
   const handleOpen = () => {
     onOpen();
   };
 
-  const [data, setData] = useState<MFund[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
 
-  const [allMfWeightedNAV, setAllMfWeightedNAV] = useState<any>();
+  const [allMfWeightedNAV, setAllMfWeightedNAV] = useState<{
+    [schemeCode: string]: [{ nav: number; date: Date }];
+  }>({});
   const [allNavData, setAllNavData] = useState<any>();
+  const [selectedCAGR, setSelectedCAGR] = useState<String>("1");
 
   const myFilter = (textValue: string, inputValue: string) => {
     if (inputValue.length === 0) {
@@ -65,27 +82,27 @@ export default function Home() {
     return textValue.includes(inputValue);
   };
 
-  function strToDate(dateStr: string) {
+  function strToDate(dateStr: string): Date {
     const [day, month, year]: number[] = dateStr.split("-").map((str) => {
       return Number(str);
     });
     return new Date(year, month - 1, day);
   }
 
-  function getNAVsForRange(navData: { date: Date; nav: string }[]): any[] {
+  function getNAVsForRange(navData: navData[]): any[] {
     const resNavData: any[] = [];
     let thresholdDate = new Date();
     thresholdDate = new Date(
-      thresholdDate.getFullYear() - 1,
+      thresholdDate.getFullYear() - Number(selectedCAGR),
       thresholdDate.getMonth(),
       thresholdDate.getDate()
     );
     for (let idx = 0; idx < navData.length; idx++) {
-      if (navData[idx].date <= thresholdDate) break;
       resNavData.push({
         date: navData[idx].date,
         nav: Number(navData[idx].nav),
       });
+      if (navData[idx].date <= thresholdDate) break;
     }
     resNavData.reverse();
     return resNavData;
@@ -93,25 +110,19 @@ export default function Home() {
 
   function updateWeightage(
     finalData: any[],
-    schemeCode: string,
-    vBegin: number,
-    vFinal: number,
-    tempAllNavData: any[]
+    tempAllNavData: any,
+    operator: number
   ) {
     let toBeAllMfWeightedNAV: any = {};
     finalData.forEach((data: any) => {
       toBeAllMfWeightedNAV[data.schemeCode] = [];
       data.weightage = Number(
-        (availableWeightage / (addedMutualFunds + 1)).toFixed(2)
+        (availableWeightage / (addedMutualFunds + operator)).toFixed(2)
       );
-      if (data.schemeCode == schemeCode) {
-        if (vBegin != -1 && vFinal != -1)
-          data.cagr = ((Math.pow(vFinal / vBegin, 1 / 1) - 1.0) * 100).toFixed(
-            2
-          );
-        else data.cagr = "-";
-      }
-      let unitsBought = data.weightage / tempAllNavData[data.schemeCode][0].nav;
+      let unitsBought =
+        tempAllNavData[data.schemeCode].length > 0
+          ? data.weightage / tempAllNavData[data.schemeCode][0].nav
+          : 0;
       tempAllNavData[data.schemeCode].forEach((navData: any) => {
         toBeAllMfWeightedNAV[data.schemeCode].push({
           date: navData.date,
@@ -122,82 +133,114 @@ export default function Home() {
     return toBeAllMfWeightedNAV;
   }
 
-  const addMFToTable = async (schemeCode: any) => {
+  function calculateCAGR(navsForRange: any[]) {
+    let vFinal = -1,
+      vBegin = -1;
+
+    if (navsForRange.length > 0) {
+      vBegin = navsForRange[0].nav;
+      vFinal = navsForRange[navsForRange.length - 1].nav;
+    }
+    console.log(vFinal, vBegin, Number(selectedCAGR));
+    return (
+      (Math.pow(vFinal / vBegin, 1 / Number(selectedCAGR)) - 1) *
+      100
+    ).toFixed(2);
+  }
+
+  function convertNavDateFromStrToDate(apiData: apiResponse): navData[] {
+    let convertedData: navData[] = [];
+    apiData.data.map((data) => {
+      convertedData.push({
+        date: strToDate(data.date),
+        nav: data.nav,
+      });
+    });
+    return convertedData;
+  }
+
+  function addMFToTable(schemeCode: any) {
+    // Check if schemeCode is not null
     if (schemeCode !== null) {
-      const filteredData = mfData.filter(
-        (mf) => mf.schemeCode.toString() === schemeCode
-      );
       fetch(apiLinkPrefix + schemeCode).then((resp) => {
-        resp
-          .json()
-          .then(
-            (apiData: {
-              meta: any;
-              data: { date: string; nav: string }[];
-              status: string;
-            }) => {
-              // Converting date as string to Date type
-              const navData: { date: Date; nav: string }[] = apiData.data.map(
-                (data) => {
-                  return {
-                    date: strToDate(data.date),
-                    nav: data.nav,
-                  };
-                }
-              );
-              // Getting NAVs for newly added MF in the span of threshold
-              const navsForRange = getNAVsForRange(navData);
-              // Adding newly added scheme to existing schemes
-              const finalData = [...data, ...filteredData];
-              // Getting Latest and Historical NAV value
-              const [vBegin, vFinal] = [
-                navsForRange.length > 0 ? navsForRange[0].nav : -1,
-                navsForRange.length > 0
-                  ? navsForRange[navsForRange.length - 1].nav
-                  : -1,
-              ];
-              let tempAllNavData: any = {
-                [schemeCode]: navsForRange,
-                ...allNavData,
-              };
-              const toBeAllMfWeightedNAV = updateWeightage(
-                finalData,
-                schemeCode,
-                vBegin,
-                vFinal,
-                tempAllNavData
-              );
-              setAllNavData(tempAllNavData);
-              setAddedMutualFunds(addedMutualFunds + 1);
-              setAllMfWeightedNAV(toBeAllMfWeightedNAV);
-              setData(finalData);
-            }
+        resp.json().then((apiData: apiResponse) => {
+          // Converting date's string type to Date type
+          const navData: navData[] = convertNavDateFromStrToDate(apiData);
+
+          // Getting NAVs for newly added MF in the span of threshold
+          const navsForRange = getNAVsForRange(navData);
+
+          // Adding to OgNAVData
+          setOgNAVData({ ...ogNAVData, schemeCode: navsForRange });
+
+          // Adding newly added scheme to schemes
+          let filteredData = mfData.filter(
+            (mf) => mf.schemeCode.toString() === schemeCode
           );
+
+          // Calculating CAGR for newMF
+          filteredData[0].cagr = calculateCAGR(navsForRange);
+
+          const finalTableData = [...tableData, ...filteredData];
+
+          // Getting Latest and Historical NAV value
+          const [vBegin, vFinal] = [
+            navsForRange.length > 0 ? navsForRange[0].nav : -1,
+            navsForRange.length > 0
+              ? navsForRange[navsForRange.length - 1].nav
+              : -1,
+          ];
+          let tempAllNavData: any = {
+            [schemeCode]: navsForRange,
+            ...allNavData,
+          };
+          const toBeAllMfWeightedNAV = updateWeightage(
+            finalTableData,
+            tempAllNavData,
+            +1
+          );
+          console.log(finalTableData, tempAllNavData);
+          setAllNavData(tempAllNavData);
+          setAddedMutualFunds(addedMutualFunds + 1);
+          setAllMfWeightedNAV(toBeAllMfWeightedNAV);
+          setTableData(finalTableData);
+        });
       });
     }
-  };
+  }
 
   const removeMutualFund = (item: any) => {
-    const tempData = data.filter((indiData) => {
+    // Removing scheme from the table
+    const tempData = tableData.filter((indiData) => {
       return indiData.schemeCode != item.schemeCode;
     });
-    setData(tempData);
+    let tempMap: { [schemeCode: string]: [{ nav: number; date: Date }] } = {};
+    Object.keys(allMfWeightedNAV).forEach((key) => {
+      if (Number(key) !== item.schemeCode) {
+        tempMap[key] = allMfWeightedNAV[key];
+      }
+    });
+    let toBeAllMfWeightedNAV = updateWeightage(tempData, tempMap, -1);
+    console.log(toBeAllMfWeightedNAV);
+    setAllMfWeightedNAV(toBeAllMfWeightedNAV);
+    setTableData(tempData);
+    setAddedMutualFunds(addedMutualFunds - 1);
   };
 
   return (
     <div className="flex gap-2 flex-col">
-      <div className="flex gap-2">
+      <div className="flex gap-3 items-center justify-between">
         <Autocomplete
           defaultItems={mfData}
-          label="Favorite Animal"
+          label="Select Scheme"
           listboxProps={{
             emptyContent: "Your own empty content text.",
           }}
           menuTrigger="input"
-          placeholder="Search an animal"
+          placeholder="Search Scheme by Name"
           onSelectionChange={($event) => addMFToTable($event)}
           defaultFilter={myFilter}
-          className="w-3/4"
+          className="w-9/12"
         >
           {(item) => (
             <AutocompleteItem key={item.schemeCode}>
@@ -205,61 +248,55 @@ export default function Home() {
             </AutocompleteItem>
           )}
         </Autocomplete>
-        <Autocomplete
-          defaultItems={yearOptions}
-          label="Favorite Animal"
-          listboxProps={{
-            emptyContent: "Your own empty content text.",
-          }}
-          menuTrigger="input"
-          placeholder="Search an animal"
-          onSelectionChange={($event) => addMFToTable($event)}
-          className="w-1/4"
-        >
-          {(item) => (
-            <AutocompleteItem key={item.value}>{item.label}</AutocompleteItem>
+        <div className="flex gap-2">
+          <Dropdown id="line-graph" className="w-1/12">
+            <DropdownTrigger>
+              <Button variant="bordered">Change CAGR</Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              onAction={(cagrKey) => setSelectedCAGR(cagrKey.toString())}
+              aria-label="Dynamic Actions"
+              items={cagrValues}
+            >
+              {(item) => (
+                <DropdownItem key={item.key}>{item.label}</DropdownItem>
+              )}
+            </DropdownMenu>
+          </Dropdown>
+          {isEditingWeight ? (
+            <div className="flex gap-3">
+              <Button
+                isIconOnly
+                aria-label="Like"
+                color="success"
+                onPress={() => setIsEditingWeight(false)}
+              >
+                <SaveIcon />
+              </Button>
+              <Button
+                isIconOnly
+                aria-label="Like1"
+                color="danger"
+                onPress={() => setIsEditingWeight(false)}
+              >
+                <CancelIcon />
+              </Button>
+            </div>
+          ) : (
+            <Button
+              isDisabled={true}
+              variant="bordered"
+              onPress={() => setIsEditingWeight(true)}
+            >
+              Adjust Weightage
+            </Button>
           )}
-        </Autocomplete>
+        </div>
       </div>
-
-      <Table aria-label="Example table with dynamic content">
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn key={column.key}>{column.label}</TableColumn>
-          )}
-        </TableHeader>
-        <TableBody>
-          {data.map((item) => (
-            <TableRow key={item.schemeCode}>
-              {(columnKey) => {
-                if (columnKey == "actions") {
-                  return (
-                    <TableCell>
-                      <Tooltip color="danger" content="Remove Mutual Fund">
-                        <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                          <DeleteIcon onClick={() => removeMutualFund(item)} />
-                        </span>
-                      </Tooltip>
-                    </TableCell>
-                  );
-                } else if (columnKey == "weightage") {
-                  return (
-                    <TableCell className="flex gap-2">
-                      {getKeyValue(item, columnKey)}
-                      <Tooltip content="Edit Weightage">
-                        <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                          <EditIcon />
-                        </span>
-                      </Tooltip>
-                    </TableCell>
-                  );
-                } else
-                  return <TableCell>{getKeyValue(item, columnKey)}</TableCell>;
-              }}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <PortfolioTable
+        tableData={tableData}
+        removeMututalFundFn={removeMutualFund}
+      />
       <div className="mx-10 my-10">
         <PortfolioChart chartData={allMfWeightedNAV} />
       </div>

@@ -1,4 +1,4 @@
-import MFund from "./interfaces";
+import MFund from "./interfaces/interfaces";
 
 export const partialMfData: any[] = [
   {

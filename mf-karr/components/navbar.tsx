@@ -70,14 +70,14 @@ export const Navbar = () => {
 
       <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
         <NavbarItem className="flex gap-2">
+          <Link isExternal aria-label="LinkedIn" href={siteConfig.links.mail}>
+            <GMailIcon className="text-default-500" />
+          </Link>
           <Link
             isExternal
             aria-label="LinkedIn"
-            href={siteConfig.links.discord}
+            href={siteConfig.links.linkedin}
           >
-            <GMailIcon className="text-default-500" />
-          </Link>
-          <Link isExternal aria-label="LinkedIn" href={siteConfig.links.github}>
             <LinkedinIcon className="text-default-500" />
           </Link>
 
