@@ -228,7 +228,7 @@ export default function Home() {
 
   return (
     <div className="flex gap-2 flex-col">
-      <div className="flex gap-3 items-center justify-between">
+      <div className="flex gap-3 flex-col items-center justify-between lg:flex-row">
         <Autocomplete
           defaultItems={mfData}
           label="Select Scheme"
@@ -238,7 +238,7 @@ export default function Home() {
           menuTrigger="input"
           onSelectionChange={($event) => addMFToTable($event)}
           defaultFilter={myFilter}
-          className="w-9/12"
+          className="w-full lg:w-9/12"
         >
           {(item) => (
             <AutocompleteItem key={item.schemeCode}>
@@ -247,7 +247,7 @@ export default function Home() {
           )}
         </Autocomplete>
         <div className="flex gap-2">
-          <Dropdown id="line-graph" className="w-1/12">
+          <Dropdown id="line-graph" className="w-1/12 lg:w-full">
             <DropdownTrigger>
               <Button isDisabled={true} variant="bordered">
                 Time period: {selectedCAGR}Y
@@ -297,7 +297,7 @@ export default function Home() {
         tableData={tableData}
         removeMututalFundFn={removeMutualFund}
       />
-      <div className="mx-10 my-10">
+      <div className="">
         <PortfolioChart
           chartData={allMfWeightedNAV}
           selectedCAGR={Number(selectedCAGR)}

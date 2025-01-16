@@ -50,7 +50,7 @@ export default function PortfolioTable({
                     );
                   } else if (columnKey == "weightage") {
                     return (
-                      <TableCell className="flex gap-2">
+                      <TableCell className=" align-center h-full">
                         {getKeyValue(row, columnKey)}
                         <Tooltip content="Edit Weightage">
                           <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
