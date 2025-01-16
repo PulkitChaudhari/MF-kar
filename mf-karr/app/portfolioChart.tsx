@@ -14,7 +14,7 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 
-import { TrendingUp } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import {
   Area,
   AreaChart,
@@ -37,19 +37,29 @@ import {
 import {
   ChartConfig,
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Button } from "@nextui-org/button";
 import { monthMapping } from "./constants";
 
-export default function PortfolioChart({ chartData }: { chartData: any }) {
+export default function PortfolioChart({
+  chartData,
+  selectedCAGR,
+}: {
+  chartData: any;
+  selectedCAGR: Number;
+}) {
   const chartConfig = {
     desktop: {
       label: "Desktop",
       color: "hsl(var(--chart-1))",
     },
   } satisfies ChartConfig;
+
+  const [portfolioReturn, setPortfolioReturn] = useState<Number>(0);
 
   const chartData1 = [
     { month: "January", desktop: 186, mobile: 80 },
@@ -78,9 +88,8 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
 
   function formatDate(date: string) {
     const tempDate = new Date(date);
-    console.log(tempDate);
     return (
-      tempDate.getDay() +
+      tempDate.getDate() +
       " " +
       monthMapping[tempDate.getMonth()] +
       ", " +
@@ -89,7 +98,6 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
   }
 
   useEffect(() => {
-    console.log(chartData);
     if (chartData !== undefined) {
       let myMap: any = {};
       const dateArray: any[] = generateDateArray();
@@ -98,10 +106,11 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
         myMap[currentDate] = undefined;
       }
       Object.keys(chartData).map((key) => {
-        const schemeCodeData: any[] = chartData[key];
+        const schemeCodeData: any = chartData[key];
+        const weightage = schemeCodeData.weightage;
 
         const schemeDataAsObj: any = {};
-        schemeCodeData.forEach((data) => {
+        schemeCodeData.data.forEach((data: any) => {
           schemeDataAsObj[data.date] = data.nav;
         });
 
@@ -114,21 +123,29 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
 
         for (let idx = 0; idx < dateArray.length; idx++) {
           const currentDate = dateArray[idx];
-          if (myMap[currentDate] === undefined)
-            myMap[currentDate] = schemeDataAsObj[currentDate];
-          else
-            myMap[currentDate] =
-              myMap[currentDate] + schemeDataAsObj[currentDate];
+          if (myMap[currentDate] === undefined) {
+            if (schemeCodeData.data.length === 0)
+              myMap[currentDate] = weightage;
+            else myMap[currentDate] = schemeDataAsObj[currentDate];
+          } else {
+            if (schemeCodeData.data.length === 0)
+              myMap[currentDate] = myMap[currentDate] + weightage;
+            else
+              myMap[currentDate] =
+                myMap[currentDate] + schemeDataAsObj[currentDate];
+          }
         }
       });
-
       const tempChartData: any[] = [];
       Object.keys(myMap).forEach((key) => {
         tempChartData.push({
           date: formatDate(key),
-          nav: myMap[key] === undefined ? 0 : myMap[key],
+          nav: myMap[key] === undefined ? 0 : Number(myMap[key].toFixed(2)),
         });
       });
+      const tempPortfolioReturn =
+        tempChartData[tempChartData.length - 1].nav - 100;
+      setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
       setFinalChartData(tempChartData);
     }
   }, [chartData]);
@@ -141,7 +158,7 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
       tempDate.getDate()
     );
     let thresholdDate = new Date(
-      tempDate.getFullYear() - 1,
+      tempDate.getFullYear() - Number(selectedCAGR),
       tempDate.getMonth(),
       tempDate.getDate()
     );
@@ -166,14 +183,13 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex gap-2 items-center">
-              Portfolio returns compared to
-              <Autocomplete
+              Portfolio returns chart
+              {/* <Autocomplete
                 defaultItems={chartIndexOptions}
                 listboxProps={{
                   emptyContent: "Your own empty content text.",
                 }}
                 menuTrigger="input"
-                placeholder="Search an animal"
                 label="Select Index"
                 className="w-3/4"
               >
@@ -182,8 +198,8 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
                     {item.label}
                   </AutocompleteItem>
                 )}
-              </Autocomplete>
-              <div className="flex items-center space-x-2">
+              </Autocomplete> */}
+              {/* <div className="flex items-center space-x-2">
                 <Label className="w-min">Line Graph</Label>
                 <Switch
                   id="line-graph"
@@ -192,11 +208,11 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
                 <Label className="w-min" htmlFor="line-graph">
                   Area Graph
                 </Label>
-              </div>
+              </div> */}
             </CardTitle>
-            <CardDescription>
-              Showing total visitors for the last 6 months
-            </CardDescription>
+            {/* <CardDescription>
+              Show the performance of your portfolio compared to
+            </CardDescription> */}
           </CardHeader>
           {showLineChart ? (
             <CardContent>
@@ -228,6 +244,7 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
                     strokeWidth={2}
                     dot={false}
                   />
+                  {/* <ChartLegend content={<ChartLegendContent />} /> */}
                 </LineChart>
               </ChartContainer>
             </CardContent>
@@ -269,11 +286,12 @@ export default function PortfolioChart({ chartData }: { chartData: any }) {
             <div className="flex w-full items-start gap-2 text-sm">
               <div className="grid gap-2">
                 <div className="flex items-center gap-2 font-medium leading-none">
-                  Trending up by 5.2% this month{" "}
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-                <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                  Showing total visitors for the last 6 months
+                  Trending up by {portfolioReturn.toFixed(2)}%
+                  {Number(portfolioReturn.toFixed(2)) >= 0 ? (
+                    <TrendingUp className="h-4 w-4" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4" />
+                  )}
                 </div>
               </div>
             </div>

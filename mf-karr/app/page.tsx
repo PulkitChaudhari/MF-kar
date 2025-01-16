@@ -98,11 +98,11 @@ export default function Home() {
       thresholdDate.getDate()
     );
     for (let idx = 0; idx < navData.length; idx++) {
+      if (navData[idx].date <= thresholdDate) break;
       resNavData.push({
         date: navData[idx].date,
         nav: Number(navData[idx].nav),
       });
-      if (navData[idx].date <= thresholdDate) break;
     }
     resNavData.reverse();
     return resNavData;
@@ -115,16 +115,18 @@ export default function Home() {
   ) {
     let toBeAllMfWeightedNAV: any = {};
     finalData.forEach((data: any) => {
-      toBeAllMfWeightedNAV[data.schemeCode] = [];
+      toBeAllMfWeightedNAV[data.schemeCode] = {};
+      toBeAllMfWeightedNAV[data.schemeCode].data = [];
       data.weightage = Number(
         (availableWeightage / (addedMutualFunds + operator)).toFixed(2)
       );
+      toBeAllMfWeightedNAV[data.schemeCode].weightage = data.weightage;
       let unitsBought =
-        tempAllNavData[data.schemeCode].length > 0
-          ? data.weightage / tempAllNavData[data.schemeCode][0].nav
+        tempAllNavData[data.schemeCode].data.length > 0
+          ? data.weightage / tempAllNavData[data.schemeCode].data[0].nav
           : 0;
-      tempAllNavData[data.schemeCode].forEach((navData: any) => {
-        toBeAllMfWeightedNAV[data.schemeCode].push({
+      tempAllNavData[data.schemeCode].data.forEach((navData: any) => {
+        toBeAllMfWeightedNAV[data.schemeCode].data.push({
           date: navData.date,
           nav: unitsBought * navData.nav,
         });
@@ -141,7 +143,6 @@ export default function Home() {
       vBegin = navsForRange[0].nav;
       vFinal = navsForRange[navsForRange.length - 1].nav;
     }
-    console.log(vFinal, vBegin, Number(selectedCAGR));
     return (
       (Math.pow(vFinal / vBegin, 1 / Number(selectedCAGR)) - 1) *
       100
@@ -191,7 +192,7 @@ export default function Home() {
               : -1,
           ];
           let tempAllNavData: any = {
-            [schemeCode]: navsForRange,
+            [schemeCode]: { data: navsForRange, weightage: 0 },
             ...allNavData,
           };
           const toBeAllMfWeightedNAV = updateWeightage(
@@ -199,11 +200,10 @@ export default function Home() {
             tempAllNavData,
             +1
           );
-          console.log(finalTableData, tempAllNavData);
-          setAllNavData(tempAllNavData);
           setAddedMutualFunds(addedMutualFunds + 1);
           setAllMfWeightedNAV(toBeAllMfWeightedNAV);
           setTableData(finalTableData);
+          setAllNavData(tempAllNavData);
         });
       });
     }
@@ -221,7 +221,6 @@ export default function Home() {
       }
     });
     let toBeAllMfWeightedNAV = updateWeightage(tempData, tempMap, -1);
-    console.log(toBeAllMfWeightedNAV);
     setAllMfWeightedNAV(toBeAllMfWeightedNAV);
     setTableData(tempData);
     setAddedMutualFunds(addedMutualFunds - 1);
@@ -237,7 +236,6 @@ export default function Home() {
             emptyContent: "Your own empty content text.",
           }}
           menuTrigger="input"
-          placeholder="Search Scheme by Name"
           onSelectionChange={($event) => addMFToTable($event)}
           defaultFilter={myFilter}
           className="w-9/12"
@@ -251,7 +249,9 @@ export default function Home() {
         <div className="flex gap-2">
           <Dropdown id="line-graph" className="w-1/12">
             <DropdownTrigger>
-              <Button variant="bordered">Change CAGR</Button>
+              <Button isDisabled={true} variant="bordered">
+                Time period: {selectedCAGR}Y
+              </Button>
             </DropdownTrigger>
             <DropdownMenu
               onAction={(cagrKey) => setSelectedCAGR(cagrKey.toString())}
@@ -298,7 +298,10 @@ export default function Home() {
         removeMututalFundFn={removeMutualFund}
       />
       <div className="mx-10 my-10">
-        <PortfolioChart chartData={allMfWeightedNAV} />
+        <PortfolioChart
+          chartData={allMfWeightedNAV}
+          selectedCAGR={Number(selectedCAGR)}
+        />
       </div>
     </div>
   );

@@ -54,7 +54,7 @@ export default function PortfolioTable({
                         {getKeyValue(row, columnKey)}
                         <Tooltip content="Edit Weightage">
                           <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                            <EditIcon />
+                            {/* <EditIcon /> */}
                           </span>
                         </Tooltip>
                       </TableCell>
