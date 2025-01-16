@@ -1,5 +1,3 @@
-import MFund from "./interfaces/interfaces";
-
 export const partialMfData: any[] = [
   {
     schemeCode: 100027,
