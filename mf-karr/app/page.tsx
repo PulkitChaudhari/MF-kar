@@ -18,7 +18,6 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@nextui-org/react";
-// import {Autocomplete, AutocompleteItem} from "@heroui/react";
 import { useAsyncList } from "@react-stately/data";
 
 import { ChartConfig } from "@/components/ui/chart";
