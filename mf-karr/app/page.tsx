@@ -1,17 +1,8 @@
 "use client";
-import React, { Key, useState } from "react";
+import React, { useState } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  getKeyValue,
-  useDisclosure,
   Autocomplete,
   AutocompleteItem,
-  Tooltip,
   Dropdown,
   DropdownTrigger,
   Button,
@@ -20,19 +11,14 @@ import {
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 
-import { ChartConfig } from "@/components/ui/chart";
 import PortfolioChart from "./portfolioChart";
 import { mfData } from "./allMfData";
-import { EditIcon } from "./EditIcon";
-import { DeleteIcon } from "./DeleteIcon";
 import PortfolioTable from "./portfolioTable";
 import { apiResponse, navData, tableColumn } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
-import { Label } from "@/components/ui/label";
 import { CancelIcon } from "./CancelIcon";
 import { SaveIcon } from "./SaveIcon";
 import { MyServiceClient } from "../generated/ServiceServiceClientPb";
-import { RequestMessage } from "../generated/service_pb";
 
 const columns = [
   {
@@ -59,8 +45,6 @@ const client = new MyServiceClient("http://localhost:8081", null, {
 });
 
 export default function Home() {
-  const yearOptions = [{ label: "1", value: 1 }];
-
   const [availableWeightage, setAvailableWeightage] = useState<number>(100);
   const [addedMutualFunds, setAddedMutualFunds] = useState<number>(0);
   const [isEditingWeight, setIsEditingWeight] = useState<boolean>(false);
