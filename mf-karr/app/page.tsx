@@ -30,6 +30,8 @@ import { cagrValues } from "./constants";
 import { Label } from "@/components/ui/label";
 import { CancelIcon } from "./CancelIcon";
 import { SaveIcon } from "./SaveIcon";
+import { MyServiceClient } from "../generated/ServiceServiceClientPb";
+import { RequestMessage } from "../generated/service_pb";
 
 const columns = [
   {
@@ -48,6 +50,12 @@ const columns = [
 ];
 
 const apiLinkPrefix: string = "https://api.mfapi.in/mf/";
+
+const client = new MyServiceClient("http://localhost:8081", null, {
+  withCredentials: false,
+  // Debug mode to see what's happening with the requests
+  debug: true,
+});
 
 export default function Home() {
   const { onOpen } = useDisclosure();
@@ -87,6 +95,25 @@ export default function Home() {
       return Number(str);
     });
     return new Date(year, month - 1, day);
+  }
+
+  function tempFunc() {
+    const request = new RequestMessage();
+    request.setQuery("World");
+
+    console.log("Sending request to server...");
+
+    client.getData(request, {}, (err, response) => {
+      if (err) {
+        console.error("Error details:", {
+          code: err.code,
+          message: err.message,
+          metadata: err.metadata,
+        });
+        return;
+      }
+      console.log("Response received:", response.getResult());
+    });
   }
 
   function getNAVsForRange(navData: navData[]): any[] {
@@ -160,7 +187,11 @@ export default function Home() {
     return convertedData;
   }
 
-  function addMFToTable(schemeCode: any) {
+  function addMFToTable(
+    schemeCode: any,
+    previousData: any = allNavData,
+    previousOgNavData: any = ogNAVData
+  ) {
     // Check if schemeCode is not null
     if (schemeCode !== null) {
       fetch(apiLinkPrefix + schemeCode).then((resp) => {
@@ -170,9 +201,10 @@ export default function Home() {
 
           // Getting NAVs for newly added MF in the span of threshold
           const navsForRange = getNAVsForRange(navData);
+          console.log(navsForRange);
 
           // Adding to OgNAVData
-          setOgNAVData({ ...ogNAVData, schemeCode: navsForRange });
+          setOgNAVData({ ...previousOgNavData, schemeCode: navsForRange });
 
           // Adding newly added scheme to schemes
           let filteredData = mfData.filter(
@@ -193,13 +225,16 @@ export default function Home() {
           ];
           let tempAllNavData: any = {
             [schemeCode]: { data: navsForRange, weightage: 0 },
-            ...allNavData,
+            ...previousData,
           };
           const toBeAllMfWeightedNAV = updateWeightage(
             finalTableData,
             tempAllNavData,
             +1
           );
+          console.log("tobeallmfweightednav", toBeAllMfWeightedNAV);
+          console.log("finalTableData", finalTableData);
+          console.log("tempAllnavData", tempAllNavData);
           setAddedMutualFunds(addedMutualFunds + 1);
           setAllMfWeightedNAV(toBeAllMfWeightedNAV);
           setTableData(finalTableData);
@@ -226,9 +261,29 @@ export default function Home() {
     setAddedMutualFunds(addedMutualFunds - 1);
   };
 
+  function changeTimePeriod(timePeriod: any) {
+    setSelectedCAGR(timePeriod.toString());
+    let tempAllMfWeightedNAV: any = {};
+    console.log(allNavData);
+    Object.keys(allNavData).forEach((key) => {
+      console.log(key);
+      addMFToTable(key, {});
+      // tempAllMfWeightedNAV[key] = {};
+      // tempAllMfWeightedNAV[key].data = getNAVsForRange(allNavData[key].data);
+      // tempAllMfWeightedNAV[key].weightage = allNavData[key].weightage;
+    });
+    setAllMfWeightedNAV(tempAllMfWeightedNAV);
+  }
+
   return (
     <div className="flex gap-2 flex-col">
       <div className="flex gap-3 flex-col items-center justify-between lg:flex-row">
+        <Button
+          isIconOnly
+          aria-label="Like"
+          color="success"
+          onPress={() => tempFunc()}
+        />
         <Autocomplete
           defaultItems={mfData}
           label="Select Scheme"
@@ -249,12 +304,10 @@ export default function Home() {
         <div className="flex gap-2">
           <Dropdown id="line-graph" className="w-1/12 lg:w-full">
             <DropdownTrigger>
-              <Button isDisabled={true} variant="bordered">
-                Time period: {selectedCAGR}Y
-              </Button>
+              <Button variant="bordered">Time period: {selectedCAGR}Y</Button>
             </DropdownTrigger>
             <DropdownMenu
-              onAction={(cagrKey) => setSelectedCAGR(cagrKey.toString())}
+              onAction={(timePeriod) => changeTimePeriod(timePeriod)}
               aria-label="Dynamic Actions"
               items={cagrValues}
             >
