@@ -8,7 +8,7 @@ CORS(app)
 @app.route('/api/hello/<string:name>')
 def hello(name):
     greeting_service = GreetingService()
-    result = greeting_service.create_greeting(name)
+    result = greeting_service.search_schemes(name)
     return jsonify(result)
 
 @app.route('/api/users', methods=['GET'])

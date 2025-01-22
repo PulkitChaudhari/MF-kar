@@ -18,6 +18,8 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@nextui-org/react";
+// import {Autocomplete, AutocompleteItem} from "@heroui/react";
+import { useAsyncList } from "@react-stately/data";
 
 import { ChartConfig } from "@/components/ui/chart";
 import PortfolioChart from "./portfolioChart";
@@ -58,8 +60,6 @@ const client = new MyServiceClient("http://localhost:8081", null, {
 });
 
 export default function Home() {
-  const { onOpen } = useDisclosure();
-
   const yearOptions = [{ label: "1", value: 1 }];
 
   const [availableWeightage, setAvailableWeightage] = useState<number>(100);
@@ -68,10 +68,6 @@ export default function Home() {
   const [ogNAVData, setOgNAVData] = useState<{
     [schemeCode: string]: { nav: number; date: Date }[];
   }>({});
-
-  const handleOpen = () => {
-    onOpen();
-  };
 
   const [tableData, setTableData] = useState<any[]>([]);
 
@@ -95,25 +91,6 @@ export default function Home() {
       return Number(str);
     });
     return new Date(year, month - 1, day);
-  }
-
-  function tempFunc() {
-    const request = new RequestMessage();
-    request.setQuery("World");
-
-    console.log("Sending request to server...");
-
-    client.getData(request, {}, (err, response) => {
-      if (err) {
-        console.error("Error details:", {
-          code: err.code,
-          message: err.message,
-          metadata: err.metadata,
-        });
-        return;
-      }
-      console.log("Response received:", response.getResult());
-    });
   }
 
   function getNAVsForRange(navData: navData[]): any[] {
@@ -201,11 +178,9 @@ export default function Home() {
 
           // Getting NAVs for newly added MF in the span of threshold
           const navsForRange = getNAVsForRange(navData);
-          console.log(navsForRange);
 
           // Adding to OgNAVData
-          setOgNAVData({ ...previousOgNavData, schemeCode: navsForRange });
-
+          setOgNAVData({ ...previousOgNavData, [schemeCode]: navsForRange });
           // Adding newly added scheme to schemes
           let filteredData = mfData.filter(
             (mf) => mf.schemeCode.toString() === schemeCode
@@ -232,9 +207,9 @@ export default function Home() {
             tempAllNavData,
             +1
           );
-          console.log("tobeallmfweightednav", toBeAllMfWeightedNAV);
-          console.log("finalTableData", finalTableData);
-          console.log("tempAllnavData", tempAllNavData);
+          // console.log("tobeallmfweightednav", toBeAllMfWeightedNAV);
+          // console.log("finalTableData", finalTableData);
+          // console.log("tempAllnavData", tempAllNavData);
           setAddedMutualFunds(addedMutualFunds + 1);
           setAllMfWeightedNAV(toBeAllMfWeightedNAV);
           setTableData(finalTableData);
@@ -255,6 +230,10 @@ export default function Home() {
         tempMap[key] = allMfWeightedNAV[key];
       }
     });
+    const keysArr = Object.keys(ogNAVData);
+    let tempOgNavData = ogNAVData;
+    delete tempOgNavData[item.schemeCode];
+    setOgNAVData(tempOgNavData);
     let toBeAllMfWeightedNAV = updateWeightage(tempData, tempMap, -1);
     setAllMfWeightedNAV(toBeAllMfWeightedNAV);
     setTableData(tempData);
@@ -264,39 +243,51 @@ export default function Home() {
   function changeTimePeriod(timePeriod: any) {
     setSelectedCAGR(timePeriod.toString());
     let tempAllMfWeightedNAV: any = {};
-    console.log(allNavData);
     Object.keys(allNavData).forEach((key) => {
-      console.log(key);
       addMFToTable(key, {});
-      // tempAllMfWeightedNAV[key] = {};
-      // tempAllMfWeightedNAV[key].data = getNAVsForRange(allNavData[key].data);
-      // tempAllMfWeightedNAV[key].weightage = allNavData[key].weightage;
     });
     setAllMfWeightedNAV(tempAllMfWeightedNAV);
   }
 
+  const list: any = useAsyncList({
+    async load({ signal, filterText }) {
+      if (filterText === "") {
+        return {
+          items: [],
+        };
+      }
+      let res = await fetch(`http://localhost:8081/api/hello/${filterText}`, {
+        signal,
+      });
+      let json: any[] = await res.json();
+      json = json.filter((scheme) => {
+        const keysArr = Object.keys(ogNAVData);
+        if (keysArr.length > 0)
+          return !keysArr.includes(scheme.schemeCode.toString());
+        return true;
+      });
+      return { items: json };
+    },
+  });
+
   return (
     <div className="flex gap-2 flex-col">
       <div className="flex gap-3 flex-col items-center justify-between lg:flex-row">
-        <Button
-          isIconOnly
-          aria-label="Like"
-          color="success"
-          onPress={() => tempFunc()}
-        />
         <Autocomplete
-          defaultItems={mfData}
-          label="Select Scheme"
-          listboxProps={{
-            emptyContent: "Your own empty content text.",
-          }}
-          menuTrigger="input"
+          inputValue={list.filterText}
+          isLoading={list.isLoading}
+          items={list.items}
+          label="Select an instrument"
+          onInputChange={list.setFilterText}
           onSelectionChange={($event) => addMFToTable($event)}
-          defaultFilter={myFilter}
+          menuTrigger="input"
           className="w-full lg:w-9/12"
+          listboxProps={{
+            emptyContent: "No results found",
+          }}
         >
-          {(item) => (
-            <AutocompleteItem key={item.schemeCode}>
+          {(item: any) => (
+            <AutocompleteItem key={item.schemeCode} className="capitalize">
               {item.schemeName}
             </AutocompleteItem>
           )}
@@ -304,7 +295,9 @@ export default function Home() {
         <div className="flex gap-2">
           <Dropdown id="line-graph" className="w-1/12 lg:w-full">
             <DropdownTrigger>
-              <Button variant="bordered">Time period: {selectedCAGR}Y</Button>
+              <Button isDisabled={true} variant="bordered">
+                Time period: {selectedCAGR}Y
+              </Button>
             </DropdownTrigger>
             <DropdownMenu
               onAction={(timePeriod) => changeTimePeriod(timePeriod)}
