@@ -23,5 +23,4 @@ jobs:
         run: sudo docker rm -f mf-karr-container || true
 
       - name: Run Docker Container
-        run: |
-          sudo docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://3.109.211.39:8081 -d --name mf-karr-container ${{ steps.login-ecr.outputs.registry }}/${{ secrets.FRONT_END_REPO_NAME }}:latest
+        run: sudo docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://3.109.211.39:8081 -d --name mf-karr-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
