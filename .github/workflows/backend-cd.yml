@@ -1,0 +1,26 @@
+# Make sure Docker is installed already on EC2 Instance and AWS CLI v2 is installed
+# Also make sure ec2 ip is configured in environment.ts file
+name: Backend CD
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    name: Deploying docker image to AWS EC2
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        run: |
+          aws ecr get-login-password
+          sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Pull latest image
+        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr-backend:latest
+
+      - name: Remove older image
+        run: sudo docker rm -f mf-karr-backend-container || true
+
+      - name: Run Docker Container
+        run: sudo docker run -p 8081:8081 -d --name mf-karr-backend-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr-backend:latest
