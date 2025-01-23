@@ -18,7 +18,7 @@ import { apiResponse, navData, tableColumn } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
 import { CancelIcon } from "./CancelIcon";
 import { SaveIcon } from "./SaveIcon";
-import { MyServiceClient } from "../generated/ServiceServiceClientPb";
+import { config } from "../config/config";
 
 const columns = [
   {
@@ -37,12 +37,6 @@ const columns = [
 ];
 
 const apiLinkPrefix: string = "https://api.mfapi.in/mf/";
-
-const client = new MyServiceClient("http://localhost:8081", null, {
-  withCredentials: false,
-  // Debug mode to see what's happening with the requests
-  debug: true,
-});
 
 export default function Home() {
   const [availableWeightage, setAvailableWeightage] = useState<number>(100);
@@ -239,7 +233,7 @@ export default function Home() {
           items: [],
         };
       }
-      let res = await fetch(`http://localhost:8081/api/hello/${filterText}`, {
+      let res = await fetch(config.apiUrl + `/api/hello/${filterText}`, {
         signal,
       });
       let json: any[] = await res.json();
