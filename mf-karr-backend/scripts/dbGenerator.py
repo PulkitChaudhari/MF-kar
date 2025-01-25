@@ -48,8 +48,8 @@ class MutualFundFetcher:
 
 def main():
     # Get scheme codes from the imported mf_data
-    # scheme_codes = [mf['schemeCode'] for mf in mf_data]
-    scheme_codes = [120828,144546]
+    scheme_codes = [mf['schemeCode'] for mf in mf_data]
+    # scheme_codes = [120828,144546]
     
     fetcher = MutualFundFetcher()
     
