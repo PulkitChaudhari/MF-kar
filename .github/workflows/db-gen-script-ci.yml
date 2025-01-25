@@ -1,4 +1,4 @@
-  name: DB GENERATION SCRIPT
+  name: DB Generation Script CI
   on:
     workflow_dispatch:
   jobs:
