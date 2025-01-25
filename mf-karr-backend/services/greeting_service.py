@@ -1,4 +1,4 @@
-from data.allMfData import mf_data
+from scripts.allMfData import mf_data
 class GreetingService:
     @staticmethod
     def create_greeting(name: str) -> dict:
