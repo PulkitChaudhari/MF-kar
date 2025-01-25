@@ -1,0 +1,25 @@
+# Make sure Docker is installed already on EC2 Instance and AWS CLI v2 is installed
+# Also make sure ec2 ip is configured in environment.ts file
+name: DB Generation Script CD
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    name: Deploying Script image to AWS EC2
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        run: |
+          sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Pull latest image
+        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen-script:latest
+
+      - name: Remove older image
+        run: sudo docker rm -f db-gen-script-container || true
+
+      - name: Run Docker Container
+        run: sudo docker run -d --name db-gen-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen-script-container:latest
