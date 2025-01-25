@@ -13,7 +13,6 @@ jobs:
 
       - name: Docker Login
         run: |
-          aws ecr get-login-password
           sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
 
       - name: Pull latest image
