@@ -16,10 +16,10 @@ jobs:
           sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
 
       - name: Pull latest image
-        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen-script:latest
+        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen:latest
 
       - name: Remove older image
         run: sudo docker rm -f db-gen-script-container || true
 
       - name: Run Docker Container
-        run: sudo docker run -d --name db-gen-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen-script-container:latest
+        run: sudo docker run -d --name db-gen-script-container -v ~:/app/data 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen:latest
