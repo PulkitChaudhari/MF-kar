@@ -15,7 +15,7 @@ on:
         time_delay:
           description: 'Define Time Delay'     
           required: true
-          default: "1"
+          default: "0"
 jobs:
   build:
     name: Deploying Script image to AWS EC2
