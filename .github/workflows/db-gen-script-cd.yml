@@ -3,6 +3,15 @@
 name: DB Generation Script CD
 on:
   workflow_dispatch:
+    inputs:
+        starting_index:
+          description: 'Define Starting index'     
+          required: true
+          default: "0"
+        ending_index:
+          description: 'Define Ending index'     
+          required: true
+          default: "10"
 jobs:
   build:
     name: Deploying Script image to AWS EC2
@@ -22,4 +31,4 @@ jobs:
         run: sudo docker rm -f db-gen-script-container || true
 
       - name: Run Docker Container
-        run: sudo docker run --name db-gen-script-container -v ~:/app/data 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen:latest
+        run: sudo docker run --name db-gen-script-container -v ~:/app/data 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/db-gen:latest ${{ github.event.inputs.starting_index }} ${{ github.event.inputs.ending_index }}
