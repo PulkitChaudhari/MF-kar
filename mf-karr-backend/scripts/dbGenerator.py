@@ -7,7 +7,7 @@ import sys
 
 # Constants
 API_BASE_URL = "https://api.mfapi.in/mf/"
-DELAY_SECONDS = int(sys.argv[3]) # Delay between requests to avoid rate limiting
+DELAY_SECONDS = float(sys.argv[3]) # Delay between requests to avoid rate limiting
 
 class MutualFundFetcher:
     def __init__(self, output_file: str = "data/mf_data_results.json", error_file: str = "data/mf_data_errors.json"):
