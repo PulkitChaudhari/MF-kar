@@ -21,5 +21,5 @@ COPY requirements.txt /app
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Run the script
-CMD ["python", "scripts/dbGenerator.py"]
+# Run the script with arguments for starting and ending indexes
+ENTRYPOINT ["python","scripts/dbGenerator.py"]

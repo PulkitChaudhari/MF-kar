@@ -3,6 +3,7 @@ import json
 import time
 from typing import Dict, List, Any
 from allMfData import mf_data
+import sys
 
 # Constants
 API_BASE_URL = "https://api.mfapi.in/mf/"
@@ -49,7 +50,13 @@ class MutualFundFetcher:
 def main():
     # Get scheme codes from the imported mf_data
     scheme_codes = [mf['schemeCode'] for mf in mf_data]
-    # scheme_codes = [120828,144546]
+    
+    # Get starting and ending indexes from command line arguments
+    start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    end_index = int(sys.argv[2]) if len(sys.argv) > 2 else len(scheme_codes)
+
+    # Select the range of scheme codes
+    scheme_codes = scheme_codes[start_index:end_index]
     
     fetcher = MutualFundFetcher()
     
