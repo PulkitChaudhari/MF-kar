@@ -53,12 +53,15 @@ def main():
     
     # Get starting and ending indexes from command line arguments
     start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    end_index = int(sys.argv[2]) if len(sys.argv) > 2 else len(scheme_codes)
+    end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+
+    output_file_name = "data/mf_data_results_"+ str(start_index) + "_" + str(end_index) + ".json"
+    error_file_name = "data/mf_data_errors_"+ str(start_index) + "_" + str(end_index) + ".json"
 
     # Select the range of scheme codes
     scheme_codes = scheme_codes[start_index:end_index]
     
-    fetcher = MutualFundFetcher()
+    fetcher = MutualFundFetcher(output_file = output_file_name,error_file= error_file_name)
     
     total_schemes = len(scheme_codes)
     print(f"Starting to fetch data for {total_schemes} mutual fund schemes...")
