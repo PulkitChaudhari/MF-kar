@@ -46,10 +46,10 @@ import { Button } from "@nextui-org/button";
 import { monthMapping } from "./constants";
 
 export default function PortfolioChart({
-  chartData,
+  selectedInstrumentsData,
   selectedCAGR,
 }: {
-  chartData: any;
+  selectedInstrumentsData: any;
   selectedCAGR: Number;
 }) {
   const chartConfig = {
@@ -61,30 +61,7 @@ export default function PortfolioChart({
 
   const [portfolioReturn, setPortfolioReturn] = useState<Number>(0);
 
-  const chartData1 = [
-    { month: "January", desktop: 186, mobile: 80 },
-    { month: "February", desktop: 305, mobile: 200 },
-    { month: "March", desktop: 237, mobile: 120 },
-    { month: "April", desktop: 73, mobile: 190 },
-    { month: "May", desktop: 209, mobile: 130 },
-    { month: "June", desktop: 214, mobile: 140 },
-  ];
-  const chartConfig1 = {
-    desktop: {
-      label: "Desktop",
-      color: "hsl(var(--chart-1))",
-    },
-    mobile: {
-      label: "Mobile",
-      color: "hsl(var(--chart-2))",
-    },
-  } satisfies ChartConfig;
-
-  const chartIndexOptions = [{ value: "nifty50", label: "Nifty 50" }];
-
-  const [finalChartData, setFinalChartData] = useState<any[]>([]);
-
-  const [showLineChart, setShowLineChart] = useState<boolean>(true);
+  const [chartData, setChartData] = useState<any[]>([]);
 
   function formatDate(date: string) {
     const tempDate = new Date(date);
@@ -98,20 +75,27 @@ export default function PortfolioChart({
   }
 
   useEffect(() => {
-    if (chartData !== undefined) {
+    if (selectedInstrumentsData !== undefined) {
       let myMap: any = {};
+
       const dateArray: any[] = generateDateArray();
+
       for (let idx = 0; idx < dateArray.length; idx++) {
         const currentDate = dateArray[idx];
         myMap[currentDate] = undefined;
       }
-      Object.keys(chartData).map((key) => {
-        const schemeCodeData: any = chartData[key];
-        const weightage = schemeCodeData.weightage;
+
+      Object.keys(selectedInstrumentsData).map((key) => {
+        const instrumentData: any = selectedInstrumentsData[key];
+        const weightage = instrumentData.weightage;
+        let unitsBought =
+          instrumentData.navData.length > 0
+            ? weightage / instrumentData.navData[0].nav
+            : 0;
 
         const schemeDataAsObj: any = {};
-        schemeCodeData.data.forEach((data: any) => {
-          schemeDataAsObj[data.date] = data.nav;
+        instrumentData.navData.forEach((data: any) => {
+          schemeDataAsObj[data.date] = data.nav * unitsBought;
         });
 
         for (let idx = 0; idx < dateArray.length; idx++) {
@@ -124,11 +108,11 @@ export default function PortfolioChart({
         for (let idx = 0; idx < dateArray.length; idx++) {
           const currentDate = dateArray[idx];
           if (myMap[currentDate] === undefined) {
-            if (schemeCodeData.data.length === 0)
+            if (instrumentData.navData.length === 0)
               myMap[currentDate] = weightage;
             else myMap[currentDate] = schemeDataAsObj[currentDate];
           } else {
-            if (schemeCodeData.data.length === 0)
+            if (instrumentData.navData.length === 0)
               myMap[currentDate] = myMap[currentDate] + weightage;
             else
               myMap[currentDate] =
@@ -136,6 +120,7 @@ export default function PortfolioChart({
           }
         }
       });
+
       const tempChartData: any[] = [];
       Object.keys(myMap).forEach((key) => {
         tempChartData.push({
@@ -146,9 +131,9 @@ export default function PortfolioChart({
       const tempPortfolioReturn =
         tempChartData[tempChartData.length - 1].nav - 100;
       setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
-      setFinalChartData(tempChartData);
+      setChartData(tempChartData);
     }
-  }, [chartData]);
+  }, [selectedInstrumentsData]);
 
   function generateDateArray(): Date[] {
     let tempDate = new Date();
@@ -214,74 +199,39 @@ export default function PortfolioChart({
               Show the performance of your portfolio compared to
             </CardDescription> */}
           </CardHeader>
-          {showLineChart ? (
-            <CardContent>
-              <ChartContainer config={chartConfig}>
-                <LineChart
-                  accessibilityLayer
-                  data={finalChartData}
-                  margin={{
-                    left: 12,
-                    right: 12,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    // tickFormatter={(value) => value.slice(0, 3)}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                  />
-                  <Line
-                    dataKey="nav"
-                    type="monotone"
-                    stroke="var(--color-desktop)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  {/* <ChartLegend content={<ChartLegendContent />} /> */}
-                </LineChart>
-              </ChartContainer>
-            </CardContent>
-          ) : (
-            <CardContent>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={finalChartData}
-                  margin={{
-                    left: 12,
-                    right: 12,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Area
-                    dataKey="nav"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
-                    stackId="a"
-                  />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
-          )}
+          <CardContent>
+            <ChartContainer config={chartConfig}>
+              <LineChart
+                accessibilityLayer
+                data={chartData}
+                margin={{
+                  left: 12,
+                  right: 12,
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  // tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
+                <Line
+                  dataKey="nav"
+                  type="monotone"
+                  stroke="var(--color-desktop)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                {/* <ChartLegend content={<ChartLegendContent />} /> */}
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
           <CardFooter>
             <div className="flex w-full items-start gap-2 text-sm">
               <div className="grid gap-2">

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableHeader,
@@ -11,18 +11,32 @@ import {
   Tooltip,
 } from "@nextui-org/react";
 
-import { EditIcon } from "./EditIcon";
 import { DeleteIcon } from "./DeleteIcon";
-import { tableRow } from "./interfaces/interfaces";
 import { columns } from "./constants";
 
 export default function PortfolioTable({
-  tableData,
+  selectedNavData,
   removeMututalFundFn,
 }: {
-  tableData: tableRow[];
+  selectedNavData: any[];
   removeMututalFundFn: any;
 }) {
+  const [tableData, setTableData] = useState<any[]>([]);
+
+  useEffect(() => {
+    let tempTableData: any[] = [];
+    Object.keys(selectedNavData).forEach((key: any) => {
+      const instrumentInfo = selectedNavData[key];
+      tempTableData.push({
+        instrumentCode: key,
+        instrumentName: instrumentInfo.instrumentName,
+        cagr: instrumentInfo.cagr,
+        weightage: instrumentInfo.weightage.toFixed(2),
+      });
+    });
+    setTableData(tempTableData);
+  }, [selectedNavData]);
+
   return (
     <div className="flex gap-2 flex-col">
       <div className="flex gap-2">
@@ -34,7 +48,7 @@ export default function PortfolioTable({
           </TableHeader>
           <TableBody>
             {tableData.map((row) => (
-              <TableRow key={row.schemeCode}>
+              <TableRow key={row.instrumentCode}>
                 {(columnKey) => {
                   if (columnKey == "actions") {
                     return (

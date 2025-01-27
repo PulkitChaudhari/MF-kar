@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Autocomplete,
   AutocompleteItem,
@@ -36,7 +36,7 @@ const columns = [
   { label: "Actions", key: "actions" },
 ];
 
-const apiLinkPrefix: string = "https://api.mfapi.in/mf/";
+const apiLinkPrefix: string = "http://localhost:8081/api/instrument/";
 
 export default function Home() {
   const [availableWeightage, setAvailableWeightage] = useState<number>(100);
@@ -52,7 +52,11 @@ export default function Home() {
     [schemeCode: string]: [{ nav: number; date: Date }];
   }>({});
   const [allNavData, setAllNavData] = useState<any>();
-  const [selectedCAGR, setSelectedCAGR] = useState<String>("1");
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState<String>("1");
+
+  const [selectedInstrumentsData, setSelectedInstrumentsData] = useState<any>(
+    []
+  );
 
   const myFilter = (textValue: string, inputValue: string) => {
     if (inputValue.length === 0) {
@@ -70,23 +74,28 @@ export default function Home() {
     return new Date(year, month - 1, day);
   }
 
-  function getNAVsForRange(navData: navData[]): any[] {
-    const resNavData: any[] = [];
+  function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
+    let convertedData: any[] = [];
+
     let thresholdDate = new Date();
     thresholdDate = new Date(
-      thresholdDate.getFullYear() - Number(selectedCAGR),
+      thresholdDate.getFullYear() - Number(timePeriod),
       thresholdDate.getMonth(),
       thresholdDate.getDate()
     );
-    for (let idx = 0; idx < navData.length; idx++) {
-      if (navData[idx].date <= thresholdDate) break;
-      resNavData.push({
-        date: navData[idx].date,
-        nav: Number(navData[idx].nav),
+
+    for (let idx = 0; idx < apiData.length; idx++) {
+      const nav = Number(apiData[idx].nav);
+      const date = strToDate(apiData[idx].date);
+      if (date <= thresholdDate) break;
+      convertedData.push({
+        date: date,
+        nav: nav,
       });
     }
-    resNavData.reverse();
-    return resNavData;
+
+    convertedData.reverse();
+    return convertedData;
   }
 
   function updateWeightage(
@@ -116,6 +125,14 @@ export default function Home() {
     return toBeAllMfWeightedNAV;
   }
 
+  function updateWeight(tempInstrumentData: any) {
+    const instrumentCodes = Object.keys(tempInstrumentData);
+    instrumentCodes.forEach((code) => {
+      tempInstrumentData[code].weightage = 100 / instrumentCodes.length;
+    });
+    return tempInstrumentData;
+  }
+
   function calculateCAGR(navsForRange: any[]) {
     let vFinal = -1,
       vBegin = -1;
@@ -125,103 +142,68 @@ export default function Home() {
       vFinal = navsForRange[navsForRange.length - 1].nav;
     }
     return (
-      (Math.pow(vFinal / vBegin, 1 / Number(selectedCAGR)) - 1) *
+      (Math.pow(vFinal / vBegin, 1 / Number(selectedTimePeriod)) - 1) *
       100
     ).toFixed(2);
   }
 
-  function convertNavDateFromStrToDate(apiData: apiResponse): navData[] {
-    let convertedData: navData[] = [];
-    apiData.data.map((data) => {
-      convertedData.push({
-        date: strToDate(data.date),
-        nav: data.nav,
+  async function fetchInstrumentData(schemeCode: any): Promise<apiResponse> {
+    return await fetch(apiLinkPrefix + schemeCode).then(async (resp) => {
+      return await resp.json().then((apiData: apiResponse) => {
+        return apiData;
       });
     });
-    return convertedData;
   }
 
-  function addMFToTable(
-    schemeCode: any,
-    previousData: any = allNavData,
-    previousOgNavData: any = ogNAVData
+  async function generateInstrumentData(
+    instrumentCode: number,
+    timePeriod: String = selectedTimePeriod
   ) {
-    // Check if schemeCode is not null
-    if (schemeCode !== null) {
-      fetch(apiLinkPrefix + schemeCode).then((resp) => {
-        resp.json().then((apiData: apiResponse) => {
-          // Converting date's string type to Date type
-          const navData: navData[] = convertNavDateFromStrToDate(apiData);
+    return await fetchInstrumentData(instrumentCode).then((apiData: any) => {
+      const navsForRange = getNAVsForRange(
+        apiData[instrumentCode].instrumentData,
+        Number(timePeriod)
+      );
 
-          // Getting NAVs for newly added MF in the span of threshold
-          const navsForRange = getNAVsForRange(navData);
+      const instrumentObj: any = {
+        instrumentName: apiData[instrumentCode].instrumentName,
+        cagr: calculateCAGR(navsForRange),
+        weightage: "",
+        navData: navsForRange,
+      };
 
-          // Adding to OgNAVData
-          setOgNAVData({ ...previousOgNavData, [schemeCode]: navsForRange });
-          // Adding newly added scheme to schemes
-          let filteredData = mfData.filter(
-            (mf) => mf.schemeCode.toString() === schemeCode
-          );
+      return instrumentObj;
+    });
+  }
 
-          // Calculating CAGR for newMF
-          filteredData[0].cagr = calculateCAGR(navsForRange);
-
-          const finalTableData = [...tableData, ...filteredData];
-
-          // Getting Latest and Historical NAV value
-          const [vBegin, vFinal] = [
-            navsForRange.length > 0 ? navsForRange[0].nav : -1,
-            navsForRange.length > 0
-              ? navsForRange[navsForRange.length - 1].nav
-              : -1,
-          ];
-          let tempAllNavData: any = {
-            [schemeCode]: { data: navsForRange, weightage: 0 },
-            ...previousData,
+  function addInstrument(instrumentValue: any) {
+    if (instrumentValue !== null) {
+      generateInstrumentData(instrumentValue, "1").then(
+        (instrumentData: any) => {
+          let tempInstrumentData = {
+            ...selectedInstrumentsData,
+            [instrumentValue]: instrumentData,
           };
-          const toBeAllMfWeightedNAV = updateWeightage(
-            finalTableData,
-            tempAllNavData,
-            +1
-          );
-          // console.log("tobeallmfweightednav", toBeAllMfWeightedNAV);
-          // console.log("finalTableData", finalTableData);
-          // console.log("tempAllnavData", tempAllNavData);
-          setAddedMutualFunds(addedMutualFunds + 1);
-          setAllMfWeightedNAV(toBeAllMfWeightedNAV);
-          setTableData(finalTableData);
-          setAllNavData(tempAllNavData);
-        });
-      });
+          tempInstrumentData = updateWeight(tempInstrumentData);
+          setSelectedInstrumentsData(tempInstrumentData);
+        }
+      );
     }
   }
 
   const removeMutualFund = (item: any) => {
     // Removing scheme from the table
-    const tempData = tableData.filter((indiData) => {
-      return indiData.schemeCode != item.schemeCode;
-    });
-    let tempMap: { [schemeCode: string]: [{ nav: number; date: Date }] } = {};
-    Object.keys(allMfWeightedNAV).forEach((key) => {
-      if (Number(key) !== item.schemeCode) {
-        tempMap[key] = allMfWeightedNAV[key];
-      }
-    });
-    const keysArr = Object.keys(ogNAVData);
-    let tempOgNavData = ogNAVData;
-    delete tempOgNavData[item.schemeCode];
-    setOgNAVData(tempOgNavData);
-    let toBeAllMfWeightedNAV = updateWeightage(tempData, tempMap, -1);
-    setAllMfWeightedNAV(toBeAllMfWeightedNAV);
-    setTableData(tempData);
-    setAddedMutualFunds(addedMutualFunds - 1);
+    let tempData = { ...selectedInstrumentsData };
+    delete tempData[item.instrumentCode];
+    tempData = updateWeight(tempData);
+    setSelectedInstrumentsData(tempData);
   };
 
   function changeTimePeriod(timePeriod: any) {
-    setSelectedCAGR(timePeriod.toString());
+    setSelectedTimePeriod(timePeriod.toString());
     let tempAllMfWeightedNAV: any = {};
     Object.keys(allNavData).forEach((key) => {
-      addMFToTable(key, {});
+      // generateInstrumentData(key);
     });
     setAllMfWeightedNAV(tempAllMfWeightedNAV);
   }
@@ -233,16 +215,16 @@ export default function Home() {
           items: [],
         };
       }
-      let res = await fetch(config.apiUrl + `/api/hello/${filterText}`, {
+      let res = await fetch(config.apiUrl + `/api/instruments/${filterText}`, {
         signal,
       });
       let json: any[] = await res.json();
-      json = json.filter((scheme) => {
-        const keysArr = Object.keys(ogNAVData);
-        if (keysArr.length > 0)
-          return !keysArr.includes(scheme.schemeCode.toString());
-        return true;
-      });
+      // json = json.filter((scheme) => {
+      //   const keysArr = Object.keys(ogNAVData);
+      //   if (keysArr.length > 0)
+      //     return !keysArr.includes(scheme.instrumentCode.toString());
+      //   return true;
+      // });
       return { items: json };
     },
   });
@@ -256,7 +238,7 @@ export default function Home() {
           items={list.items}
           label="Select an instrument"
           onInputChange={list.setFilterText}
-          onSelectionChange={($event) => addMFToTable($event)}
+          onSelectionChange={($event) => addInstrument($event)}
           menuTrigger="input"
           className="w-full lg:w-9/12"
           listboxProps={{
@@ -264,8 +246,8 @@ export default function Home() {
           }}
         >
           {(item: any) => (
-            <AutocompleteItem key={item.schemeCode} className="capitalize">
-              {item.schemeName}
+            <AutocompleteItem key={item.instrumentCode} className="capitalize">
+              {item.instrumentName}
             </AutocompleteItem>
           )}
         </Autocomplete>
@@ -273,7 +255,7 @@ export default function Home() {
           <Dropdown id="line-graph" className="w-1/12 lg:w-full">
             <DropdownTrigger>
               <Button isDisabled={true} variant="bordered">
-                Time period: {selectedCAGR}Y
+                Time period: {selectedTimePeriod}Y
               </Button>
             </DropdownTrigger>
             <DropdownMenu
@@ -317,13 +299,13 @@ export default function Home() {
         </div>
       </div>
       <PortfolioTable
-        tableData={tableData}
+        selectedNavData={selectedInstrumentsData}
         removeMututalFundFn={removeMutualFund}
       />
       <div className="">
         <PortfolioChart
-          chartData={allMfWeightedNAV}
-          selectedCAGR={Number(selectedCAGR)}
+          selectedInstrumentsData={selectedInstrumentsData}
+          selectedCAGR={Number(selectedTimePeriod)}
         />
       </div>
     </div>

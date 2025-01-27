@@ -2,8 +2,8 @@ import { tableColumn } from "./interfaces/interfaces";
 
 export const columns: tableColumn[] = [
   {
-    key: "schemeName",
-    label: "Scheme Name",
+    key: "instrumentName",
+    label: "Instrument Name",
   },
   {
     key: "cagr",
