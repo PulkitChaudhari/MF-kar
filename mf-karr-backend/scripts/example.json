@@ -1,0 +1,44 @@
+{
+  "100027": {
+    "meta": {
+      "fund_house": "Standard Chartered Mutual Fund",
+      "scheme_type": "Open Ended Schemes",
+      "scheme_category": "Income",
+      "scheme_code": 100027,
+      "scheme_name": "Grindlays Super Saver Income Fund-GSSIF-Half Yearly Dividend",
+      "isin_growth": null,
+      "isin_div_reinvestment": null
+    },
+    "data": [
+      {
+        "date": "29-05-2008",
+        "nav": "10.72050"
+      },
+      {
+        "date": "28-05-2008",
+        "nav": "10.72500"
+      }
+    ]
+  },
+  "100042": {
+    "meta": {
+      "fund_house": "Aditya Birla Sun Life Mutual Fund",
+      "scheme_type": "360 ONE Mutual Fund",
+      "scheme_category": "Formerly Known as IIFL Mutual Fund",
+      "scheme_code": 100042,
+      "scheme_name": "Aditya Birla Sun Life Liquid Fund-Retail (Growth)",
+      "isin_growth": "INF209K01ME4",
+      "isin_div_reinvestment": null
+    },
+    "data": [
+      {
+        "date": "26-01-2025",
+        "nav": "662.90390"
+      },
+      {
+        "date": "24-01-2025",
+        "nav": "662.64180"
+      }
+    ]
+  }
+}

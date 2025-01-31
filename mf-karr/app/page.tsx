@@ -1,24 +1,26 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Autocomplete,
   AutocompleteItem,
   Dropdown,
   DropdownTrigger,
-  Button,
   DropdownMenu,
   DropdownItem,
+  Tooltip,
+  Button,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 
 import PortfolioChart from "./portfolioChart";
-import { mfData } from "./allMfData";
 import PortfolioTable from "./portfolioTable";
 import { apiResponse, navData, tableColumn } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
 import { CancelIcon } from "./CancelIcon";
 import { SaveIcon } from "./SaveIcon";
 import { config } from "../config/config";
+// import { Tooltip } from "@heroui/tooltip";
+// import {Button} from "@heroui/react";
 
 const columns = [
   {
@@ -36,7 +38,7 @@ const columns = [
   { label: "Actions", key: "actions" },
 ];
 
-const apiLinkPrefix: string = "http://localhost:8081/api/instrument/";
+const apiLinkPrefix: string = "http://localhost:8081/api/instrument";
 
 export default function Home() {
   const [availableWeightage, setAvailableWeightage] = useState<number>(100);
@@ -77,17 +79,17 @@ export default function Home() {
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
 
-    let thresholdDate = new Date();
-    thresholdDate = new Date(
-      thresholdDate.getFullYear() - Number(timePeriod),
-      thresholdDate.getMonth(),
-      thresholdDate.getDate()
-    );
+    // let thresholdDate = new Date();
+    // thresholdDate = new Date(
+    //   thresholdDate.getFullYear() - Number(timePeriod),
+    //   thresholdDate.getMonth(),
+    //   thresholdDate.getDate()
+    // );
 
-    for (let idx = 0; idx < apiData.length; idx++) {
-      const nav = Number(apiData[idx].nav);
-      const date = strToDate(apiData[idx].date);
-      if (date <= thresholdDate) break;
+    for (let idx = apiData.length - 1; idx >= 0; idx--) {
+      const nav = Number(apiData[idx][1]);
+      const date = new Date(Date.parse(apiData[idx][0]));
+      // if (date <= thresholdDate) break;
       convertedData.push({
         date: date,
         nav: nav,
@@ -133,7 +135,7 @@ export default function Home() {
     return tempInstrumentData;
   }
 
-  function calculateCAGR(navsForRange: any[]) {
+  function calculateCAGR(navsForRange: any[], timePeriod: Number) {
     let vFinal = -1,
       vBegin = -1;
 
@@ -142,13 +144,25 @@ export default function Home() {
       vFinal = navsForRange[navsForRange.length - 1].nav;
     }
     return (
-      (Math.pow(vFinal / vBegin, 1 / Number(selectedTimePeriod)) - 1) *
+      (Math.pow(vFinal / vBegin, 1 / Number(timePeriod)) - 1) *
       100
     ).toFixed(2);
   }
 
-  async function fetchInstrumentData(schemeCode: any): Promise<apiResponse> {
-    return await fetch(apiLinkPrefix + schemeCode).then(async (resp) => {
+  async function fetchInstrumentData(
+    schemeCode: any,
+    timePeriod: any
+  ): Promise<apiResponse> {
+    return await fetch(apiLinkPrefix, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        instrumentCode: schemeCode,
+        timePeriod: timePeriod,
+      }),
+    }).then(async (resp) => {
       return await resp.json().then((apiData: apiResponse) => {
         return apiData;
       });
@@ -157,28 +171,30 @@ export default function Home() {
 
   async function generateInstrumentData(
     instrumentCode: number,
-    timePeriod: String = selectedTimePeriod
+    timePeriod: String
   ) {
-    return await fetchInstrumentData(instrumentCode).then((apiData: any) => {
-      const navsForRange = getNAVsForRange(
-        apiData[instrumentCode].instrumentData,
-        Number(timePeriod)
-      );
+    return await fetchInstrumentData(instrumentCode, timePeriod).then(
+      (apiData: any) => {
+        const navsForRange = getNAVsForRange(
+          apiData[instrumentCode].instrumentData,
+          Number(timePeriod)
+        );
 
-      const instrumentObj: any = {
-        instrumentName: apiData[instrumentCode].instrumentName,
-        cagr: calculateCAGR(navsForRange),
-        weightage: "",
-        navData: navsForRange,
-      };
+        const instrumentObj: any = {
+          instrumentName: apiData[instrumentCode].instrumentName,
+          cagr: calculateCAGR(navsForRange, Number(timePeriod)),
+          weightage: "",
+          navData: navsForRange,
+        };
 
-      return instrumentObj;
-    });
+        return instrumentObj;
+      }
+    );
   }
 
   function addInstrument(instrumentValue: any) {
     if (instrumentValue !== null) {
-      generateInstrumentData(instrumentValue, "1").then(
+      generateInstrumentData(instrumentValue, selectedTimePeriod).then(
         (instrumentData: any) => {
           let tempInstrumentData = {
             ...selectedInstrumentsData,
@@ -199,13 +215,26 @@ export default function Home() {
     setSelectedInstrumentsData(tempData);
   };
 
-  function changeTimePeriod(timePeriod: any) {
-    setSelectedTimePeriod(timePeriod.toString());
-    let tempAllMfWeightedNAV: any = {};
-    Object.keys(allNavData).forEach((key) => {
-      // generateInstrumentData(key);
+  async function changeTimePeriod(timePeriod: any) {
+    let tempSelectedInstrumentsData: any = {};
+    const instrumentCodes = Object.keys(selectedInstrumentsData);
+
+    // Collect all promises
+    const promises = instrumentCodes.map(async (key) => {
+      const newInstrumentData = await generateInstrumentData(
+        Number(key),
+        timePeriod
+      );
+      tempSelectedInstrumentsData = {
+        ...tempSelectedInstrumentsData,
+        [key]: newInstrumentData,
+      };
     });
-    setAllMfWeightedNAV(tempAllMfWeightedNAV);
+    await Promise.all(promises);
+    tempSelectedInstrumentsData = updateWeight(tempSelectedInstrumentsData);
+
+    setSelectedInstrumentsData(tempSelectedInstrumentsData);
+    setSelectedTimePeriod(timePeriod.toString());
   }
 
   const list: any = useAsyncList({
@@ -254,7 +283,7 @@ export default function Home() {
         <div className="flex gap-2">
           <Dropdown id="line-graph" className="w-1/12 lg:w-full">
             <DropdownTrigger>
-              <Button isDisabled={true} variant="bordered">
+              <Button variant="bordered">
                 Time period: {selectedTimePeriod}Y
               </Button>
             </DropdownTrigger>
@@ -301,11 +330,12 @@ export default function Home() {
       <PortfolioTable
         selectedNavData={selectedInstrumentsData}
         removeMututalFundFn={removeMutualFund}
+        timePeriod={Number(selectedTimePeriod)}
       />
       <div className="">
         <PortfolioChart
-          selectedInstrumentsData={selectedInstrumentsData}
-          selectedCAGR={Number(selectedTimePeriod)}
+          instrumentsData={selectedInstrumentsData}
+          timePeriod={Number(selectedTimePeriod)}
         />
       </div>
     </div>

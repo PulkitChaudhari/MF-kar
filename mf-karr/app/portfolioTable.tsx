@@ -17,11 +17,14 @@ import { columns } from "./constants";
 export default function PortfolioTable({
   selectedNavData,
   removeMututalFundFn,
+  timePeriod,
 }: {
   selectedNavData: any[];
   removeMututalFundFn: any;
+  timePeriod: Number;
 }) {
   const [tableData, setTableData] = useState<any[]>([]);
+  const [tableHeaders, setTableHeaders] = useState<any[]>(columns);
 
   useEffect(() => {
     let tempTableData: any[] = [];
@@ -37,14 +40,24 @@ export default function PortfolioTable({
     setTableData(tempTableData);
   }, [selectedNavData]);
 
+  useEffect(() => {
+    let toBeTableHeaders = [
+      ...columns.map((column) => {
+        return { ...column };
+      }),
+    ];
+    toBeTableHeaders[1].label = timePeriod + "YR CAGR";
+    setTableHeaders(toBeTableHeaders);
+  }, [timePeriod]);
+
   return (
     <div className="flex gap-2 flex-col">
       <div className="flex gap-2">
         <Table aria-label="Example table with dynamic content">
-          <TableHeader columns={columns}>
-            {(column) => (
-              <TableColumn key={column.key}>{column.label}</TableColumn>
-            )}
+          <TableHeader columns={tableHeaders}>
+            {(column) => {
+              return <TableColumn key={column.key}>{column.label}</TableColumn>;
+            }}
           </TableHeader>
           <TableBody>
             {tableData.map((row) => (

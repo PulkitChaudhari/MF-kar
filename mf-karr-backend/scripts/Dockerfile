@@ -14,7 +14,7 @@ RUN apt-get update && \
 RUN mkdir -p /app/data /app/scripts
 
 # Copy only the required files
-COPY dbGenerator.py /app/scripts/
+COPY dbDataFetcher.py /app/scripts/
 COPY allMfData.py /app/scripts/
 COPY requirements.txt /app
 
@@ -22,4 +22,4 @@ COPY requirements.txt /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run the script with arguments for starting and ending indexes
-ENTRYPOINT ["python","scripts/dbGenerator.py"]
+ENTRYPOINT ["python","scripts/dbDataFetcher.py"]

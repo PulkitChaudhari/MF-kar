@@ -46,11 +46,11 @@ import { Button } from "@nextui-org/button";
 import { monthMapping } from "./constants";
 
 export default function PortfolioChart({
-  selectedInstrumentsData,
-  selectedCAGR,
+  instrumentsData,
+  timePeriod,
 }: {
-  selectedInstrumentsData: any;
-  selectedCAGR: Number;
+  instrumentsData: any;
+  timePeriod: Number;
 }) {
   const chartConfig = {
     desktop: {
@@ -75,18 +75,18 @@ export default function PortfolioChart({
   }
 
   useEffect(() => {
-    if (selectedInstrumentsData !== undefined) {
+    if (instrumentsData !== undefined) {
       let myMap: any = {};
 
-      const dateArray: any[] = generateDateArray();
+      const dateArray: any[] = generateDateArray(timePeriod);
 
       for (let idx = 0; idx < dateArray.length; idx++) {
         const currentDate = dateArray[idx];
         myMap[currentDate] = undefined;
       }
 
-      Object.keys(selectedInstrumentsData).map((key) => {
-        const instrumentData: any = selectedInstrumentsData[key];
+      Object.keys(instrumentsData).map((key) => {
+        const instrumentData: any = instrumentsData[key];
         const weightage = instrumentData.weightage;
         let unitsBought =
           instrumentData.navData.length > 0
@@ -133,9 +133,9 @@ export default function PortfolioChart({
       setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
       setChartData(tempChartData);
     }
-  }, [selectedInstrumentsData]);
+  }, [instrumentsData]);
 
-  function generateDateArray(): Date[] {
+  function generateDateArray(timePeriod: Number): Date[] {
     let tempDate = new Date();
     let todayDate = new Date(
       tempDate.getFullYear(),
@@ -143,7 +143,7 @@ export default function PortfolioChart({
       tempDate.getDate()
     );
     let thresholdDate = new Date(
-      tempDate.getFullYear() - Number(selectedCAGR),
+      tempDate.getFullYear() - Number(timePeriod),
       tempDate.getMonth(),
       tempDate.getDate()
     );
@@ -152,7 +152,11 @@ export default function PortfolioChart({
       let tempDate = new Date(
         todayDate.getFullYear(),
         todayDate.getMonth(),
-        todayDate.getDate()
+        todayDate.getDate(),
+        5,
+        30,
+        0,
+        0
       );
       dateArray.push(tempDate);
       todayDate.setDate(todayDate.getDate() - 1);
