@@ -1,4 +1,4 @@
-const {heroui} = require('@heroui/theme');
+import { heroui } from "@heroui/theme";
 import { nextui } from "@nextui-org/theme";
 
 export default {
@@ -6,7 +6,7 @@ export default {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/@heroui/theme/dist/components/popover.js"
+    "./node_modules/@heroui/theme/dist/components/popover.js",
   ],
   theme: {
     extend: {
@@ -64,5 +64,5 @@ export default {
     },
   },
   darkMode: ["class", "class"],
-  plugins: [nextui(),import("tailwindcss-animate"),heroui()],
+  plugins: [nextui(), import("tailwindcss-animate"), heroui()],
 };
