@@ -31,4 +31,5 @@ ENV FLASK_APP=index.py
 ENV FLASK_ENV=production
 
 # Run the application
-CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=8081"] 
+# CMD ["python", "-m", "flask", "run", "--host=0.0.0.0", "--port=8081"] 
+CMD ["python", "index.py"]
