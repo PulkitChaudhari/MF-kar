@@ -1,5 +1,4 @@
 from scripts.allMfData import mf_data
-import requests  # Importing requests library
 from scripts.constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime, timedelta
@@ -21,9 +20,9 @@ class InstrumentService:
         # Connect to PostgreSQL database
         conn = psycopg2.connect(
             dbname='postgres',
-            user='admin',
-            password='admin',
-            host='localhost',
+            user='postgres',
+            password='Pulkit#0102',
+            host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
             port='5432'
         )
         cursor = conn.cursor()
