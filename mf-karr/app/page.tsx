@@ -153,7 +153,7 @@ export default function Home() {
     schemeCode: any,
     timePeriod: any
   ): Promise<apiResponse> {
-    return await fetch(apiLinkPrefix, {
+    return await fetch(config.apiUrl + `/api/instrument`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
