@@ -8,11 +8,13 @@ import {
   TableRow,
   TableCell,
   getKeyValue,
-  Tooltip,
+  Chip,
 } from "@nextui-org/react";
 
 import { DeleteIcon } from "./DeleteIcon";
 import { columns } from "./constants";
+
+import { Slider } from "@heroui/slider";
 
 export default function PortfolioTable({
   selectedNavData,
@@ -56,7 +58,15 @@ export default function PortfolioTable({
         <Table aria-label="Example table with dynamic content">
           <TableHeader columns={tableHeaders}>
             {(column) => {
-              return <TableColumn key={column.key}>{column.label}</TableColumn>;
+              return (
+                <TableColumn
+                  align="center"
+                  width={column.width}
+                  key={column.key}
+                >
+                  {column.label}
+                </TableColumn>
+              );
             }}
           </TableHeader>
           <TableBody>
@@ -66,24 +76,34 @@ export default function PortfolioTable({
                   if (columnKey == "actions") {
                     return (
                       <TableCell>
-                        <Tooltip color="danger" content="Remove Mutual Fund">
-                          <span className="text-lg text-danger cursor-pointer active:opacity-50">
-                            <DeleteIcon
-                              onClick={() => removeMututalFundFn(row)}
-                            />
-                          </span>
-                        </Tooltip>
+                        <span className="flex justify-center h-full text-lg text-danger cursor-pointer active:opacity-50">
+                          <DeleteIcon
+                            onClick={() => removeMututalFundFn(row)}
+                          />
+                        </span>
                       </TableCell>
                     );
                   } else if (columnKey == "weightage") {
                     return (
-                      <TableCell className=" align-center h-full">
+                      // <TableCell
+                      //   width={row.width}
+                      //   className="flex justify-center h-full"
+                      // >
+                      //   {getKeyValue(row, columnKey)}
+                      //   <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+                      //     {/* <EditIcon /> */}
+                      //   </span>
+                      // </TableCell>
+                      <TableCell>
+                        <Slider
+                          className="max-w-md"
+                          defaultValue={Number(getKeyValue(row, columnKey))}
+                          maxValue={100}
+                          minValue={0}
+                          step={0.01}
+                          isDisabled={true}
+                        />
                         {getKeyValue(row, columnKey)}
-                        <Tooltip content="Edit Weightage">
-                          <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                            {/* <EditIcon /> */}
-                          </span>
-                        </Tooltip>
                       </TableCell>
                     );
                   } else

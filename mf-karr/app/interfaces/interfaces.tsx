@@ -8,6 +8,7 @@ export interface tableRow {
 export interface tableColumn {
   label: string;
   key: string;
+  width: string;
 }
 
 export interface apiResponse {

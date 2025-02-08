@@ -1,22 +1,25 @@
 import { tableColumn } from "./interfaces/interfaces";
 
-export const columns: tableColumn[] = [
+export const columns: any[] = [
   {
     key: "instrumentName",
     label: "Instrument Name",
+    width: "40%",
   },
   {
     key: "cagr",
     label: "1YR CAGR",
+    width: "15%",
   },
   {
     key: "weightage",
     label: "Weightage",
+    width: "30%",
   },
-  { label: "Actions", key: "actions" },
+  { label: "Actions", key: "actions", width: "15%" },
 ];
 
-export const cagrValues: tableColumn[] = [
+export const cagrValues: any[] = [
   {
     key: "1",
     label: "1Y",
