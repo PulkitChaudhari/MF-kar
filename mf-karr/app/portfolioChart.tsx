@@ -105,6 +105,16 @@ export default function PortfolioChart({
           }
         }
 
+        for (let idx = dateArray.length; idx >= 0; idx--) {
+          const currentDate = dateArray[idx];
+          if (
+            schemeDataAsObj[currentDate] === undefined &&
+            idx + 1 < dateArray.length
+          ) {
+            schemeDataAsObj[currentDate] = schemeDataAsObj[dateArray[idx + 1]];
+          }
+        }
+
         for (let idx = 0; idx < dateArray.length; idx++) {
           const currentDate = dateArray[idx];
           if (myMap[currentDate] === undefined) {

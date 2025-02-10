@@ -7,17 +7,14 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  Tooltip,
   Button,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 
 import PortfolioChart from "./portfolioChart";
 import PortfolioTable from "./portfolioTable";
-import { apiResponse, navData, tableColumn } from "./interfaces/interfaces";
+import { apiResponse } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
-import { CancelIcon } from "./CancelIcon";
-import { SaveIcon } from "./SaveIcon";
 import { config } from "../config/config";
 // import { Tooltip } from "@heroui/tooltip";
 // import {Button} from "@heroui/react";
@@ -41,50 +38,21 @@ const columns = [
 const apiLinkPrefix: string = "http://localhost:8081/api/instrument";
 
 export default function Home() {
-  const [availableWeightage, setAvailableWeightage] = useState<number>(100);
-  const [addedMutualFunds, setAddedMutualFunds] = useState<number>(0);
-  const [isEditingWeight, setIsEditingWeight] = useState<boolean>(false);
-  const [ogNAVData, setOgNAVData] = useState<{
-    [schemeCode: string]: { nav: number; date: Date }[];
-  }>({});
-
-  const [tableData, setTableData] = useState<any[]>([]);
-
-  const [allMfWeightedNAV, setAllMfWeightedNAV] = useState<{
-    [schemeCode: string]: [{ nav: number; date: Date }];
-  }>({});
-  const [allNavData, setAllNavData] = useState<any>();
+  const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
+    useState<boolean>(false);
+  const [toBeData, setToBeData] = useState<any[]>([]);
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<String>("1");
-
+  const [tableDataWeightageCopy, setTableDataWeightageCopy] = useState<any[]>(
+    []
+  );
   const [selectedInstrumentsData, setSelectedInstrumentsData] = useState<any>(
     []
   );
-
-  const myFilter = (textValue: string, inputValue: string) => {
-    if (inputValue.length === 0) {
-      return true;
-    }
-    textValue = textValue.normalize("NFC").toLocaleLowerCase();
-    inputValue = inputValue.normalize("NFC").toLocaleLowerCase();
-    return textValue.includes(inputValue);
-  };
-
-  function strToDate(dateStr: string): Date {
-    const [day, month, year]: number[] = dateStr.split("-").map((str) => {
-      return Number(str);
-    });
-    return new Date(year, month - 1, day);
-  }
+  const [isSaveButtonEnabled, setIsSaveButtonEnabled] =
+    useState<boolean>(false);
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
-
-    // let thresholdDate = new Date();
-    // thresholdDate = new Date(
-    //   thresholdDate.getFullYear() - Number(timePeriod),
-    //   thresholdDate.getMonth(),
-    //   thresholdDate.getDate()
-    // );
 
     for (let idx = apiData.length - 1; idx >= 0; idx--) {
       const nav = Number(apiData[idx][1]);
@@ -100,38 +68,19 @@ export default function Home() {
     return convertedData;
   }
 
-  function updateWeightage(
-    finalData: any[],
-    tempAllNavData: any,
-    operator: number
-  ) {
-    let toBeAllMfWeightedNAV: any = {};
-    finalData.forEach((data: any) => {
-      toBeAllMfWeightedNAV[data.schemeCode] = {};
-      toBeAllMfWeightedNAV[data.schemeCode].data = [];
-      data.weightage = Number(
-        (availableWeightage / (addedMutualFunds + operator)).toFixed(2)
-      );
-      toBeAllMfWeightedNAV[data.schemeCode].weightage = data.weightage;
-      let unitsBought =
-        tempAllNavData[data.schemeCode].data.length > 0
-          ? data.weightage / tempAllNavData[data.schemeCode].data[0].nav
-          : 0;
-      tempAllNavData[data.schemeCode].data.forEach((navData: any) => {
-        toBeAllMfWeightedNAV[data.schemeCode].data.push({
-          date: navData.date,
-          nav: unitsBought * navData.nav,
-        });
-      });
-    });
-    return toBeAllMfWeightedNAV;
-  }
-
   function updateWeight(tempInstrumentData: any) {
     const instrumentCodes = Object.keys(tempInstrumentData);
     instrumentCodes.forEach((code) => {
-      tempInstrumentData[code].weightage = 100 / instrumentCodes.length;
+      tempInstrumentData[code].weightage = Math.floor(
+        100 / instrumentCodes.length
+      );
     });
+    if (100 % instrumentCodes.length != 0) {
+      const code = instrumentCodes[0];
+      tempInstrumentData[code].weightage = Math.ceil(
+        100 / instrumentCodes.length
+      );
+    }
     return tempInstrumentData;
   }
 
@@ -248,15 +197,42 @@ export default function Home() {
         signal,
       });
       let json: any[] = await res.json();
-      // json = json.filter((scheme) => {
-      //   const keysArr = Object.keys(ogNAVData);
-      //   if (keysArr.length > 0)
-      //     return !keysArr.includes(scheme.instrumentCode.toString());
-      //   return true;
-      // });
+      json = json.filter((scheme) => {
+        const keysArr = Object.keys(selectedInstrumentsData);
+        if (keysArr.length > 0)
+          return !keysArr.includes(scheme.instrumentCode.toString());
+        return true;
+      });
       return { items: json };
     },
   });
+
+  function isSaveEnabled(posSelectedInstrumentsData: any[]): void {
+    let totalWeightage = 0;
+    posSelectedInstrumentsData.forEach((data: any) => {
+      totalWeightage += Number(data.weightage);
+    });
+    if (totalWeightage == 100) setIsSaveButtonEnabled(true);
+    else setIsSaveButtonEnabled(false);
+    setToBeData(posSelectedInstrumentsData);
+  }
+
+  function onSave() {
+    let keysArr = Object.keys(selectedInstrumentsData);
+    let tempData = { ...selectedInstrumentsData };
+    toBeData.forEach((data: any) => {
+      if (keysArr.includes(data.instrumentCode)) {
+        tempData[data.instrumentCode].weightage = Number(data.weightage);
+      }
+    });
+    setSelectedInstrumentsData(tempData);
+    setIsAdjustWeightageEnabled(false);
+  }
+
+  function onCancelWeightAdjust() {
+    setSelectedInstrumentsData({ ...selectedInstrumentsData });
+    setIsAdjustWeightageEnabled(false);
+  }
 
   return (
     <div className="flex gap-2 flex-col">
@@ -269,10 +245,11 @@ export default function Home() {
           onInputChange={list.setFilterText}
           onSelectionChange={($event) => addInstrument($event)}
           menuTrigger="input"
-          className="w-full lg:w-9/12"
+          className="w-full lg:w-8/12"
           listboxProps={{
             emptyContent: "No results found",
           }}
+          isDisabled={isAdjustWeightageEnabled}
         >
           {(item: any) => (
             <AutocompleteItem key={item.instrumentCode} className="capitalize">
@@ -280,8 +257,12 @@ export default function Home() {
             </AutocompleteItem>
           )}
         </Autocomplete>
-        <div className="flex gap-2">
-          <Dropdown id="line-graph" className="w-1/12 lg:w-full">
+        <div className="flex gap-2 w-4/12">
+          <Dropdown
+            isDisabled={isAdjustWeightageEnabled}
+            id="line-graph"
+            className="w-1/2"
+          >
             <DropdownTrigger>
               <Button variant="bordered">
                 Time period: {selectedTimePeriod}Y
@@ -297,40 +278,51 @@ export default function Home() {
               )}
             </DropdownMenu>
           </Dropdown>
-          {isEditingWeight ? (
-            <div className="flex gap-3">
+          <div className="w-1/2">
+            {isAdjustWeightageEnabled ? (
+              <div className="flex gap-3">
+                <Button
+                  isIconOnly
+                  aria-label="Like"
+                  color="success"
+                  className="w-1/2"
+                  isDisabled={!isSaveButtonEnabled}
+                  onPress={() => onSave()}
+                >
+                  {/* <SaveIcon /> */}
+                  Save
+                </Button>
+                <Button
+                  isIconOnly
+                  aria-label="Like1"
+                  color="danger"
+                  onPress={() => onCancelWeightAdjust()}
+                  className="w-1/2"
+                >
+                  {/* <CancelIcon /> */}
+                  Cancel
+                </Button>
+              </div>
+            ) : (
               <Button
-                isIconOnly
-                aria-label="Like"
-                color="success"
-                onPress={() => setIsEditingWeight(false)}
+                variant="bordered"
+                className="w-full"
+                onPress={() => setIsAdjustWeightageEnabled(true)}
               >
-                <SaveIcon />
+                Adjust Weightage
               </Button>
-              <Button
-                isIconOnly
-                aria-label="Like1"
-                color="danger"
-                onPress={() => setIsEditingWeight(false)}
-              >
-                <CancelIcon />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              isDisabled={true}
-              variant="bordered"
-              onPress={() => setIsEditingWeight(true)}
-            >
-              Adjust Weightage
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
       <PortfolioTable
         selectedNavData={selectedInstrumentsData}
         removeMututalFundFn={removeMutualFund}
         timePeriod={Number(selectedTimePeriod)}
+        isAdjustWeightageEnabled={isAdjustWeightageEnabled}
+        isSaveEnabled={isSaveEnabled}
+        tableDataWeightageCopy={tableDataWeightageCopy}
+        setTableDataWeightageCopy={setTableDataWeightageCopy}
       />
       <div className="">
         <PortfolioChart
