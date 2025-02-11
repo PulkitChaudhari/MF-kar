@@ -177,7 +177,7 @@ export default function PortfolioChart({
 
   return (
     <div className="flex gap-2 flex-col">
-      <div className="mx-10 my-10">
+      <div>
         {/* {chartData !== undefined ? chartData["120828"][0].date : "nope"} */}
         <Card>
           <CardHeader>
