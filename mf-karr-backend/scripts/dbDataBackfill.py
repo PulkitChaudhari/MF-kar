@@ -44,8 +44,7 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
         print(error_msg)
 
 def main():
-    # scheme_codes = [mf['instrumentCode'] for mf in mf_data]
-    scheme_codes = [120828]
+    scheme_codes = [mf['instrumentCode'] for mf in mf_data]
     print(f"Starting to fetch latest data for mutual fund schemes...")
     for scheme_code in scheme_codes:
 
