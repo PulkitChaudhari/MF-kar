@@ -1,5 +1,4 @@
 import requests
-import json
 import time
 from allMfData import mf_data
 from constants import SORTED_RESULTS
@@ -7,11 +6,19 @@ import psycopg2
 from datetime import datetime
 
 # Connect to PostgreSQL database
+# conn = psycopg2.connect(
+#     dbname='postgres',
+#     user='admin',
+#     password='admin',
+#     host='localhost',
+#     port='5432'
+# )
+
 conn = psycopg2.connect(
     dbname='postgres',
-    user='admin',
-    password='admin',
-    host='localhost',
+    user='postgres',
+    password='Pulkit#0102',
+    host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
     port='5432'
 )
 cursor = conn.cursor()
@@ -37,7 +44,8 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
         print(error_msg)
 
 def main():
-    scheme_codes = [mf['schemeCode'] for mf in mf_data]
+    # scheme_codes = [mf['instrumentCode'] for mf in mf_data]
+    scheme_codes = [120828]
     print(f"Starting to fetch latest data for mutual fund schemes...")
     for scheme_code in scheme_codes:
 
@@ -57,7 +65,6 @@ def main():
             lastAvailableDate = str(lastAvailableDate)
             year, month, day = lastAvailableDate.split('-')
             lastAvailableDate = datetime(int(year), int(month), int(day))
-            print(lastAvailableDate)
         else:
             print(f"""No last max date found for %s""",scheme_code)
             break
@@ -71,11 +78,11 @@ def main():
             day = datetime_object.day
             if (lastAvailableDate >= datetime_object):
                  break
+            print(nav,date,tablename)
             cursor.execute(f"""
             INSERT INTO mf_data_results_{tablename[0]}_{tablename[1]} 
             (nav_date, nav_value, fund_id) VALUES (TO_DATE(%s, 'dd-mm-yyyy'), %s, %s)
             """, (str(date)+"-"+str(month)+"-"+str(year), nav, scheme_code))
-            print(f"""Insertion for mf_data_results_{keys[0]}_{keys[1]} completed.""")
     conn.commit()
     cursor.close()
     conn.close()
