@@ -13,9 +13,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.13
-        
-    - name: Install dependencies
-      run: pip install -r ./mf-karr-backend/requirements.txt
-
-    - name: Run Script
-      run: python ./mf-karr-backend/scripts/dbDataBackfill.py
+      run: |
+        pip install -r ./mf-karr-backend/requirements.txt
+        python ./mf-karr-backend/scripts/dbDataBackfill.py
