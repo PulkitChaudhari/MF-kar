@@ -17,7 +17,7 @@ class InstrumentService:
     def getInstrumentInfo(instrumentCode: int, timePeriod: int) -> dict:
         # response = requests.get(f'https://api.mfapi.in/mf/{instrumentCode}')  # Making the API call
 
-        Connect to PostgreSQL database
+        # Connect to PostgreSQL database
         conn = psycopg2.connect(
             dbname='postgres',
             user='postgres',
