@@ -3,16 +3,15 @@ on:
   workflow_dispatch:
 jobs:
   build:
-    name: Python setup and DB Backfill
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
     - uses: actions/checkout@v2
-    
     - name: Set up python 3.7
       uses: actions/setup-python@v2
       with:
-        python-version: 3.13
+        python-version: 3.7
+    - name: Install dependencies and run script
       run: |
         pip install -r ./mf-karr-backend/requirements.txt
         python ./mf-karr-backend/scripts/dbDataBackfill.py
