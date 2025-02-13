@@ -17,21 +17,21 @@ class InstrumentService:
     def getInstrumentInfo(instrumentCode: int, timePeriod: int) -> dict:
         # response = requests.get(f'https://api.mfapi.in/mf/{instrumentCode}')  # Making the API call
 
-        # Connect to PostgreSQL database
-        # conn = psycopg2.connect(
-        #     dbname='postgres',
-        #     user='postgres',
-        #     password='Pulkit#0102',
-        #     host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
-        #     port='5432'
-        # )
+        Connect to PostgreSQL database
         conn = psycopg2.connect(
             dbname='postgres',
-            user='admin',
-            password='admin',
-            host='localhost',
+            user='postgres',
+            password='Pulkit#0102',
+            host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
             port='5432'
         )
+        # conn = psycopg2.connect(
+        #     dbname='postgres',
+        #     user='admin',
+        #     password='admin',
+        #     host='localhost',
+        #     port='5432'
+        # )
         cursor = conn.cursor()
 
         # Get today's date
