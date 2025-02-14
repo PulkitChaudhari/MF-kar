@@ -1,9 +1,9 @@
 import requests
-import json
 import time
 from allMfData import mf_data
 from constants import SORTED_RESULTS
 import psycopg2
+from datetime import datetime
 
 # Connect to PostgreSQL database
 conn = psycopg2.connect(
@@ -47,6 +47,19 @@ def main():
         nav = results['data'][0]['nav']
         for keys in SORTED_RESULTS: 
             if (SORTED_RESULTS[keys][0] <= scheme_code and SORTED_RESULTS[keys][1] >= scheme_code): 
+                cursor.execute(f"""
+                    SELECT MAX(nav_date) FROM mf_data_results_{keys[0]}_{keys[1]} where fund_id={scheme_code}
+                """)
+                results = cursor.fetchall()
+                if results and results[0][0] is not None:
+                    lastAvailableDate = results[0][0] 
+                    lastAvailableDate = str(lastAvailableDate)
+                    year, month, day = lastAvailableDate.split('-')
+                    lastAvailableDate = datetime(int(year), int(month), int(day))
+                    datetime_object = datetime.strptime(date, '%d-%m-%Y')  # Assuming date is in 'dd-mm-yyyy' format
+                    if (lastAvailableDate >= datetime_object):
+                        print("breaking out of for loop")
+                        break  
                 cursor.execute(f"""
                     INSERT INTO mf_data_results_{keys[0]}_{keys[1]} (nav_date, nav_value, fund_id)
                     VALUES (TO_DATE(%s, 'dd-mm-yyyy'), %s, %s)
