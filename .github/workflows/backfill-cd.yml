@@ -1,6 +1,15 @@
 name: Backfill CD
 on:
   workflow_dispatch:
+    inputs:
+      starting_code:
+        description: 'Define Starting instrumentCode'     
+        required: true
+        default: "0"
+      ending_code:
+        description: 'Define Ending instrumentCode'     
+        required: true
+        default: "0"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,4 +22,4 @@ jobs:
     - name: Install dependencies
       run: |
         pip install -r ./mf-karr-backend/requirements.txt
-        python ./mf-karr-backend/scripts/dbDataBackfill.py
+        python ./mf-karr-backend/scripts/dbDataBackfill.py ${{ github.event.inputs.starting_code }} ${{ github.event.inputs.ending_code }}
