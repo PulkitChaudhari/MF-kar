@@ -4,6 +4,7 @@ from allMfData import mf_data
 from constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime
+import sys
 
 # Connect to PostgreSQL database
 # conn = psycopg2.connect(
@@ -44,7 +45,14 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
         print(error_msg)
 
 def main():
-    scheme_codes = [mf['instrumentCode'] for mf in mf_data if mf['instrumentCode'] >= 132010]
+
+    # Get starting and ending indexes from command line arguments
+    start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+
+    print(f"DB Data backfill process started for instrumentCodes >= {start_index} and instrumentCodes <= {end_index}")
+
+    scheme_codes = [mf['instrumentCode'] for mf in mf_data if mf['instrumentCode'] >= start_index and mf['instrumentCode'] <= end_index]
     print(f"Starting to fetch latest data for mutual fund schemes...")
     for scheme_code in scheme_codes:
 
