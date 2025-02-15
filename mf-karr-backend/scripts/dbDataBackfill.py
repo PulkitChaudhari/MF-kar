@@ -46,50 +46,47 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
 
 def main():
 
-    # Get starting and ending indexes from command line arguments
-    start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 
-    print(f"DB Data backfill process started for instrumentCodes >= {start_index} and instrumentCodes <= {end_index}")
-
-    scheme_codes = [mf['instrumentCode'] for mf in mf_data if mf['instrumentCode'] >= start_index and mf['instrumentCode'] <= end_index]
+    scheme_codes = [mf['instrumentCode'] for mf in mf_data]
     print(f"Starting to fetch latest data for mutual fund schemes...")
-    for scheme_code in scheme_codes:
 
-        results = fetch_latest_mf_data(scheme_code)
-        data = results['data']
+    # Open a file to write the SQL dump
+    with open('mf_data_dump.sql', 'w') as dump_file:
+        # Use the dynamic table name for the COPY statement
 
-        for keys in SORTED_RESULTS: 
-            if (SORTED_RESULTS[keys][0] <= scheme_code and SORTED_RESULTS[keys][1] >= scheme_code): 
-                tablename = keys[0],keys[1]
+        for scheme_code in scheme_codes:
+            results = fetch_latest_mf_data(scheme_code)
+            data = results['data']
 
-        cursor.execute(f"""
-            SELECT MAX(nav_date) FROM mf_data_results_{tablename[0]}_{tablename[1]} where fund_id={scheme_code}
-        """)
-        results = cursor.fetchall()
-        if results and results[0][0] is not None:
-            lastAvailableDate = results[0][0] 
-            lastAvailableDate = str(lastAvailableDate)
-            year, month, day = lastAvailableDate.split('-')
-            lastAvailableDate = datetime(int(year), int(month), int(day))
-        else:
-            print(f"""No last max date found for %s""",scheme_code)
-            break
+            for keys in SORTED_RESULTS: 
+                if (SORTED_RESULTS[keys][0] <= scheme_code and SORTED_RESULTS[keys][1] >= scheme_code): 
+                    tablename = keys[0], keys[1]
+            
+            dump_file.write(f"COPY mf_data_results_{tablename[0]}_{tablename[1]} (nav_date, nav_value, fund_id) FROM STDIN;\n")
 
-        for nav_data in data:
-            date = nav_data['date']
-            nav = nav_data['nav']
-            datetime_object = datetime.strptime(date, '%d-%m-%Y')  # Assuming date is in 'dd-mm-yyyy' format
-            year = datetime_object.year
-            month = datetime_object.month
-            day = datetime_object.day
-            if (lastAvailableDate >= datetime_object):
-                 break
-            print(nav,date,tablename)
             cursor.execute(f"""
-            INSERT INTO mf_data_results_{tablename[0]}_{tablename[1]} 
-            (nav_date, nav_value, fund_id) VALUES (TO_DATE(%s, 'dd-mm-yyyy'), %s, %s)
-            """, (str(date)+"-"+str(month)+"-"+str(year), nav, scheme_code))
+                SELECT MAX(nav_date) FROM mf_data_results_{tablename[0]}_{tablename[1]} where fund_id={scheme_code}
+            """)
+            results = cursor.fetchall()
+            if results and results[0][0] is not None:
+                lastAvailableDate = results[0][0] 
+                lastAvailableDate = str(lastAvailableDate)
+                year, month, day = lastAvailableDate.split('-')
+                lastAvailableDate = datetime(int(year), int(month), int(day))
+            else:
+                print(f"""No last max date found for %s""",scheme_code)
+                break
+
+            for nav_data in data:
+                date = nav_data['date']
+                nav = nav_data['nav']
+                datetime_object = datetime.strptime(date, '%d-%m-%Y')  # Assuming date is in 'dd-mm-yyyy' format
+                if (lastAvailableDate >= datetime_object):
+                    break
+                formatted_date = datetime_object.strftime('%Y-%m-%d')
+                dump_file.write(f"{formatted_date}\t{nav}\t{scheme_code}\n")
+
+        dump_file.write("\\.\n")
     conn.commit()
     cursor.close()
     conn.close()

@@ -11,7 +11,6 @@ import {
   Card,
   CardHeader,
 } from "@nextui-org/react";
-import { Image } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 
 import PortfolioChart from "./portfolioChart";
@@ -19,10 +18,7 @@ import PortfolioTable from "./portfolioTable";
 import { apiResponse } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
 import { config } from "../config/config";
-import { CardFooter } from "@heroui/card";
-import { CancelIcon } from "./CancelIcon";
-// import { Tooltip } from "@heroui/tooltip";
-// import {Button} from "@heroui/react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const columns = [
   {
@@ -50,6 +46,7 @@ export default function Home() {
   const [tableDataWeightageCopy, setTableDataWeightageCopy] = useState<any[]>(
     []
   );
+  const { data: session } = useSession();
   const [selectedInstrumentsData, setSelectedInstrumentsData] = useState<any>(
     []
   );
