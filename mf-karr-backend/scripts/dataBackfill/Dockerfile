@@ -17,4 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 VOLUME ["/app"]
 
 # Run the dbDataBackfill.py script
-ENTRYPOINT ["python", "dbDataBackfill.py"]
+CMD ["python", "dbDataBackfill.py"]
