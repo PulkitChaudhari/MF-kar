@@ -1,6 +1,6 @@
 import requests
 import time
-from allMfData import mf_data
+# from allMfData import mf_data
 from constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime
