@@ -11,7 +11,7 @@ COPY constants.py /app/
 COPY requirements.txt /app/
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Set the output directory for SQL dump
 VOLUME ["/app"]
