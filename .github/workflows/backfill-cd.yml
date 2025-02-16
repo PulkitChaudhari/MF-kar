@@ -1,25 +1,23 @@
-name: Backfill CD
+name: DB Backfill Script CD
 on:
   workflow_dispatch:
-    inputs:
-      starting_code:
-        description: 'Define Starting instrumentCode'     
-        required: true
-        default: "0"
-      ending_code:
-        description: 'Define Ending instrumentCode'     
-        required: true
-        default: "0"
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: Deploying Backfill Script image to AWS EC2
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up python 3.7
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.13
-    - name: Install dependencies
-      run: |
-        pip install -r ./mf-karr-backend/requirements.txt
-        python ./mf-karr-backend/scripts/dbDataBackfill.py ${{ github.event.inputs.starting_code }} ${{ github.event.inputs.ending_code }}
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        run: |
+          sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Pull latest image
+        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
+
+      - name: Remove older image
+        run: sudo docker rm -f db-backfill-script-container || true
+
+      - name: Run Docker Container
+        run: sudo docker run --name db-backfill-script-container -v ~:/app 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
