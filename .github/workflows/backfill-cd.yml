@@ -18,7 +18,7 @@ jobs:
 
       - name: Delete older image and Pull latest image
         run: |
-          sudo docker rmi $(sudo docker images '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script')
+          [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script')
           sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
 
       - name: Run Docker Container
