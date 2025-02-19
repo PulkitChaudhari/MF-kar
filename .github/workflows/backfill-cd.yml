@@ -12,12 +12,14 @@ jobs:
       - name: Docker Login
         run: |
           sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
-
-      - name: Pull latest image
-        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
-
-      - name: Remove older image
+          
+      - name: Remove older container
         run: sudo docker rm -f db-backfill-script-container || true
+
+      - name: Delete older image and Pull latest image
+        run: |
+          sudo docker rmi $(sudo docker images '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script')
+          sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
 
       - name: Run Docker Container
         run: sudo docker run --platform linux/amd64 --name db-backfill-script-container -v ~:/app 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
