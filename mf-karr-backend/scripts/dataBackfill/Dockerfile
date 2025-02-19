@@ -10,9 +10,6 @@ RUN apt-get update && \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Create necessary directories
-RUN mkdir -p /app
-
 # Copy only the required files
 COPY dbDataBackfill.py /app
 COPY allMfData.py /app
