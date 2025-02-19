@@ -3,7 +3,7 @@ import time
 from constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime
-import sys
+from allMfData import mf_data
 
 # Connect to PostgreSQL database
 # conn = psycopg2.connect(
@@ -46,8 +46,8 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
 def main():
 
 
-    # scheme_codes = [mf['instrumentCode'] for mf in mf_data]
-    scheme_codes = [120828]
+    scheme_codes = [mf['instrumentCode'] for mf in mf_data]
+    # scheme_codes = [120828]
     print(f"Starting to fetch latest data for mutual fund schemes...")
 
     # Open a file to write the SQL dump
