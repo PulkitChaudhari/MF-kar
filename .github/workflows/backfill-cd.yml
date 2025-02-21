@@ -11,8 +11,8 @@ on:
         required: true
         default: "10"
 jobs:
-  build:
-    name: Deploying Backfill Script image to AWS EC2
+  AWS ECR Login using Docker:
+    name: Pulling Backfill Script image to AWS EC2
     runs-on: self-hosted
     steps:
       - name: Checkout
@@ -22,67 +22,29 @@ jobs:
         run: |
           sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
 
-      - name: Remove older container
-        run: sudo docker rm -f db-backfill-script-container || true
-
       - name: Delete older image and Pull latest image
         run: |
           [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script')
           sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
 
-      - name: Run Docker Container
-        run: sudo docker run --name db-backfill-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ github.event.inputs.starting_index }} ${{ github.event.inputs.ending_index }}
-
-  run-backfill-100000:
-    name: Run Backfill Script [100000, 110000]
+  run-backfill:
+    name: Run Backfill Script
     runs-on: self-hosted
     needs: build
+    strategy:
+      matrix:
+        range:
+          - [100000, 110000]
+          - [110000, 120000]
+          - [120000, 130000]
+          - [130000, 140000]
+          - [140000, 150000]
+          - [150000, 160000]
+      max-parallel: 1
     steps:
-      - name: Run Docker Container
-        run: |
-          sudo docker run --name db-backfill-script-container-100000 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest 100000 110000
+      - name: Remove older container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
+        run: sudo docker rm -f db-backfill-script-container-${{ matrix.range[0] }} || true
 
-  run-backfill-110000:
-    name: Run Backfill Script [110000, 120000]
-    runs-on: self-hosted
-    needs: run-backfill-100000
-    steps:
-      - name: Run Docker Container
+      - name: Run Docker Container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
         run: |
-          sudo docker run --name db-backfill-script-container-110000 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest 110000 120000
-
-  run-backfill-120000:
-    name: Run Backfill Script [120000, 130000]
-    runs-on: self-hosted
-    needs: run-backfill-110000
-    steps:
-      - name: Run Docker Container
-        run: |
-          sudo docker run --name db-backfill-script-container-120000 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest 120000 130000
-
-  run-backfill-130000:
-    name: Run Backfill Script [130000, 140000]
-    runs-on: self-hosted
-    needs: run-backfill-120000
-    steps:
-      - name: Run Docker Container
-        run: |
-          sudo docker run --name db-backfill-script-container-130000 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest 130000 140000
-
-  run-backfill-140000:
-    name: Run Backfill Script [140000, 150000]
-    runs-on: self-hosted
-    needs: run-backfill-130000
-    steps:
-      - name: Run Docker Container
-        run: |
-          sudo docker run --name db-backfill-script-container-140000 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest 140000 150000
-
-  run-backfill-150000:
-    name: Run Backfill Script [150000, 160000]
-    runs-on: self-hosted
-    needs: run-backfill-140000
-    steps:
-      - name: Run Docker Container
-        run: |
-          sudo docker run --name db-backfill-script-container-150000 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest 150000 160000
+          sudo docker run --name db-backfill-script-container-${{ matrix.range[0] }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range[0] }} ${{ matrix.range[1] }}
