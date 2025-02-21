@@ -44,4 +44,8 @@ jobs:
 
       - name: Copy Docker files to EC2
         run: |
-          sudo docker cp 88054f398c11:. ./${{ matrix.range }}
+          sudo docker cp db-backfill-script-container-${{ matrix.range }}:. ./${{ matrix.range }}
+
+      - name: Remove Docker Container
+        run: |
+          sudo docker rm db-backfill-script-container-${{ matrix.range }}
