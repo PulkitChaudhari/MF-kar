@@ -1,6 +1,19 @@
 name: DB Backfill Script CD
 on:
   workflow_dispatch:
+    inputs:
+        starting_index:
+          description: 'Define Starting index'     
+          required: true
+          default: "0"
+        ending_index:
+          description: 'Define Ending index'     
+          required: true
+          default: "10"
+        time_delay:
+          description: 'Define Time Delay'     
+          required: true
+          default: "0"
 jobs:
   build:
     name: Deploying Backfill Script image to AWS EC2
@@ -22,4 +35,4 @@ jobs:
           sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
 
       - name: Run Docker Container
-        run: sudo docker run -d --name db-backfill-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest -v .:/app
+        run: sudo docker run -d --name db-backfill-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest -v .:/app ${{ github.event.inputs.starting_index }} ${{ github.event.inputs.ending_index }}
