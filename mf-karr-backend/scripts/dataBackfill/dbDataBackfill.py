@@ -4,6 +4,7 @@ from constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime
 from allMfData import mf_data
+import sys
 
 # Connect to PostgreSQL database
 # conn = psycopg2.connect(
