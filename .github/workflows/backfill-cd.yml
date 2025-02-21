@@ -24,11 +24,11 @@ jobs:
     needs: AWS-ECR-Login-Using-Docker
     strategy:
       matrix:
-        range: [100000,110000,120000,130000,140000,150000]
+        range: [100000, 110000, 120000, 130000, 140000, 150000]
       max-parallel: 1
     steps:
       - name: Remove older container for range ${{ matrix.range }} to ${{ matrix.range + 10000 }}
-        run: sudo docker rm -f db-backfill-script-container-${{ matrix.range[0] + 10000  }} || true
+        run: sudo docker rm -f db-backfill-script-container-${{ matrix.range + 10000  }} || true
 
       # - name: Run Docker Container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
       #   run: |
