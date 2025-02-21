@@ -182,7 +182,7 @@ export default function PortfolioChart({
         <Card>
           <CardHeader>
             <CardTitle className="flex gap-2 items-center">
-              Portfolio returns chart
+              If you would have invested 100 Rs.
               {/* <Autocomplete
                 defaultItems={chartIndexOptions}
                 listboxProps={{

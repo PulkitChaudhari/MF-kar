@@ -45,9 +45,11 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
 
 def main():
 
+    #Get starting and ending indexes from command line arguments
+    start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 
-    scheme_codes = [mf['instrumentCode'] for mf in mf_data]
-    # scheme_codes = [120828]
+    scheme_codes = [mf['instrumentCode'] for mf in mf_data if start_index <= mf['instrumentCode'] and end_index > mf['instrumentCode']]
     print(f"Starting to fetch latest data for mutual fund schemes...")
 
     # Open a file to write the SQL dump
