@@ -10,10 +10,6 @@ on:
           description: 'Define Ending index'     
           required: true
           default: "10"
-        time_delay:
-          description: 'Define Time Delay'     
-          required: true
-          default: "0"
 jobs:
   build:
     name: Deploying Backfill Script image to AWS EC2
