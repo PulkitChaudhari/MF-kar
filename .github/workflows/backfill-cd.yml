@@ -35,4 +35,4 @@ jobs:
           sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
 
       - name: Run Docker Container
-        run: sudo docker run -d --name db-backfill-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest -v .:/app ${{ github.event.inputs.starting_index }} ${{ github.event.inputs.ending_index }}
+        run: sudo docker run --name db-backfill-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest -v .:/app ${{ github.event.inputs.starting_index }} ${{ github.event.inputs.ending_index }}
