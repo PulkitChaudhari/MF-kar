@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Docker Container for range ${{ matrix.range }}
         run: |
-          sudo docker run --name db-backfill-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range }} $NEXT_RANGE
+          sudo docker run --name db-backfill-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range }} ${{ env.NEXT_RANGE }}
 
       - name: Copy Docker files to EC2
         run: |
@@ -48,4 +48,4 @@ jobs:
 
       - name: Remove Docker Container
         run: |
-          sudo docker rm db-backfill-script-container-${{ matrix.range }}
+          sudo docker rm -f db-backfill-script-container-${{ matrix.range }} || true
