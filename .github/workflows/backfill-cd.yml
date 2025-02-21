@@ -31,7 +31,7 @@ jobs:
         id: set_next_range
         run: echo "NEXT_RANGE=$(( ${{ matrix.range }} + 10000 ))" >> $GITHUB_ENV
 
-      - name: Remove older container for range ${{ matrix.range }} to $NEXT_RANGE
+      - name: Remove older container for range ${{ matrix.range }}
         run: sudo docker rm -f db-backfill-script-container-${{ matrix.range }} || true
 
       - name: Use next range value
