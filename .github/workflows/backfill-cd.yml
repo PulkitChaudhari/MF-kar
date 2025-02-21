@@ -1,17 +1,8 @@
 name: DB Backfill Script CD
 on:
   workflow_dispatch:
-    inputs:
-      starting_index:
-        description: "Define Starting index"
-        required: true
-        default: "0"
-      ending_index:
-        description: "Define Ending index"
-        required: true
-        default: "10"
 jobs:
-  AWS ECR Login using Docker:
+  AWS-ECR-Login-Using-Docker:
     name: Pulling Backfill Script image to AWS EC2
     runs-on: self-hosted
     steps:
@@ -27,24 +18,18 @@ jobs:
           [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script')
           sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest
 
-  run-backfill:
+  Run-Backfill:
     name: Run Backfill Script
     runs-on: self-hosted
-    needs: build
+    needs: AWS-ECR-Login-Using-Docker
     strategy:
       matrix:
-        range:
-          - [100000, 110000]
-          - [110000, 120000]
-          - [120000, 130000]
-          - [130000, 140000]
-          - [140000, 150000]
-          - [150000, 160000]
+        range: [100000,110000,120000,130000,140000,150000]
       max-parallel: 1
     steps:
-      - name: Remove older container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
-        run: sudo docker rm -f db-backfill-script-container-${{ matrix.range[0] }} || true
+      - name: Remove older container for range ${{ matrix.range }} to ${{ matrix.range + 10000 }}
+        run: sudo docker rm -f db-backfill-script-container-${{ matrix.range[0] + 10000  }} || true
 
-      - name: Run Docker Container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
-        run: |
-          sudo docker run --name db-backfill-script-container-${{ matrix.range[0] }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range[0] }} ${{ matrix.range[1] }}
+      # - name: Run Docker Container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
+      #   run: |
+      #     sudo docker run --name db-backfill-script-container-${{ matrix.range[0] }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range[0] }} ${{ matrix.range[1] }}
