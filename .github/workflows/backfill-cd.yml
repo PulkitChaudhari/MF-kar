@@ -27,8 +27,15 @@ jobs:
         range: [100000, 110000, 120000, 130000, 140000, 150000]
       max-parallel: 1
     steps:
-      - name: Remove older container for range ${{ matrix.range }} to ${{ matrix.range + 10000 }}
-        run: sudo docker rm -f db-backfill-script-container-${{ matrix.range + 10000  }} || true
+      - name: Remove older container for range ${{ matrix.range }} to $(( ${{ matrix.range }} + 10000 ))
+        run: sudo docker rm -f db-backfill-script-container-$(( ${{ matrix.range }} + 10000 )) || true
+
+      - name: Set next range value
+        id: set_next_range
+        run: echo "NEXT_RANGE=$(( ${{ matrix.range }} + 10000 ))" >> $GITHUB_ENV
+
+      - name: Use next range value
+        run: echo "Next range value is $NEXT_RANGE"
 
       # - name: Run Docker Container for range ${{ matrix.range[0] }} to ${{ matrix.range[1] }}
       #   run: |
