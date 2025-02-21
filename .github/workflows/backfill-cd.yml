@@ -41,3 +41,7 @@ jobs:
       - name: Run Docker Container for range ${{ matrix.range }}
         run: |
           sudo docker run --name db-backfill-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range }} $NEXT_RANGE
+
+      - name: Copy Docker files to EC2
+        run: |
+          sudo docker cp 88054f398c11:. ./${{ matrix.range }}
