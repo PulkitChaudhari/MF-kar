@@ -60,7 +60,7 @@ jobs:
 
       - name: Copy data to database
         run: |
-          psql -h mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com -U postgres -p 5432 postgres < backfill-data-${{ matrix.range }}
+          psql -h mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com -U postgres -p 5432 postgres < ~/backfill-data-${{ matrix.range }}
 
       # - name: Remove Docker Container
       #   run: |
