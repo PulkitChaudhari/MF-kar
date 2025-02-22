@@ -88,8 +88,7 @@ def main():
                     break
                 formatted_date = datetime_object.strftime('%Y-%m-%d')
                 dump_file.write(f"{formatted_date}\t{nav}\t{scheme_code}\n")
-
-        dump_file.write("\\.\n")
+            dump_file.write("\\.\n")
     conn.commit()
     cursor.close()
     conn.close()
