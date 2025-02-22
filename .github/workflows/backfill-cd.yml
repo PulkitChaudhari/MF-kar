@@ -50,6 +50,11 @@ jobs:
       - name: Use next range value
         run: echo "Next range value is $NEXT_RANGE"
 
+      - name: testset
+        run: |
+          export PGPASSWORD="${{ secrets.PG_PASSWORD }}"
+          echo PGPASSWORD
+
       # - name: Run Docker Container for range ${{ matrix.range }}
       #   run: |
       #     sudo docker run --name db-backfill-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/backfill-script:latest ${{ matrix.range }} ${{ env.NEXT_RANGE }}
@@ -58,10 +63,10 @@ jobs:
       #   run: |
       #     sudo docker cp db-backfill-script-container-${{ matrix.range }}:./app/mf_data_dump.sql ~/backfill-data-${{ matrix.range }}
 
-      - name: Copy data to database
-        run: |
-          export PGPASSWORD="Pulkit#0102"
-          psql -h mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com -U postgres -p 5432 postgres < ~/backfill-data-${{ matrix.range }}
+      # - name: Copy data to database
+      #   run: |
+      #     export PGPASSWORD="Pulkit#0102"
+      #     psql -h mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com -U postgres -p 5432 postgres < ~/backfill-data-${{ matrix.range }}
 
       # - name: Remove Docker Container
       #   run: |
