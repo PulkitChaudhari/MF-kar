@@ -1,16 +1,61 @@
 name: DB Update Cron Job
 on:
-  schedule:
-    - cron: '58 8 * * *'
+  # schedule:
+  #   - cron: '58 8 * * *'
+  workflow_dispatch:
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  AWS-ECR-Login-Using-Docker:
+    name: Pulling Update Script image to AWS EC2
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up python 3.7
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.13
-    - name: Install dependencies
-      run: |
-        echo "hELLO WORLD"
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        run: |
+          sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Delete older image and Pull latest image
+        run: |
+          [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script')
+          sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script:latest
+
+  Run-Backfill:
+    name: Run Update Script
+    runs-on: self-hosted
+    needs: AWS-ECR-Login-Using-Docker
+    strategy:
+      matrix:
+        range:
+          [
+            100000,
+            105000,
+            110000,
+            115000,
+            120000,
+            125000,
+            130000,
+            135000,
+            140000,
+            145000,
+            150000,
+          ]
+      max-parallel: 1
+    steps:
+      - name: Set next range value
+        id: set_next_range
+        run: echo "NEXT_RANGE=$(( ${{ matrix.range }} + 5000 ))" >> $GITHUB_ENV
+
+      - name: Remove older container for range ${{ matrix.range }}
+        run: sudo docker rm -f db-update-script-container-${{ matrix.range }} || true
+
+      - name: Use next range value
+        run: echo "Next range value is $NEXT_RANGE"
+
+      - name: Run Docker Container for range ${{ matrix.range }}
+        run: |
+          sudo docker run --name db-update-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script:latest ${{ matrix.range }} ${{ env.NEXT_RANGE }}
+
+      - name: Remove Docker Container
+        run: |
+          sudo docker rm -f db-backfill-script-container-${{ matrix.range }} || true
