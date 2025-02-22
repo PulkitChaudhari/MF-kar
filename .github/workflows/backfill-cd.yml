@@ -53,7 +53,7 @@ jobs:
       - name: testset
         run: |
           export PGPASSWORD="${{ secrets.PG_PASSWORD }}"
-          echo PGPASSWORD
+          echo $PGPASSWORD
 
       # - name: Run Docker Container for range ${{ matrix.range }}
       #   run: |
