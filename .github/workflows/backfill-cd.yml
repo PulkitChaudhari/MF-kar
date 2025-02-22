@@ -24,13 +24,25 @@ jobs:
     needs: AWS-ECR-Login-Using-Docker
     strategy:
       matrix:
-        # range: [100000, 110000, 120000, 130000, 140000, 150000]
-        range: [100000]
+        range:
+          [
+            100000,
+            105000,
+            110000,
+            115000,
+            120000,
+            125000,
+            130000,
+            135000,
+            140000,
+            145000,
+            150000,
+          ]
       max-parallel: 1
     steps:
       - name: Set next range value
         id: set_next_range
-        run: echo "NEXT_RANGE=$(( ${{ matrix.range }} + 10000 ))" >> $GITHUB_ENV
+        run: echo "NEXT_RANGE=$(( ${{ matrix.range }} + 5000 ))" >> $GITHUB_ENV
 
       - name: Remove older container for range ${{ matrix.range }}
         run: sudo docker rm -f db-backfill-script-container-${{ matrix.range }} || true
