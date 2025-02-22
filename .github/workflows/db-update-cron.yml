@@ -58,4 +58,4 @@ jobs:
 
       - name: Remove Docker Container
         run: |
-          sudo docker rm -f db-backfill-script-container-${{ matrix.range }} || true
+          sudo docker rm -f db-update-script-container-${{ matrix.range }} || true
