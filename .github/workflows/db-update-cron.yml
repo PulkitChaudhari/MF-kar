@@ -1,7 +1,7 @@
 name: DB Update Cron Job
 on:
-  # schedule:
-  #   - cron: '0 0 * * *'
+  schedule:
+    - cron: '30 6 * * *'
   workflow_dispatch:
 jobs:
   build:
@@ -14,5 +14,6 @@ jobs:
         python-version: 3.13
     - name: Install dependencies
       run: |
-        pip install -r ./mf-karr-backend/requirements.txt
-        python ./mf-karr-backend/scripts/dbUpdateCron.py
+        # pip install -r ./mf-karr-backend/requirements.txt
+        # python ./mf-karr-backend/scripts/dbUpdateCron.py
+        echo "hELLO WORLD"
