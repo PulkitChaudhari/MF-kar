@@ -1,7 +1,7 @@
 name: DB Update Cron Job
 on:
   schedule:
-    - cron: '30 6 * * *'
+    - cron: '34 6 * * *'
   workflow_dispatch:
 jobs:
   build:
