@@ -1,8 +1,7 @@
 name: DB Update Cron Job
 on:
   schedule:
-    - cron: '38 6 * * *'
-  workflow_dispatch:
+    - cron: '44 6 * * *'
 jobs:
   build:
     runs-on: ubuntu-latest
