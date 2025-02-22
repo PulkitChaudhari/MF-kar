@@ -51,8 +51,8 @@ def main():
     end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 
     # scheme_codes = [mf['schemeCode'] for mf in mf_data]
-    scheme_codes = [mf['instrumentCode'] for mf in mf_data if start_index <= mf['instrumentCode'] and end_index > mf['instrumentCode']]
-    # scheme_codes = [120828]
+    # scheme_codes = [mf['instrumentCode'] for mf in mf_data if start_index <= mf['instrumentCode'] and end_index > mf['instrumentCode']]
+    scheme_codes = [120828]
 
     print(f"Starting to fetch latest data for mutual fund schemes...")
 
