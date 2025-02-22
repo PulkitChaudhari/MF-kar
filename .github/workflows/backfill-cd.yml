@@ -58,9 +58,9 @@ jobs:
       #   run: |
       #     sudo docker cp db-backfill-script-container-${{ matrix.range }}:./app/mf_data_dump.sql ~/backfill-data-${{ matrix.range }}
 
-        - name: Copy data to database
-          run: |
-            psql -h mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com -U postgres -p 5432 postgres < backfill-data-${{ matrix.range }}
+      - name: Copy data to database
+        run: |
+          psql -h mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com -U postgres -p 5432 postgres < backfill-data-${{ matrix.range }}
 
       # - name: Remove Docker Container
       #   run: |
