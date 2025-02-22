@@ -46,13 +46,10 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
 
 def main():
 
-    #Get starting and ending indexes from command line arguments
     start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 
-    # scheme_codes = [mf['schemeCode'] for mf in mf_data]
-    # scheme_codes = [mf['instrumentCode'] for mf in mf_data if start_index <= mf['instrumentCode'] and end_index > mf['instrumentCode']]
-    scheme_codes = [120828]
+    scheme_codes = [mf['instrumentCode'] for mf in mf_data if start_index <= mf['instrumentCode'] and end_index > mf['instrumentCode']]
 
     print(f"Starting to fetch latest data for mutual fund schemes...")
 
@@ -75,10 +72,10 @@ def main():
                     if (lastAvailableDate >= datetime_object):
                         print(f"""Nothing to insert for {scheme_code} in mf_data_results_{keys[0]}_{keys[1]}""")
                         break  
-                # cursor.execute(f"""
-                #     INSERT INTO mf_data_results_{keys[0]}_{keys[1]} (nav_date, nav_value, fund_id)
-                #     VALUES (TO_DATE(%s, 'dd-mm-yyyy'), %s, %s)
-                # """, (date, nav, scheme_code))
+                cursor.execute(f"""
+                    INSERT INTO mf_data_results_{keys[0]}_{keys[1]} (nav_date, nav_value, fund_id)
+                    VALUES (TO_DATE(%s, 'dd-mm-yyyy'), %s, %s)
+                """, (date, nav, scheme_code))
                 print(f"""Insertion for mf_data_results_{keys[0]}_{keys[1]} completed. for {scheme_code} for date {date}""")
                 # Commit changes and close the connection
                 conn.commit()
