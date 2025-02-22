@@ -1,8 +1,7 @@
 name: DB Update Cron Job
 on:
-  # schedule:
-  #   - cron: '58 8 * * *'
-  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 jobs:
   AWS-ECR-Login-Using-Docker:
     name: Pulling Update Script image to AWS EC2
@@ -20,7 +19,7 @@ jobs:
           [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script')
           sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/update-script:latest
 
-  Run-Backfill:
+  Run-Update:
     name: Run Update Script
     runs-on: self-hosted
     needs: AWS-ECR-Login-Using-Docker
