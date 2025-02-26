@@ -6,24 +6,18 @@ export default function LoginLogoutButton() {
   const { data: session }: any = useSession();
   if (session) {
     return (
-      <Button
-        isIconOnly
-        variant="bordered"
-        onPress={() => signOut()}
-        className="w-full"
-      >
-        Sign out
-      </Button>
+      <div className="flex items-center gap-2">
+        {/* <div>Hi, {session.user.name}! </div> */}
+        <Button
+          isIconOnly
+          variant="bordered"
+          onPress={() => signOut()}
+          className="w-full p-2"
+        >
+          Sign out {session.user.name} ?
+        </Button>
+      </div>
     );
   }
-  return (
-    <Button
-      isIconOnly
-      variant="bordered"
-      onPress={() => signIn()}
-      className="w-full"
-    >
-      Sign In
-    </Button>
-  );
+  return <div></div>;
 }

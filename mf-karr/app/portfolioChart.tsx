@@ -66,11 +66,9 @@ export default function PortfolioChart({
   function formatDate(date: string) {
     const tempDate = new Date(date);
     return (
-      tempDate.getDate() +
-      " " +
       monthMapping[tempDate.getMonth()] +
       ", " +
-      tempDate.getFullYear()
+      tempDate.getFullYear().toString().substring(2)
     );
   }
 

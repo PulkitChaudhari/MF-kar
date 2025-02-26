@@ -12,6 +12,10 @@ import {
   Tabs,
   Tab,
   CardBody,
+  Modal,
+  ModalBody,
+  ModalContent,
+  useDisclosure,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 import { GiInjustice } from "react-icons/gi";
@@ -21,8 +25,7 @@ import PortfolioTable from "./portfolioTable";
 import { apiResponse } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
 import { config } from "../config/config";
-import { useSession } from "next-auth/react";
-import { JusticeScaleIcon } from "./JusticeScaleIcon";
+import { useSession, signIn } from "next-auth/react";
 
 const columns = [
   {
@@ -56,7 +59,7 @@ export default function Home() {
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] =
     useState<boolean>(false);
   const [isShowTable, setIsShowTable] = useState<Boolean>(true);
-  const { data: session }: any = useSession();
+  const { data: session } = useSession();
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
@@ -243,107 +246,135 @@ export default function Home() {
   }
 
   return (
-    <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
-      <Card className="col-span-1 sm:col-span-1 gap-2 grid-rows-2 p-3 overflow-y-auto">
-        <div className="flex gap-2 w-full">
-          <Dropdown isDisabled={isAdjustWeightageEnabled} id="line-graph">
-            <DropdownTrigger>
-              <Button variant="bordered">{selectedTimePeriod}Y</Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              onAction={(timePeriod) => changeTimePeriod(timePeriod)}
-              aria-label="Dynamic Actions"
-              items={cagrValues}
-            >
-              {(item) => (
-                <DropdownItem key={item.key}>{item.label}</DropdownItem>
-              )}
-            </DropdownMenu>
-          </Dropdown>
-          {isAdjustWeightageEnabled ? (
+    <div>
+      {!session ? (
+        <Modal
+          isDismissable={false}
+          isKeyboardDismissDisabled={true}
+          isOpen={true}
+          hideCloseButton={true}
+          className="p-2"
+        >
+          <ModalContent>
+            <ModalBody>
+              <Button
+                isIconOnly
+                variant="bordered"
+                onPress={() => signIn("github")}
+                className="w-full p-2"
+              >
+                Sign In Github
+              </Button>
+              <Button
+                isIconOnly
+                variant="bordered"
+                onPress={() => signIn("google")}
+                className="w-full p-2"
+              >
+                Sign In Google
+              </Button>
+            </ModalBody>
+          </ModalContent>
+        </Modal>
+      ) : (
+        <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
+          <Card className="col-span-1 sm:col-span-1 gap-2 grid-rows-2 p-3 overflow-y-auto">
             <div className="flex gap-2 w-full">
-              <Button
-                isIconOnly
-                aria-label="Like"
-                color="success"
-                className="w-1/2"
-                isDisabled={!isSaveButtonEnabled}
-                onPress={() => onSave()}
-              >
-                Save
-              </Button>
-              <Button
-                isIconOnly
-                aria-label="Like1"
-                color="danger"
-                onPress={() => onCancelWeightAdjust()}
-                className="w-1/2"
-              >
-                {/* <CancelIcon /> */}
-                Cancel
-              </Button>
-            </div>
-          ) : (
-            <Button
-              isIconOnly
-              variant="bordered"
-              onPress={() => setIsAdjustWeightageEnabled(true)}
-              className="w-full"
-            >
-              <GiInjustice />
-            </Button>
-          )}
-          {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
+              <Dropdown isDisabled={isAdjustWeightageEnabled} id="line-graph">
+                <DropdownTrigger>
+                  <Button variant="bordered">{selectedTimePeriod}Y</Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  onAction={(timePeriod) => changeTimePeriod(timePeriod)}
+                  aria-label="Dynamic Actions"
+                  items={cagrValues}
+                >
+                  {(item) => (
+                    <DropdownItem key={item.key}>{item.label}</DropdownItem>
+                  )}
+                </DropdownMenu>
+              </Dropdown>
+              {isAdjustWeightageEnabled ? (
+                <div className="flex gap-2 w-full">
+                  <Button
+                    isIconOnly
+                    aria-label="Like"
+                    color="success"
+                    className="w-1/2"
+                    isDisabled={!isSaveButtonEnabled}
+                    onPress={() => onSave()}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    isIconOnly
+                    aria-label="Like1"
+                    color="danger"
+                    onPress={() => onCancelWeightAdjust()}
+                    className="w-1/2"
+                  >
+                    {/* <CancelIcon /> */}
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  onPress={() => setIsAdjustWeightageEnabled(true)}
+                  className="w-full"
+                >
+                  <GiInjustice />
+                </Button>
+              )}
+              {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
             <Tab key="photos" title="One-Time"></Tab>
             <Tab key="music" title="SIP"></Tab>
           </Tabs> */}
-          {session ? (
-            <div> Signed in as {session.user.email}</div>
-          ) : (
-            <div>Hello World</div>
-          )}
-        </div>
-        <PortfolioTable
-          selectedNavData={selectedInstrumentsData}
-          removeMututalFundFn={removeMutualFund}
-          timePeriod={Number(selectedTimePeriod)}
-          isAdjustWeightageEnabled={isAdjustWeightageEnabled}
-          isSaveEnabled={isSaveEnabled}
-          tableDataWeightageCopy={tableDataWeightageCopy}
-          setTableDataWeightageCopy={setTableDataWeightageCopy}
-        />
-      </Card>
-      <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
-        <div className="flex flex-col gap-3">
-          <Autocomplete
-            inputValue={list.filterText}
-            isLoading={list.isLoading}
-            items={list.items}
-            label="Select an instrument"
-            onInputChange={list.setFilterText}
-            onSelectionChange={($event) => addInstrument($event)}
-            menuTrigger="input"
-            className="w-full"
-            listboxProps={{
-              emptyContent: "No results found",
-            }}
-            isDisabled={isAdjustWeightageEnabled}
-          >
-            {(item: any) => (
-              <AutocompleteItem
-                key={item.instrumentCode}
-                className="capitalize"
+            </div>
+            <PortfolioTable
+              selectedNavData={selectedInstrumentsData}
+              removeMututalFundFn={removeMutualFund}
+              timePeriod={Number(selectedTimePeriod)}
+              isAdjustWeightageEnabled={isAdjustWeightageEnabled}
+              isSaveEnabled={isSaveEnabled}
+              tableDataWeightageCopy={tableDataWeightageCopy}
+              setTableDataWeightageCopy={setTableDataWeightageCopy}
+            />
+          </Card>
+          <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
+            <div className="flex flex-col gap-3">
+              <Autocomplete
+                inputValue={list.filterText}
+                isLoading={list.isLoading}
+                items={list.items}
+                label="Select an instrument"
+                onInputChange={list.setFilterText}
+                onSelectionChange={($event) => addInstrument($event)}
+                menuTrigger="input"
+                className="w-full"
+                listboxProps={{
+                  emptyContent: "No results found",
+                }}
+                isDisabled={isAdjustWeightageEnabled}
               >
-                {item.instrumentName}
-              </AutocompleteItem>
-            )}
-          </Autocomplete>
-          <PortfolioChart
-            instrumentsData={selectedInstrumentsData}
-            timePeriod={Number(selectedTimePeriod)}
-          />
+                {(item: any) => (
+                  <AutocompleteItem
+                    key={item.instrumentCode}
+                    className="capitalize"
+                  >
+                    {item.instrumentName}
+                  </AutocompleteItem>
+                )}
+              </Autocomplete>
+              <PortfolioChart
+                instrumentsData={selectedInstrumentsData}
+                timePeriod={Number(selectedTimePeriod)}
+              />
+            </div>
+          </Card>
         </div>
-      </Card>
+      )}
     </div>
   );
 }
