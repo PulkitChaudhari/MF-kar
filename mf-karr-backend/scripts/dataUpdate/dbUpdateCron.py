@@ -78,10 +78,10 @@ def main():
                 """, (date, nav, scheme_code))
                 print(f"""Insertion for mf_data_results_{keys[0]}_{keys[1]} completed. for {scheme_code} for date {date}""")
                 # Commit changes and close the connection
-                conn.commit()
-                print("Commit successful")
-                cursor.close()
-                conn.close()
+        conn.commit()
+        print("Commit successful")
+        cursor.close()
+        conn.close()
             
 
 if __name__ == "__main__":
