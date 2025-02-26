@@ -19,6 +19,7 @@ import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { GithubIcon, SearchIcon, Logo, GMailIcon } from "@/components/icons";
 import { LinkedinIcon } from "lucide-react";
+import LoginLogoutButton from "@/app/LoginLogoutButton";
 
 export const Navbar = () => {
   const searchInput = (
@@ -85,6 +86,7 @@ export const Navbar = () => {
             <GithubIcon className="text-default-500" />
           </Link>
           <ThemeSwitch />
+          <LoginLogoutButton />
         </NavbarItem>
       </NavbarContent>
     </NextUINavbar>

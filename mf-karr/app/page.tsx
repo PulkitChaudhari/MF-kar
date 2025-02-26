@@ -50,13 +50,13 @@ export default function Home() {
   const [tableDataWeightageCopy, setTableDataWeightageCopy] = useState<any[]>(
     []
   );
-  const { data: session } = useSession();
   const [selectedInstrumentsData, setSelectedInstrumentsData] = useState<any>(
     []
   );
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] =
     useState<boolean>(false);
   const [isShowTable, setIsShowTable] = useState<Boolean>(true);
+  const { data: session }: any = useSession();
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
@@ -293,10 +293,15 @@ export default function Home() {
               <GiInjustice />
             </Button>
           )}
-          <Tabs isDisabled={true} aria-label="Options" className="w-full">
+          {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
             <Tab key="photos" title="One-Time"></Tab>
             <Tab key="music" title="SIP"></Tab>
-          </Tabs>
+          </Tabs> */}
+          {session ? (
+            <div> Signed in as {session.user.email}</div>
+          ) : (
+            <div>Hello World</div>
+          )}
         </div>
         <PortfolioTable
           selectedNavData={selectedInstrumentsData}
