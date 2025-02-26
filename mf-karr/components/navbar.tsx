@@ -1,3 +1,4 @@
+"use client";
 import {
   Navbar as NextUINavbar,
   NavbarContent,
@@ -20,8 +21,11 @@ import { ThemeSwitch } from "@/components/theme-switch";
 import { GithubIcon, SearchIcon, Logo, GMailIcon } from "@/components/icons";
 import { LinkedinIcon } from "lucide-react";
 import LoginLogoutButton from "@/app/LoginLogoutButton";
+import { useSession } from "next-auth/react";
 
 export const Navbar = () => {
+  const { data: session } = useSession();
+
   const searchInput = (
     <Input
       aria-label="Search"
@@ -43,52 +47,57 @@ export const Navbar = () => {
     />
   );
 
-  return (
-    <NextUINavbar maxWidth="xl" position="sticky">
-      <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-        <NavbarBrand as="li" className="gap-3 max-w-fit">
-          <NextLink className="flex justify-start items-center gap-1" href="/">
-            <p className="font-bold text-inherit">MF-karr</p>
-          </NextLink>
-        </NavbarBrand>
-        <ul className="hidden lg:flex gap-4 justify-start ml-2">
-          {siteConfig.navItems.map((item: any) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium"
-                )}
-                color="foreground"
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
-        </ul>
-      </NavbarContent>
+  if (session)
+    return (
+      <NextUINavbar maxWidth="xl" position="sticky">
+        <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
+          <NavbarBrand as="li" className="gap-3 max-w-fit">
+            <NextLink
+              className="flex justify-start items-center gap-1"
+              href="/"
+            >
+              <p className="font-bold text-inherit">MF-karr</p>
+            </NextLink>
+          </NavbarBrand>
+          <ul className="hidden lg:flex gap-4 justify-start ml-2">
+            {siteConfig.navItems.map((item: any) => (
+              <NavbarItem key={item.href}>
+                <NextLink
+                  className={clsx(
+                    linkStyles({ color: "foreground" }),
+                    "data-[active=true]:text-primary data-[active=true]:font-medium"
+                  )}
+                  color="foreground"
+                  href={item.href}
+                >
+                  {item.label}
+                </NextLink>
+              </NavbarItem>
+            ))}
+          </ul>
+        </NavbarContent>
 
-      <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
-        <NavbarItem className="flex gap-2">
-          <Link isExternal aria-label="LinkedIn" href={siteConfig.links.mail}>
-            <GMailIcon className="text-default-500" />
-          </Link>
-          <Link
-            isExternal
-            aria-label="LinkedIn"
-            href={siteConfig.links.linkedin}
-          >
-            <LinkedinIcon className="text-default-500" />
-          </Link>
+        <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
+          <NavbarItem className="flex gap-2">
+            <Link isExternal aria-label="LinkedIn" href={siteConfig.links.mail}>
+              <GMailIcon className="text-default-500" />
+            </Link>
+            <Link
+              isExternal
+              aria-label="LinkedIn"
+              href={siteConfig.links.linkedin}
+            >
+              <LinkedinIcon className="text-default-500" />
+            </Link>
 
-          <Link isExternal aria-label="Github" href={siteConfig.links.github}>
-            <GithubIcon className="text-default-500" />
-          </Link>
-          <ThemeSwitch />
-          <LoginLogoutButton />
-        </NavbarItem>
-      </NavbarContent>
-    </NextUINavbar>
-  );
+            <Link isExternal aria-label="Github" href={siteConfig.links.github}>
+              <GithubIcon className="text-default-500" />
+            </Link>
+            <ThemeSwitch />
+            <LoginLogoutButton />
+          </NavbarItem>
+        </NavbarContent>
+      </NextUINavbar>
+    );
+  else return <div></div>;
 };
