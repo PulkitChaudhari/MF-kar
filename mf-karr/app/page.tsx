@@ -16,16 +16,20 @@ import {
   ModalBody,
   ModalContent,
   useDisclosure,
+  ModalFooter,
+  Input,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 import { GiInjustice } from "react-icons/gi";
-
+import { TfiSave } from "react-icons/tfi";
+import { RxCross2 } from "react-icons/rx";
 import PortfolioChart from "./portfolioChart";
 import PortfolioTable from "./portfolioTable";
 import { apiResponse } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
 import { config } from "../config/config";
 import { useSession, signIn } from "next-auth/react";
+import { FaCheck } from "react-icons/fa6";
 
 const columns = [
   {
@@ -60,6 +64,9 @@ export default function Home() {
     useState<boolean>(false);
   const [isShowTable, setIsShowTable] = useState<Boolean>(true);
   const { data: session } = useSession();
+  const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
+    useState<boolean>(false);
+  const [portfolioName, setPortfolioName] = useState("");
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
@@ -170,7 +177,6 @@ export default function Home() {
     // Removing scheme from the table
     let tempData = { ...selectedInstrumentsData };
     delete tempData[item.instrumentCode];
-    console.log(item, tempData);
     tempData = updateWeight(tempData);
     setSelectedInstrumentsData(tempData);
   };
@@ -245,6 +251,29 @@ export default function Home() {
     setIsAdjustWeightageEnabled(false);
   }
 
+  function savePortfolio() {
+    const toBeSentData: any[] = [];
+    Object.keys(selectedInstrumentsData).forEach((key) => {
+      const weightage = selectedInstrumentsData[key].weightage;
+      toBeSentData.push({ instrumentCode: key, weightage: weightage });
+    });
+    fetch(config.apiUrl + `/api/portfolio/save`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailId: session?.user?.email,
+        instrumentsData: toBeSentData,
+        portfolioName: portfolioName,
+      }),
+    }).then(async (resp) => {
+      console.log(resp);
+    });
+    console.log("Portfolio saved");
+    setShowSavePortfolioNameModal(false);
+  }
+
   return (
     <div>
       {!session ? (
@@ -277,102 +306,146 @@ export default function Home() {
           </ModalContent>
         </Modal>
       ) : (
-        <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
-          <Card className="col-span-1 sm:col-span-1 gap-2 grid-rows-2 p-3 overflow-y-auto">
-            <div className="flex gap-2 w-full">
-              <Dropdown isDisabled={isAdjustWeightageEnabled} id="line-graph">
-                <DropdownTrigger>
-                  <Button variant="bordered">{selectedTimePeriod}Y</Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  onAction={(timePeriod) => changeTimePeriod(timePeriod)}
-                  aria-label="Dynamic Actions"
-                  items={cagrValues}
-                >
-                  {(item) => (
-                    <DropdownItem key={item.key}>{item.label}</DropdownItem>
-                  )}
-                </DropdownMenu>
-              </Dropdown>
-              {isAdjustWeightageEnabled ? (
-                <div className="flex gap-2 w-full">
-                  <Button
-                    isIconOnly
-                    aria-label="Like"
-                    color="success"
-                    className="w-1/2"
-                    isDisabled={!isSaveButtonEnabled}
-                    onPress={() => onSave()}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    isIconOnly
-                    aria-label="Like1"
-                    color="danger"
-                    onPress={() => onCancelWeightAdjust()}
-                    className="w-1/2"
-                  >
-                    {/* <CancelIcon /> */}
-                    Cancel
-                  </Button>
-                </div>
-              ) : (
+        <div>
+          <Modal
+            isDismissable={false}
+            isKeyboardDismissDisabled={true}
+            isOpen={showSavePortfolioNameModal}
+            hideCloseButton={true}
+            className="p-2"
+          >
+            <ModalContent>
+              <Input
+                label="Portfolio Name"
+                type="text"
+                value={portfolioName}
+                onValueChange={setPortfolioName}
+              />
+              <ModalBody></ModalBody>
+              <ModalFooter>
                 <Button
                   isIconOnly
                   variant="bordered"
-                  onPress={() => setIsAdjustWeightageEnabled(true)}
-                  className="w-full"
+                  className="w-full hover:bg-green-200 transition-all"
+                  onPress={() => savePortfolio()}
                 >
-                  <GiInjustice />
+                  <FaCheck />
                 </Button>
-              )}
-              {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  className="w-full hover:bg-red-200 transition-all"
+                  onPress={() => setShowSavePortfolioNameModal(false)}
+                >
+                  <RxCross2 />
+                </Button>
+              </ModalFooter>
+            </ModalContent>
+          </Modal>
+          <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
+            <Card className="col-span-1 sm:col-span-1 gap-2 grid-rows-2 p-3 overflow-y-auto">
+              <div className="flex gap-2 w-full">
+                <Dropdown isDisabled={isAdjustWeightageEnabled} id="line-graph">
+                  <DropdownTrigger>
+                    <Button variant="bordered">{selectedTimePeriod}Y</Button>
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    onAction={(timePeriod) => changeTimePeriod(timePeriod)}
+                    aria-label="Dynamic Actions"
+                    items={cagrValues}
+                  >
+                    {(item) => (
+                      <DropdownItem key={item.key}>{item.label}</DropdownItem>
+                    )}
+                  </DropdownMenu>
+                </Dropdown>
+                {isAdjustWeightageEnabled ? (
+                  <div className="flex gap-2 w-full">
+                    <Button
+                      isIconOnly
+                      aria-label="Like"
+                      color="success"
+                      className="w-1/2"
+                      isDisabled={!isSaveButtonEnabled}
+                      onPress={() => onSave()}
+                    >
+                      <FaCheck />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      aria-label="Like1"
+                      color="danger"
+                      onPress={() => onCancelWeightAdjust()}
+                      className="w-1/2"
+                    >
+                      <RxCross2 />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    onPress={() => setIsAdjustWeightageEnabled(true)}
+                    className="w-full"
+                  >
+                    <GiInjustice />
+                  </Button>
+                )}
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  className="w-full"
+                  onPress={() => setShowSavePortfolioNameModal(true)}
+                >
+                  <TfiSave />
+                </Button>
+                {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
             <Tab key="photos" title="One-Time"></Tab>
             <Tab key="music" title="SIP"></Tab>
           </Tabs> */}
-            </div>
-            <PortfolioTable
-              selectedNavData={selectedInstrumentsData}
-              removeMututalFundFn={removeMutualFund}
-              timePeriod={Number(selectedTimePeriod)}
-              isAdjustWeightageEnabled={isAdjustWeightageEnabled}
-              isSaveEnabled={isSaveEnabled}
-              tableDataWeightageCopy={tableDataWeightageCopy}
-              setTableDataWeightageCopy={setTableDataWeightageCopy}
-            />
-          </Card>
-          <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
-            <div className="flex flex-col gap-3">
-              <Autocomplete
-                inputValue={list.filterText}
-                isLoading={list.isLoading}
-                items={list.items}
-                label="Select an instrument"
-                onInputChange={list.setFilterText}
-                onSelectionChange={($event) => addInstrument($event)}
-                menuTrigger="input"
-                className="w-full"
-                listboxProps={{
-                  emptyContent: "No results found",
-                }}
-                isDisabled={isAdjustWeightageEnabled}
-              >
-                {(item: any) => (
-                  <AutocompleteItem
-                    key={item.instrumentCode}
-                    className="capitalize"
-                  >
-                    {item.instrumentName}
-                  </AutocompleteItem>
-                )}
-              </Autocomplete>
-              <PortfolioChart
-                instrumentsData={selectedInstrumentsData}
+              </div>
+              <PortfolioTable
+                selectedNavData={selectedInstrumentsData}
+                removeMututalFundFn={removeMutualFund}
                 timePeriod={Number(selectedTimePeriod)}
+                isAdjustWeightageEnabled={isAdjustWeightageEnabled}
+                isSaveEnabled={isSaveEnabled}
+                tableDataWeightageCopy={tableDataWeightageCopy}
+                setTableDataWeightageCopy={setTableDataWeightageCopy}
               />
-            </div>
-          </Card>
+            </Card>
+            <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
+              <div className="flex flex-col gap-3">
+                <Autocomplete
+                  inputValue={list.filterText}
+                  isLoading={list.isLoading}
+                  items={list.items}
+                  label="Select an instrument"
+                  onInputChange={list.setFilterText}
+                  onSelectionChange={($event) => addInstrument($event)}
+                  menuTrigger="input"
+                  className="w-full"
+                  listboxProps={{
+                    emptyContent: "No results found",
+                  }}
+                  isDisabled={isAdjustWeightageEnabled}
+                >
+                  {(item: any) => (
+                    <AutocompleteItem
+                      key={item.instrumentCode}
+                      className="capitalize"
+                    >
+                      {item.instrumentName}
+                    </AutocompleteItem>
+                  )}
+                </Autocomplete>
+                <PortfolioChart
+                  instrumentsData={selectedInstrumentsData}
+                  timePeriod={Number(selectedTimePeriod)}
+                />
+              </div>
+            </Card>
+          </div>
         </div>
       )}
     </div>
