@@ -15,16 +15,7 @@ import {
 } from "@nextui-org/react";
 
 import { TrendingDown, TrendingUp } from "lucide-react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-} from "recharts";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -62,12 +53,14 @@ export default function PortfolioChart({
   const [portfolioReturn, setPortfolioReturn] = useState<Number>(0);
 
   const [chartData, setChartData] = useState<any[]>([]);
+  const [initialValue, setInitialValue] = useState(100);
+  const [finalValue, setFinalValue] = useState(100);
 
   function formatDate(date: string) {
     const tempDate = new Date(date);
     return (
       monthMapping[tempDate.getMonth()] +
-      ", " +
+      " " +
       tempDate.getFullYear().toString().substring(2)
     );
   }
@@ -139,6 +132,8 @@ export default function PortfolioChart({
       const tempPortfolioReturn =
         tempChartData[tempChartData.length - 1].nav - 100;
       setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
+      setInitialValue(100);
+      setFinalValue(tempChartData[tempChartData.length - 1].nav);
       setChartData(tempChartData);
     }
   }, [instrumentsData]);
@@ -179,37 +174,59 @@ export default function PortfolioChart({
         {/* {chartData !== undefined ? chartData["120828"][0].date : "nope"} */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex gap-2 items-center">
-              If you would have invested 100 Rs.
-              {/* <Autocomplete
-                defaultItems={chartIndexOptions}
-                listboxProps={{
-                  emptyContent: "Your own empty content text.",
-                }}
-                menuTrigger="input"
-                label="Select Index"
-                className="w-3/4"
-              >
-                {(item) => (
-                  <AutocompleteItem key={item.value}>
-                    {item.label}
-                  </AutocompleteItem>
-                )}
-              </Autocomplete> */}
-              {/* <div className="flex items-center space-x-2">
-                <Label className="w-min">Line Graph</Label>
-                <Switch
-                  id="line-graph"
-                  onClick={() => setShowLineChart(!showLineChart)}
-                />
-                <Label className="w-min" htmlFor="line-graph">
-                  Area Graph
-                </Label>
-              </div> */}
+            <CardTitle className="flex gap-2 items-center w-full">
+              <div className="flex flex-row sm:flex-col gap-1">
+                <div className="flex gap-2">
+                  <div className="flex flex-col justify-center items-center">
+                    <div>Invested Amount</div> <div>{initialValue}</div>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div>Final Amount</div> <div>{finalValue}</div>
+                  </div>
+                  {finalValue < initialValue ? (
+                    <div className="flex flex-col items-center">
+                      <div>Loss</div>
+                      <div>
+                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div>Gain</div>
+                      <div>
+                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}{" "}
+                        %
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex flex-col justify-center items-center">
+                    <div>Invested Amount</div> <div>{initialValue}</div>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div>Final Amount</div> <div>{finalValue}</div>
+                  </div>
+                  {finalValue < initialValue ? (
+                    <div className="flex flex-col items-center">
+                      <div>Loss</div>
+                      <div>
+                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div>Gain</div>
+                      <div>
+                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}{" "}
+                        %
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div></div>
+              </div>
             </CardTitle>
-            {/* <CardDescription>
-              Show the performance of your portfolio compared to
-            </CardDescription> */}
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig}>
@@ -224,6 +241,13 @@ export default function PortfolioChart({
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  // tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <YAxis
+                  dataKey="nav"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}

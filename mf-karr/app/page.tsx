@@ -9,15 +9,12 @@ import {
   DropdownItem,
   Button,
   Card,
-  Tabs,
-  Tab,
-  CardBody,
   Modal,
   ModalBody,
   ModalContent,
-  useDisclosure,
   ModalFooter,
   Input,
+  Form,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 import { GiInjustice } from "react-icons/gi";
@@ -30,6 +27,7 @@ import { cagrValues } from "./constants";
 import { config } from "../config/config";
 import { useSession, signIn } from "next-auth/react";
 import { FaCheck } from "react-icons/fa6";
+import { CiExport } from "react-icons/ci";
 
 const columns = [
   {
@@ -63,10 +61,14 @@ export default function Home() {
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] =
     useState<boolean>(false);
   const [isShowTable, setIsShowTable] = useState<Boolean>(true);
-  const { data: session } = useSession();
   const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
     useState<boolean>(false);
   const [portfolioName, setPortfolioName] = useState("");
+  const [errors, setErrors] = React.useState({});
+  const [showSavedPortolioModal, setShowSavedPortolioModal] =
+    useState<boolean>(false);
+  const [userSavedPortfolios, setUserSavedPortfolios] = useState<any[]>([]);
+  const { data: session } = useSession();
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
@@ -158,18 +160,19 @@ export default function Home() {
     );
   }
 
-  function addInstrument(instrumentValue: any) {
+  async function addInstrument(instrumentValue: any) {
     if (instrumentValue !== null) {
-      generateInstrumentData(instrumentValue, selectedTimePeriod).then(
-        (instrumentData: any) => {
-          let tempInstrumentData = {
-            ...selectedInstrumentsData,
-            [instrumentValue]: instrumentData,
-          };
-          tempInstrumentData = updateWeight(tempInstrumentData);
-          setSelectedInstrumentsData(tempInstrumentData);
-        }
+      const instrumentData = await generateInstrumentData(
+        instrumentValue,
+        selectedTimePeriod
       );
+      let tempInstrumentData = await {
+        ...selectedInstrumentsData,
+        [instrumentValue]: instrumentData,
+      };
+      tempInstrumentData = updateWeight(tempInstrumentData);
+      setSelectedInstrumentsData(tempInstrumentData);
+      return tempInstrumentData;
     }
   }
 
@@ -234,10 +237,13 @@ export default function Home() {
     setToBeData(posSelectedInstrumentsData);
   }
 
-  function onSave() {
-    let keysArr = Object.keys(selectedInstrumentsData);
-    let tempData = { ...selectedInstrumentsData };
-    toBeData.forEach((data: any) => {
+  function onSave(
+    toBeDataWeightage: any = toBeData,
+    instrumentsData: any = selectedInstrumentsData
+  ) {
+    let keysArr = Object.keys(instrumentsData);
+    let tempData = { ...instrumentsData };
+    toBeDataWeightage.forEach((data: any) => {
       if (keysArr.includes(data.instrumentCode)) {
         tempData[data.instrumentCode].weightage = Number(data.weightage);
       }
@@ -251,13 +257,13 @@ export default function Home() {
     setIsAdjustWeightageEnabled(false);
   }
 
-  function savePortfolio() {
+  async function savePortfolio(data: any) {
     const toBeSentData: any[] = [];
     Object.keys(selectedInstrumentsData).forEach((key) => {
       const weightage = selectedInstrumentsData[key].weightage;
       toBeSentData.push({ instrumentCode: key, weightage: weightage });
     });
-    fetch(config.apiUrl + `/api/portfolio/save`, {
+    return fetch(config.apiUrl + `/api/portfolio/save`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -265,13 +271,61 @@ export default function Home() {
       body: JSON.stringify({
         emailId: session?.user?.email,
         instrumentsData: toBeSentData,
-        portfolioName: portfolioName,
+        portfolioName: data.portfolioName,
       }),
-    }).then(async (resp) => {
-      console.log(resp);
     });
-    console.log("Portfolio saved");
-    setShowSavePortfolioNameModal(false);
+  }
+
+  const onSubmit = async (e: any) => {
+    e.preventDefault();
+
+    const data = Object.fromEntries(new FormData(e.currentTarget));
+    const result = savePortfolio(data).then((resp) => {
+      resp.json().then((res) => {
+        if (res == "Duplicate Portfolio name")
+          setShowSavePortfolioNameModal(false);
+        else setErrors({ portfolioName: res });
+      });
+    });
+  };
+
+  function fetchSavedPortfolio() {
+    return fetch(
+      config.apiUrl + `/api/portfolio/getPortfolios/` + session?.user?.email
+    );
+  }
+
+  function openPortfolioModal() {
+    fetchSavedPortfolio().then((resp) => {
+      resp.json().then((res) => {
+        let tempPortfolios: any[] = [];
+        res.forEach((portfolio: any) => {
+          tempPortfolios.push({
+            portfolioName: portfolio[2],
+            instruments: JSON.parse(portfolio[1]),
+          });
+        });
+        setUserSavedPortfolios(tempPortfolios);
+        setShowSavedPortolioModal(true);
+      });
+    });
+  }
+
+  function loadPortfolio(row: any) {
+    let tmepvar: any = {};
+    row.instruments.forEach(async (instrument: any) => {
+      const instrumentData = await generateInstrumentData(
+        instrument.instrumentCode,
+        selectedTimePeriod
+      );
+      tmepvar = {
+        ...tmepvar,
+        [instrument.instrumentCode]: instrumentData,
+      };
+      // tmepvar = updateWeight(tmepvar, instrument.weightage);
+      tmepvar[instrument.instrumentCode].weightage = instrument.weightage;
+      setSelectedInstrumentsData(tmepvar);
+    });
   }
 
   return (
@@ -314,36 +368,89 @@ export default function Home() {
             hideCloseButton={true}
             className="p-2"
           >
-            <ModalContent>
-              <Input
-                label="Portfolio Name"
-                type="text"
-                value={portfolioName}
-                onValueChange={setPortfolioName}
-              />
-              <ModalBody></ModalBody>
-              <ModalFooter>
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  className="w-full hover:bg-green-200 transition-all"
-                  onPress={() => savePortfolio()}
-                >
-                  <FaCheck />
-                </Button>
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  className="w-full hover:bg-red-200 transition-all"
-                  onPress={() => setShowSavePortfolioNameModal(false)}
-                >
-                  <RxCross2 />
-                </Button>
-              </ModalFooter>
+            <ModalContent className="w-full">
+              <Form
+                className="w-full"
+                validationErrors={errors}
+                onSubmit={onSubmit}
+              >
+                <ModalBody className="w-full">
+                  <Input
+                    label="Portfolio Name"
+                    type="text"
+                    value={portfolioName}
+                    onValueChange={setPortfolioName}
+                    name="portfolioName"
+                  />
+                </ModalBody>
+                <ModalFooter className="w-full pt-0">
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    className="w-full hover:bg-green-200 transition-all"
+                    // onPress={() => savePortfolio()}
+                    type="submit"
+                  >
+                    <FaCheck />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    className="w-full hover:bg-red-200 transition-all"
+                    onPress={() => setShowSavePortfolioNameModal(false)}
+                  >
+                    <RxCross2 />
+                  </Button>
+                </ModalFooter>
+              </Form>
+            </ModalContent>
+          </Modal>
+
+          <Modal
+            isDismissable={true}
+            isKeyboardDismissDisabled={true}
+            isOpen={showSavedPortolioModal}
+            hideCloseButton={false}
+            className="p-2"
+            onClose={() => setShowSavedPortolioModal(false)}
+          >
+            <ModalContent className="w-full">
+              <ModalBody className="w-full">
+                {userSavedPortfolios.map((row) => {
+                  return (
+                    <Card key={row.portfolioName} className="flex p-2 m-1">
+                      <div className="col-span-4 flex align-center justify-between p-2">
+                        <div className="text-sm flex items-center">
+                          {row?.portfolioName}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            isIconOnly
+                            variant="bordered"
+                            className="hover:bg-green-200 transition-all"
+                            onPress={() => loadPortfolio(row)}
+                            type="submit"
+                          >
+                            <FaCheck />
+                          </Button>
+                          <Button
+                            isIconOnly
+                            variant="bordered"
+                            className="hover:bg-red-200 transition-all"
+                          >
+                            <RxCross2 />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </ModalBody>
+              <ModalFooter className="w-full pt-0"></ModalFooter>
             </ModalContent>
           </Modal>
           <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
-            <Card className="col-span-1 sm:col-span-1 gap-2 grid-rows-2 p-3 overflow-y-auto">
+            <Card className="col-span-1 sm:col-span-1 gap-2 flex p-3 overflow-y-auto">
               <div className="flex gap-2 w-full">
                 <Dropdown isDisabled={isAdjustWeightageEnabled} id="line-graph">
                   <DropdownTrigger>
@@ -391,14 +498,6 @@ export default function Home() {
                     <GiInjustice />
                   </Button>
                 )}
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  className="w-full"
-                  onPress={() => setShowSavePortfolioNameModal(true)}
-                >
-                  <TfiSave />
-                </Button>
                 {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
             <Tab key="photos" title="One-Time"></Tab>
             <Tab key="music" title="SIP"></Tab>
@@ -413,6 +512,24 @@ export default function Home() {
                 tableDataWeightageCopy={tableDataWeightageCopy}
                 setTableDataWeightageCopy={setTableDataWeightageCopy}
               />
+              <div className="flex gap-2 justify-end">
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  className="w-full"
+                  onPress={() => setShowSavePortfolioNameModal(true)}
+                >
+                  <TfiSave />
+                </Button>
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  className="w-full"
+                  onPress={() => openPortfolioModal()}
+                >
+                  <CiExport />
+                </Button>
+              </div>
             </Card>
             <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
               <div className="flex flex-col gap-3">

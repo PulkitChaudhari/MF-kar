@@ -94,7 +94,7 @@ export default function PortfolioTable({
   }
 
   return (
-    <div className="flex gap-2 flex-col">
+    <div className="flex gap-2 flex-col grow">
       {!isAdjustWeightageEnabled
         ? tableData.map((row) => {
             return (

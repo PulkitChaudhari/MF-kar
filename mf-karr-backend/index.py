@@ -31,6 +31,11 @@ def savePortfolio():
     result = PortfolioService.savePortfolioForUser(emailId, instrumentsData,portfolioName)
     return jsonify(result)
 
+@app.route('/api/portfolio/getPortfolios/<string:emailId>', methods=['GET'])
+def getPortfolios(emailId):
+    result = PortfolioService.getPortfoliosForUser(emailId)
+    return jsonify(result)
+
 if __name__ == "__main__":
     instrumentService = InstrumentService()
     portfolioService = PortfolioService()
