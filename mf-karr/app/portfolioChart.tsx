@@ -51,10 +51,68 @@ export default function PortfolioChart({
   } satisfies ChartConfig;
 
   const [portfolioReturn, setPortfolioReturn] = useState<Number>(0);
-
+  const [maxDrawdown, setMaxDrawdown] = useState<number>(0);
+  const [sharpeRatio, setSharpeRatio] = useState<number>(0);
   const [chartData, setChartData] = useState<any[]>([]);
   const [initialValue, setInitialValue] = useState(100);
   const [finalValue, setFinalValue] = useState(100);
+
+  function calculateMaxDrawdown(data: any[]): number {
+    if (!data || data.length === 0) return 0;
+
+    let peak = data[0].nav;
+    let maxDrawdown = 0;
+
+    for (let i = 1; i < data.length; i++) {
+      const currentValue = data[i].nav;
+
+      if (currentValue > peak) {
+        peak = currentValue;
+      } else if (peak > 0) {
+        const drawdown = ((peak - currentValue) / peak) * 100;
+        if (drawdown > maxDrawdown) {
+          maxDrawdown = drawdown;
+        }
+      }
+    }
+
+    return maxDrawdown;
+  }
+
+  function calculateSharpeRatio(data: any[]): number {
+    if (!data || data.length < 2) return 0;
+
+    // Calculate daily returns
+    const returns: number[] = [];
+    for (let i = 1; i < data.length; i++) {
+      const dailyReturn = (data[i].nav - data[i - 1].nav) / data[i - 1].nav;
+      returns.push(dailyReturn);
+    }
+
+    // Calculate average return
+    const avgReturn =
+      returns.reduce((sum, value) => sum + value, 0) / returns.length;
+
+    // Calculate standard deviation (volatility)
+    const squaredDiffs = returns.map((value) => Math.pow(value - avgReturn, 2));
+    const variance =
+      squaredDiffs.reduce((sum, value) => sum + value, 0) / returns.length;
+    const stdDev = Math.sqrt(variance);
+
+    // Assume a risk-free rate of 3% annually, converted to same period as returns
+    // For daily returns, approximate daily risk-free rate
+    const annualRiskFreeRate = 0.03;
+    const periodRiskFreeRate = annualRiskFreeRate / 252; // Assuming ~252 trading days
+
+    // Calculate Sharpe ratio
+    if (stdDev === 0) return 0; // Avoid division by zero
+    const sharpeRatio = (avgReturn - periodRiskFreeRate) / stdDev;
+
+    // Annualize the Sharpe ratio
+    const annualizedSharpeRatio = sharpeRatio * Math.sqrt(252);
+
+    return annualizedSharpeRatio;
+  }
 
   function formatDate(date: string) {
     const tempDate = new Date(date);
@@ -135,6 +193,12 @@ export default function PortfolioChart({
       setInitialValue(100);
       setFinalValue(tempChartData[tempChartData.length - 1].nav);
       setChartData(tempChartData);
+
+      const calculatedMaxDrawdown = calculateMaxDrawdown(tempChartData);
+      setMaxDrawdown(calculatedMaxDrawdown);
+
+      const calculatedSharpeRatio = calculateSharpeRatio(tempChartData);
+      setSharpeRatio(calculatedSharpeRatio);
     }
   }, [instrumentsData]);
 
@@ -199,30 +263,14 @@ export default function PortfolioChart({
                       </div>
                     </div>
                   )}
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex flex-col justify-center items-center">
-                    <div>Invested Amount</div> <div>{initialValue}</div>
+                  <div className="flex flex-col items-center">
+                    <div>Max Drawdown</div>
+                    <div>{maxDrawdown.toFixed(2)}%</div>
                   </div>
                   <div className="flex flex-col items-center">
-                    <div>Final Amount</div> <div>{finalValue}</div>
+                    <div>Sharpe Ratio</div>
+                    <div>{sharpeRatio.toFixed(2)}</div>
                   </div>
-                  {finalValue < initialValue ? (
-                    <div className="flex flex-col items-center">
-                      <div>Loss</div>
-                      <div>
-                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center">
-                      <div>Gain</div>
-                      <div>
-                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}{" "}
-                        %
-                      </div>
-                    </div>
-                  )}
                 </div>
                 <div></div>
               </div>
@@ -270,16 +318,7 @@ export default function PortfolioChart({
           </CardContent>
           <CardFooter>
             <div className="flex w-full items-start gap-2 text-sm">
-              <div className="grid gap-2">
-                <div className="flex items-center gap-2 font-medium leading-none">
-                  Trending up by {portfolioReturn.toFixed(2)}%
-                  {Number(portfolioReturn.toFixed(2)) >= 0 ? (
-                    <TrendingUp className="h-4 w-4" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4" />
-                  )}
-                </div>
-              </div>
+              <div className="grid gap-2"></div>
             </div>
           </CardFooter>
         </Card>
