@@ -5,21 +5,21 @@ import pandas as pd
 import time  # Import the time module
 
 # Database connection parameters
-# conn = psycopg2.connect(
-#     dbname='postgres',
-#     user='postgres',
-#     password='Pulkit#0102',
-#     host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
-#     port='5432'
-# )
-
 conn = psycopg2.connect(
     dbname='postgres',
-    user='admin',
-    password='admin',
-    host='localhost',
+    user='postgres',
+    password='Pulkit#0102',
+    host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
     port='5432'
 )
+
+# conn = psycopg2.connect(
+#     dbname='postgres',
+#     user='admin',
+#     password='admin',
+#     host='localhost',
+#     port='5432'
+# )
 # indices = nse_get_index_list()
 indices = ['NIFTY 50']
 
@@ -28,17 +28,16 @@ cursor = conn.cursor()
 not_successful = []
 
 for index in indices:
-    end_date = "05-Mar-2025"
     start_date = "01-Jan-2000"
+    end_date = datetime.now().strftime("%d-%b-%Y")  # Get today's date
     data = index_history(index,start_date,end_date)
     print(f"Data fetched for {index}")
 
-    time.sleep(3)  # Add a sleep time of 3 seconds
+    time.sleep(3)
 
     if data.empty:
         not_successful.append(index)
     else:
-        # Create table if it doesn't exist
         cursor.execute(f"""
             CREATE TABLE IF NOT EXISTS index_{index.lower().replace(' ', '_')} (
                 nav_date DATE,
@@ -46,7 +45,6 @@ for index in indices:
             )
         """)
 
-        # Insert data into PostgreSQL
         for symbol, row in data.iterrows():
             cursor.execute(f"""
                 INSERT INTO index_{index.lower().replace(' ', '_')} (nav_date, nav_value)
