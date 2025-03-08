@@ -22,7 +22,7 @@ jobs:
     name: Run Backfill Script
     runs-on: self-hosted
     needs: AWS-ECR-Login-Using-Docker
-
+    steps:
       - name: Remove older container
         run: sudo docker rm -f db-index-backfill-script-container || true
 
