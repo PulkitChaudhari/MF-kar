@@ -1,0 +1,70 @@
+name: DB Index Update Cron Job
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  # workflow_dispatch:
+jobs:
+  Build:
+    name: Pushing Script Image to AWS ECR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push the image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.INDEX_UPDATE_REPO_NAME }}
+          IMAGE_TAG: latest
+        run: |
+          cd ./mf-karr-backend/scripts/indexUpdate
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  AWS-ECR-Login-Using-Docker:
+    name: Pulling Update Script image to AWS EC2
+    runs-on: self-hosted
+    needs: Build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        run: |
+          sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Delete older image and Pull latest image
+        run: |
+          [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-update-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-update-script')
+          sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-update-script:latest
+
+  Run-Update:
+    name: Run Update Script
+    runs-on: self-hosted
+    needs: AWS-ECR-Login-Using-Docker
+    steps:
+      - name: Remove older container for range ${{ matrix.range }}
+        run: sudo docker rm -f db-index-update-script-container-${{ matrix.range }} || true
+
+      - name: Use next range value
+        run: echo "Next range value is $NEXT_RANGE"
+
+      - name: Run Docker Container for range ${{ matrix.range }}
+        run: |
+          sudo docker run --name db-index-update-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-update-script:latest ${{ matrix.range }} ${{ env.NEXT_RANGE }}
+
+      - name: Remove Docker Container
+        run: |
+          sudo docker rm -f db-index-update-script-container-${{ matrix.range }} || true
