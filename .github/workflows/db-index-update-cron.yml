@@ -1,8 +1,8 @@
 name: DB Index Update Cron Job
 on:
-  schedule:
-    - cron: "0 0 * * *"
-  # workflow_dispatch:
+  # schedule:
+  #   - cron: "0 0 * * *"
+  workflow_dispatch:
 jobs:
   Build:
     name: Pushing Script Image to AWS ECR
@@ -55,16 +55,13 @@ jobs:
     runs-on: self-hosted
     needs: AWS-ECR-Login-Using-Docker
     steps:
-      - name: Remove older container for range ${{ matrix.range }}
-        run: sudo docker rm -f db-index-update-script-container-${{ matrix.range }} || true
+      - name: Remove older container for range
+        run: sudo docker rm -f db-index-update-script-container || true
 
-      - name: Use next range value
-        run: echo "Next range value is $NEXT_RANGE"
-
-      - name: Run Docker Container for range ${{ matrix.range }}
+      - name: Run Docker Container for range
         run: |
-          sudo docker run --name db-index-update-script-container-${{ matrix.range }} 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-update-script:latest ${{ matrix.range }} ${{ env.NEXT_RANGE }}
+          sudo docker run --name db-index-update-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-update-script:latest
 
       - name: Remove Docker Container
         run: |
-          sudo docker rm -f db-index-update-script-container-${{ matrix.range }} || true
+          sudo docker rm -f db-index-update-script-container || true
