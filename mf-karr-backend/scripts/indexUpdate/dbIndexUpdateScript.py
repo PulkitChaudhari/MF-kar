@@ -30,37 +30,36 @@ not_successful = []
 
 for index in indices:
     end_date = datetime.now().strftime("%d-%b-%Y")  # Get today's date
-    print(end_date)
-    # start_date = end_date
-    # data = index_history(index,start_date,end_date)
-    # print(f"Data fetched for {index} :- \n",data)
+    start_date = end_date
+    data = index_history(index,start_date,end_date)
+    print(f"Data fetched for {index} :- \n",data)
 
-    # time.sleep(3)
+    time.sleep(3)
 
-    # if data.empty:
-    #     not_successful.append(index)
-    # else:
-    #     date_format = "%d-%b-%Y"
-    #     date_variable = datetime.strptime(end_date, date_format)
-    #     db_formatted_date = date_variable.strftime("%d-%m-%Y")
+    if data.empty:
+        not_successful.append(index)
+    else:
+        date_format = "%d-%b-%Y"
+        date_variable = datetime.strptime(end_date, date_format)
+        db_formatted_date = date_variable.strftime("%d-%m-%Y")
 
-    #     for symbol, row in data.iterrows():
+        for symbol, row in data.iterrows():
 
-    #         cursor.execute(f"""
-    #             SELECT COUNT(*) FROM index_{index.lower().replace(' ', '_')} 
-    #             WHERE nav_date=TO_DATE('{db_formatted_date}', 'dd-mm-yyyy')
-    #         """)
-    #         results = cursor.fetchall()
+            cursor.execute(f"""
+                SELECT COUNT(*) FROM index_{index.lower().replace(' ', '_')} 
+                WHERE nav_date=TO_DATE('{db_formatted_date}', 'dd-mm-yyyy')
+            """)
+            results = cursor.fetchall()
 
-    #         if results and results[0][0] == 0:
-    #             cursor.execute(f"""
-    #                 INSERT INTO index_{index.lower().replace(' ', '_')} (nav_date, nav_value)
-    #                 VALUES (TO_DATE('{db_formatted_date}', 'dd-mm-yyyy'), {float(row['CLOSE'])})
-    #             """)
-    #             print(f"Insertion sucessful for {index} with {db_formatted_date}.")
+            if results and results[0][0] == 0:
+                cursor.execute(f"""
+                    INSERT INTO index_{index.lower().replace(' ', '_')} (nav_date, nav_value)
+                    VALUES (TO_DATE('{db_formatted_date}', 'dd-mm-yyyy'), {float(row['CLOSE'])})
+                """)
+                print(f"Insertion sucessful for {index} with {db_formatted_date}.")
         
-    #         else:
-    #             print(f"Duplicate entry for {index} with {db_formatted_date} exists.")
+            else:
+                print(f"Duplicate entry for {index} with {db_formatted_date} exists.")
 
 
 if len(not_successful) > 0:
