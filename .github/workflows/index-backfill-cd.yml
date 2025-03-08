@@ -1,0 +1,35 @@
+name: DB Index Backfill Script CD
+on:
+  workflow_dispatch:
+jobs:
+  AWS-ECR-Login-Using-Docker:
+    name: Pulling Backfill Script image to AWS EC2
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Docker Login
+        run: |
+          sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+
+      - name: Delete older image and Pull latest image
+        run: |
+          [ $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-backfill-script' | wc -l) -ge 1 ] && sudo docker rmi $(sudo docker images -q '715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-backfill-script')
+          sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-backfill-script:latest
+
+  Run-Backfill:
+    name: Run Backfill Script
+    runs-on: self-hosted
+    needs: AWS-ECR-Login-Using-Docker
+
+      - name: Remove older container
+        run: sudo docker rm -f db-index-backfill-script-container || true
+
+      - name: Run Docker Container
+        run: |
+          sudo docker run --name db-index-backfill-script-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/index-backfill-script:latest
+
+      - name: Remove Docker Container
+        run: |
+          sudo docker rm -f db-index-backfill-script-container || true
