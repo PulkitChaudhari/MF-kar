@@ -3,15 +3,10 @@ import psycopg2
 from datetime import datetime
 import pandas as pd
 import time  # Import the time module
+from ...db_config import get_db_connection
 
 # Database connection parameters
-conn = psycopg2.connect(
-    dbname='postgres',
-    user='postgres',
-    password='Pulkit#0102',
-    host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
-    port='5432'
-)
+conn = get_db_connection()
 
 # conn = psycopg2.connect(
 #     dbname='postgres',
@@ -64,3 +59,6 @@ if len(not_successful) > 0:
 conn.commit()
 conn.close()
 cursor.close()
+
+def main():
+    conn = get_db_connection()

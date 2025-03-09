@@ -4,6 +4,7 @@ import psycopg2
 from datetime import datetime, timedelta
 from typing import List  # Importing List from typing
 import json  # Importing json module
+from ..db_config import get_db_connection
 
 class PortfolioService:
     
@@ -17,13 +18,7 @@ class PortfolioService:
         #     host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
         #     port='5432'
         # )
-        conn = psycopg2.connect(
-            dbname='postgres',
-            user='pulkitchaudhari',
-            password='admin',
-            host='localhost',
-            port='5432'
-        )
+        conn = get_db_connection()
         cursor = conn.cursor()
         print(portfolioName)
         cursor.execute(f"""
@@ -61,13 +56,7 @@ class PortfolioService:
         #     host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
         #     port='5432'
         # )
-        conn = psycopg2.connect(
-            dbname='postgres',
-            user='pulkitchaudhari',
-            password='admin',
-            host='localhost',
-            port='5432'
-        )
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(f"""

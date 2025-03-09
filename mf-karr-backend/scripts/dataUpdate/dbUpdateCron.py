@@ -5,28 +5,10 @@ from constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime
 import sys
-
-# Connect to PostgreSQL database
-# conn = psycopg2.connect(
-#     dbname='postgres',
-#     user='admin',
-#     password='admin',
-#     host='localhost',
-#     port='5432'
-# )
-
-conn = psycopg2.connect(
-    dbname='postgres',
-    user='postgres',
-    password='Pulkit#0102',
-    host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
-    port='5432'
-)
-cursor = conn.cursor()
+from ...db_config import get_db_connection
 
 # Constants
 API_BASE_URL = "https://api.mfapi.in/mf/"
-# DELAY_SECONDS = float(sys.argv[0]) # Delay between requests to avoid rate limiting
 DELAY_SECONDS = 0
 
 def fetch_latest_mf_data(scheme_code: int) -> dict:
@@ -45,6 +27,8 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
         print(error_msg)
 
 def main():
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
     end_index = int(sys.argv[2]) if len(sys.argv) > 2 else 1

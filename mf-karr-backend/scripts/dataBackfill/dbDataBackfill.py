@@ -5,6 +5,7 @@ import psycopg2
 from datetime import datetime
 from allMfData import mf_data
 import sys
+from ...db_config import get_db_connection
 
 # Connect to PostgreSQL database
 # conn = psycopg2.connect(
@@ -15,13 +16,7 @@ import sys
 #     port='5432'
 # )
 
-conn = psycopg2.connect(
-    dbname='postgres',
-    user='postgres',
-    password='Pulkit#0102',
-    host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
-    port='5432'
-)
+conn = get_db_connection()
 cursor = conn.cursor()
 
 # Constants
@@ -45,6 +40,7 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
         print(error_msg)
 
 def main():
+    conn = get_db_connection()
 
     #Get starting and ending indexes from command line arguments
     start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0

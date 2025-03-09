@@ -1,5 +1,7 @@
 import psycopg2
+from ..db_config import get_db_connection
 from datetime import datetime, timedelta
+import pandas as pd
 
 class IndexService:
     
@@ -13,13 +15,7 @@ class IndexService:
         #     host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
         #     port='5432'
         # )
-        conn = psycopg2.connect(
-            dbname='postgres',
-            user='admin',
-            password='admin',
-            host='localhost',
-            port='5432'
-        )
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         # Get today's date

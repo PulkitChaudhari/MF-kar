@@ -1,5 +1,6 @@
 import psycopg2
 from allMfData import mf_data
+from ..db_config import get_db_connection
 
 # Database connection configuration
 # conn = psycopg2.connect(
@@ -35,9 +36,14 @@ def create_mf_data_table():
         )
     """)
 
-create_mf_data_table()
-insert_mf_data(mf_data)
-conn.commit()
-print("Commit successful")
-cursor.close()
-conn.close()
+def main():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    create_mf_data_table()
+    insert_mf_data(mf_data)
+    conn.commit()
+    print("Commit successful")
+    cursor.close()
+    conn.close()
+
+main()
