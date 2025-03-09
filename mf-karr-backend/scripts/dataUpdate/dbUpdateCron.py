@@ -5,7 +5,7 @@ from constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime
 import sys
-from ...db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 # Constants
 API_BASE_URL = "https://api.mfapi.in/mf/"

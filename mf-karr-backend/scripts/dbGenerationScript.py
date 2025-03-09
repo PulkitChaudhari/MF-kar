@@ -1,7 +1,7 @@
 import json
 import psycopg2
 import os
-from ..db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 def main():
     conn = get_db_connection()

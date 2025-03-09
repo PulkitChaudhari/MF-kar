@@ -1,6 +1,6 @@
 import psycopg2
 from allMfData import mf_data
-from ..db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 # Database connection configuration
 # conn = psycopg2.connect(

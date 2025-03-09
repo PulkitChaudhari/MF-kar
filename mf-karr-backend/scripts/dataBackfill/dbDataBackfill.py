@@ -5,7 +5,7 @@ import psycopg2
 from datetime import datetime
 from allMfData import mf_data
 import sys
-from ...db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 # Connect to PostgreSQL database
 # conn = psycopg2.connect(

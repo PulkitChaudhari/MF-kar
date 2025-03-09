@@ -1,5 +1,5 @@
 import psycopg2
-from ..db_config import get_db_connection
+from utils.db_config import get_db_connection
 from datetime import datetime, timedelta
 import pandas as pd
 

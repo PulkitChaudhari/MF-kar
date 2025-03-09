@@ -2,7 +2,7 @@ from scripts.allMfData import mf_data
 from scripts.constants import SORTED_RESULTS
 import psycopg2
 from datetime import datetime, timedelta
-from ..db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 class InstrumentService:
 

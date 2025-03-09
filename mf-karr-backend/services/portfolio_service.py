@@ -4,7 +4,7 @@ import psycopg2
 from datetime import datetime, timedelta
 from typing import List  # Importing List from typing
 import json  # Importing json module
-from ..db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 class PortfolioService:
     

@@ -3,7 +3,7 @@ import psycopg2
 from datetime import datetime
 import pandas as pd
 import time  # Import the time module
-from ...db_config import get_db_connection
+from utils.db_config import get_db_connection
 
 # Database connection parameters
 conn = get_db_connection()
