@@ -35,6 +35,8 @@ import {
 } from "@/components/ui/chart";
 import { Button } from "@nextui-org/button";
 import { monthMapping } from "./constants";
+import { config } from "../config/config";
+import { apiResponse } from "./interfaces/interfaces";
 
 export default function PortfolioChart({
   instrumentsData,
@@ -48,12 +50,17 @@ export default function PortfolioChart({
       label: "Desktop",
       color: "hsl(var(--chart-1))",
     },
+    mobile: {
+      label: "Mobile",
+      color: "hsl(var(--chart-2))",
+    },
   } satisfies ChartConfig;
 
   const [portfolioReturn, setPortfolioReturn] = useState<Number>(0);
   const [maxDrawdown, setMaxDrawdown] = useState<number>(0);
   const [sharpeRatio, setSharpeRatio] = useState<number>(0);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [indexData, setIndexData] = useState<any[]>([]);
   const [initialValue, setInitialValue] = useState(100);
   const [finalValue, setFinalValue] = useState(100);
 
@@ -77,6 +84,26 @@ export default function PortfolioChart({
     }
 
     return maxDrawdown;
+  }
+
+  async function fetchIndexData(
+    indexName: any,
+    timePeriod: any
+  ): Promise<apiResponse> {
+    return await fetch(config.apiUrl + `/api/index`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        indexCode: "nifty_50",
+        timePeriod: timePeriod,
+      }),
+    }).then(async (resp) => {
+      return await resp.json().then((apiData: apiResponse) => {
+        return apiData;
+      });
+    });
   }
 
   function calculateSharpeRatio(data: any[]): number {
@@ -121,6 +148,120 @@ export default function PortfolioChart({
       " " +
       tempDate.getFullYear().toString().substring(2)
     );
+  }
+
+  function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
+    const firstVal = apiData[0][1];
+    console.log(apiData);
+    let convertedData: any[] = [];
+
+    for (let idx = apiData.length - 1; idx >= 0; idx--) {
+      const nav = Number(apiData[idx][1]);
+      const date = new Date(Date.parse(apiData[idx][0]));
+      // if (date <= thresholdDate) break;
+      convertedData.push({
+        date: date.toString(),
+        nav: (nav * 100) / firstVal,
+      });
+    }
+
+    convertedData.reverse();
+    return convertedData;
+  }
+
+  function calculateCAGR(navsForRange: any[], timePeriod: Number) {
+    let vFinal = -1,
+      vBegin = -1;
+
+    if (navsForRange.length > 0) {
+      vBegin = navsForRange[0].nav;
+      vFinal = navsForRange[navsForRange.length - 1].nav;
+    }
+    return (
+      (Math.pow(vFinal / vBegin, 1 / Number(timePeriod)) - 1) *
+      100
+    ).toFixed(2);
+  }
+
+  async function generateIndexData() {
+    return await fetchIndexData("nifty_50", 1).then((resp: any) => {
+      const navsForRange = getNAVsForRange(
+        resp.nifty_50.indexData,
+        Number(timePeriod)
+      );
+
+      const instrumentObj: any = {
+        instrumentName: "Nifty 50",
+        cagr: calculateCAGR(navsForRange, Number(timePeriod)),
+        weightage: "",
+        navData: navsForRange,
+      };
+
+      console.log(navsForRange);
+
+      let myMap: any = {};
+
+      const dateArray: any[] = generateDateArray(timePeriod);
+
+      for (let idx = 0; idx < dateArray.length; idx++) {
+        const currentDate = dateArray[idx];
+        myMap[currentDate] = undefined;
+      }
+
+      // const instrumentData: any = instrumentsData[key];
+      // const weightage = instrumentData.weightage;
+      let unitsBought = 1;
+
+      const schemeDataAsObj: any = {};
+      navsForRange.forEach((data: any) => {
+        schemeDataAsObj[data.date] = data.nav * unitsBought;
+      });
+
+      console.log(schemeDataAsObj);
+
+      for (let idx = 0; idx < dateArray.length; idx++) {
+        const currentDate = dateArray[idx];
+        if (schemeDataAsObj[currentDate] === undefined && idx - 1 >= 0) {
+          schemeDataAsObj[currentDate] = schemeDataAsObj[dateArray[idx - 1]];
+        }
+      }
+
+      for (let idx = dateArray.length; idx >= 0; idx--) {
+        const currentDate = dateArray[idx];
+        if (
+          schemeDataAsObj[currentDate] === undefined &&
+          idx + 1 < dateArray.length
+        ) {
+          schemeDataAsObj[currentDate] = schemeDataAsObj[dateArray[idx + 1]];
+        }
+      }
+      console.log(schemeDataAsObj);
+
+      for (let idx = 0; idx < dateArray.length; idx++) {
+        const currentDate = dateArray[idx];
+        if (myMap[currentDate] === undefined) {
+          if (navsForRange.length === 0) myMap[currentDate] = 100;
+          else myMap[currentDate] = schemeDataAsObj[currentDate];
+        } else {
+          if (navsForRange.length === 0)
+            myMap[currentDate] = myMap[currentDate] + 100;
+          else
+            myMap[currentDate] =
+              myMap[currentDate] + schemeDataAsObj[currentDate];
+        }
+      }
+
+      const tempChartData: any[] = [];
+      Object.keys(myMap).forEach((key) => {
+        tempChartData.push({
+          date: formatDate(key),
+          nav: myMap[key] === undefined ? 0 : Number(myMap[key].toFixed(2)),
+        });
+      });
+
+      return tempChartData;
+      // return instrumentObj;
+    });
   }
 
   useEffect(() => {
@@ -192,7 +333,14 @@ export default function PortfolioChart({
       setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
       setInitialValue(100);
       setFinalValue(tempChartData[tempChartData.length - 1].nav);
-      setChartData(tempChartData);
+      console.log(tempChartData);
+      generateIndexData().then((indexData) => {
+        for (let i = 0; i < indexData.length; i++) {
+          tempChartData[i].navIndex = indexData[i].nav;
+        }
+        console.log(tempChartData);
+        setChartData(tempChartData);
+      });
 
       const calculatedMaxDrawdown = calculateMaxDrawdown(tempChartData);
       setMaxDrawdown(calculatedMaxDrawdown);
@@ -309,6 +457,63 @@ export default function PortfolioChart({
                   dataKey="nav"
                   type="monotone"
                   stroke="var(--color-desktop)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                {/* <ChartLegend content={<ChartLegendContent />} /> */}
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+          <CardFooter>
+            <div className="flex w-full items-start gap-2 text-sm">
+              <div className="grid gap-2"></div>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+      <div>
+        <Card>
+          <CardHeader></CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig}>
+              <LineChart
+                accessibilityLayer
+                data={chartData}
+                margin={{
+                  left: 12,
+                  right: 12,
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  // tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <YAxis
+                  dataKey="nav"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  // tickFormatter={(value) => value.slice(0, 3)}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent />}
+                />
+                <Line
+                  dataKey="nav"
+                  type="monotone"
+                  stroke="var(--color-desktop)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  dataKey="navIndex"
+                  type="monotone"
+                  stroke="var(--color-mobile)"
                   strokeWidth={2}
                   dot={false}
                 />

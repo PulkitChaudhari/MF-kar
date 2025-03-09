@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from services.instrument_service import InstrumentService
 from services.portfolio_service import PortfolioService
+from services.index_service import IndexService
 
 app = Flask(__name__)
 
@@ -15,11 +16,19 @@ def getInstruments(instrumentNamePattern):
     return jsonify(result)
 
 @app.route('/api/instrument', methods=['POST'])
-def getInstrument():
+def getInstrumentData():
     data = request.get_json()  # Retrieve the JSON body from the request
     instrumentCode = int(data.get('instrumentCode'))  # Extract instrumentCode from the body
     timePeriod = int(data.get('timePeriod'))  # Extract timePeriod from the body
     result = instrumentService.getInstrumentInfo(instrumentCode, timePeriod)
+    return jsonify(result)
+
+@app.route('/api/index', methods=['POST'])
+def getIndexData():
+    data = request.get_json()  # Retrieve the JSON body from the request
+    instrumentCode = data.get('indexCode')  # Extract instrumentCode from the body
+    timePeriod = int(data.get('timePeriod'))  # Extract timePeriod from the body
+    result = indexService.getIndexInfo(instrumentCode, timePeriod)
     return jsonify(result)
 
 @app.route('/api/portfolio/save', methods=['POST'])
@@ -39,4 +48,5 @@ def getPortfolios(emailId):
 if __name__ == "__main__":
     instrumentService = InstrumentService()
     portfolioService = PortfolioService()
+    indexService = IndexService()
     app.run(host='0.0.0.0', port=8081, debug=True)
