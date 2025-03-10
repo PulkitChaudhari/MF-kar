@@ -13,6 +13,7 @@ RUN apt-get update && \
 # Copy only the required files
 COPY dbIndexUpdateScript.py /app
 COPY requirements.txt /app
+# COPY utils/ /app/utils/
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

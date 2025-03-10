@@ -11,11 +11,11 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only the required files
-# COPY dbUpdateCron.py /app
-# COPY allMfData.py /app
-# COPY constants.py /app
-# COPY requirements.txt /app
-COPY scripts/ /app/scripts
+COPY dbUpdateCron.py /app
+COPY allMfData.py /app
+COPY constants.py /app
+COPY requirements.txt /app
+# COPY scripts/ /app/scripts
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
