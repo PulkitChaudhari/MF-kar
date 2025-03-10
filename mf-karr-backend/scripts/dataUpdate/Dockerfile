@@ -24,4 +24,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 VOLUME ["/app"]
 
 # Run the dbDataBackfill.py script
-ENTRYPOINT ["python","scripts/dataUpdate/dbUpdateCron.py"]
+ENTRYPOINT ["python","dbUpdateCron.py"]
