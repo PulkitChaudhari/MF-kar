@@ -27,7 +27,13 @@ def fetch_latest_mf_data(scheme_code: int) -> dict:
         print(error_msg)
 
 def main():
-    conn = get_db_connection()
+    conn = psycopg2.connect(
+        dbname='postgres',
+        user='postgres',
+        password='Pulkit#0102',
+        host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
+        port='5432'
+    )
     cursor = conn.cursor()
 
     start_index = int(sys.argv[1]) if len(sys.argv) > 1 else 0
