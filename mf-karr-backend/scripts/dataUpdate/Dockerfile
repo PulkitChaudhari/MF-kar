@@ -15,7 +15,7 @@ COPY dbUpdateCron.py /app
 COPY allMfData.py /app
 COPY constants.py /app
 COPY requirements.txt /app
-COPY utils/ /app/utils/
+COPY scripts/utils /app/utils
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
