@@ -3,10 +3,9 @@ import psycopg2
 from datetime import datetime
 import pandas as pd
 import time  # Import the time module
-from utils.db_config import get_db_connection
 
 # Database connection parameters
-conn = get_db_connection()
+# conn = get_db_connection()
 
 # conn = psycopg2.connect(
 #     dbname='postgres',
@@ -15,6 +14,13 @@ conn = get_db_connection()
 #     host='localhost',
 #     port='5432'
 # )
+conn = psycopg2.connect(
+    dbname='postgres',
+    user='postgres',
+    password='Pulkit#0102',
+    host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
+    port='5432'
+)
 # indices = nse_get_index_list()
 indices = ['NIFTY 50']
 
@@ -23,7 +29,7 @@ cursor = conn.cursor()
 not_successful = []
 
 for index in indices:
-    start_date = "01-Jan-2000"
+    start_date = "08-Mar-2025"
     end_date = datetime.now().strftime("%d-%b-%Y")  # Get today's date
     data = index_history(index,start_date,end_date)
     print(f"Data fetched for {index}")
