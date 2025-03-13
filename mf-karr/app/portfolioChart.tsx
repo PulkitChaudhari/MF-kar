@@ -263,7 +263,6 @@ export default function PortfolioChart({
   }
 
   useEffect(() => {
-    console.log(initialAmount, oldInitialNum);
     let tempChartData = chartData;
     tempChartData.forEach((data) => {
       data.nav = Number(
