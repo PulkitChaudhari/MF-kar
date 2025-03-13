@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Autocomplete,
   AutocompleteItem,
@@ -64,11 +64,12 @@ export default function Home() {
   const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
     useState<boolean>(false);
   const [portfolioName, setPortfolioName] = useState("");
-  const [errors, setErrors] = React.useState({});
+  const [errors, setErrors] = useState({});
   const [showSavedPortolioModal, setShowSavedPortolioModal] =
     useState<boolean>(false);
   const [userSavedPortfolios, setUserSavedPortfolios] = useState<any[]>([]);
   const { data: session } = useSession();
+  const [initialAmount, setInitialAmount] = useState<string>("100000");
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     let convertedData: any[] = [];
@@ -328,6 +329,16 @@ export default function Home() {
     });
   }
 
+  const usePrevious = (value: any) => {
+    const ref = useRef<any>();
+    useEffect(() => {
+      ref.current = value;
+    }, [value]);
+    return ref.current;
+  };
+
+  const oldInitialNum = usePrevious(initialAmount);
+
   return (
     <div>
       {!session ? (
@@ -512,23 +523,32 @@ export default function Home() {
                 tableDataWeightageCopy={tableDataWeightageCopy}
                 setTableDataWeightageCopy={setTableDataWeightageCopy}
               />
-              <div className="flex gap-2 justify-end">
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  className="w-full"
-                  onPress={() => setShowSavePortfolioNameModal(true)}
-                >
-                  <TfiSave />
-                </Button>
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  className="w-full"
-                  onPress={() => openPortfolioModal()}
-                >
-                  <CiExport />
-                </Button>
+              <div className="flex flex-col gap-2 justify-end">
+                <Input
+                  label="Initial Amount"
+                  type="number"
+                  value={initialAmount}
+                  onValueChange={(val) => setInitialAmount(val)}
+                  name="portfolioName"
+                />
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    className="w-full"
+                    onPress={() => setShowSavePortfolioNameModal(true)}
+                  >
+                    <TfiSave />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    className="w-full"
+                    onPress={() => openPortfolioModal()}
+                  >
+                    <CiExport />
+                  </Button>
+                </div>
               </div>
             </Card>
             <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
@@ -559,6 +579,8 @@ export default function Home() {
                 <PortfolioChart
                   instrumentsData={selectedInstrumentsData}
                   timePeriod={Number(selectedTimePeriod)}
+                  initialAmount={initialAmount}
+                  oldInitialNum={oldInitialNum}
                 />
               </div>
             </Card>

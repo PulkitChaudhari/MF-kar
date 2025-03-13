@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -41,9 +41,13 @@ import { apiResponse } from "./interfaces/interfaces";
 export default function PortfolioChart({
   instrumentsData,
   timePeriod,
+  initialAmount,
+  oldInitialNum,
 }: {
   instrumentsData: any;
   timePeriod: Number;
+  initialAmount: String;
+  oldInitialNum: String;
 }) {
   const chartConfig = {
     desktop: {
@@ -152,7 +156,6 @@ export default function PortfolioChart({
 
   function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
     const firstVal = apiData[0][1];
-    console.log(apiData);
     let convertedData: any[] = [];
 
     for (let idx = apiData.length - 1; idx >= 0; idx--) {
@@ -197,8 +200,6 @@ export default function PortfolioChart({
         navData: navsForRange,
       };
 
-      console.log(navsForRange);
-
       let myMap: any = {};
 
       const dateArray: any[] = generateDateArray(timePeriod);
@@ -217,8 +218,6 @@ export default function PortfolioChart({
         schemeDataAsObj[data.date] = data.nav * unitsBought;
       });
 
-      console.log(schemeDataAsObj);
-
       for (let idx = 0; idx < dateArray.length; idx++) {
         const currentDate = dateArray[idx];
         if (schemeDataAsObj[currentDate] === undefined && idx - 1 >= 0) {
@@ -235,7 +234,6 @@ export default function PortfolioChart({
           schemeDataAsObj[currentDate] = schemeDataAsObj[dateArray[idx + 1]];
         }
       }
-      console.log(schemeDataAsObj);
 
       for (let idx = 0; idx < dateArray.length; idx++) {
         const currentDate = dateArray[idx];
@@ -263,6 +261,23 @@ export default function PortfolioChart({
       // return instrumentObj;
     });
   }
+
+  useEffect(() => {
+    console.log(initialAmount, oldInitialNum);
+    let tempChartData = chartData;
+    tempChartData.forEach((data) => {
+      data.nav = Number(
+        ((data.nav * Number(initialAmount)) / Number(oldInitialNum)).toFixed(2)
+      );
+      data.navIndex = Number(
+        (
+          (data.navIndex * Number(initialAmount)) /
+          Number(oldInitialNum)
+        ).toFixed(2)
+      );
+    });
+    setChartData(tempChartData);
+  }, [initialAmount]);
 
   useEffect(() => {
     if (instrumentsData !== undefined) {
@@ -322,10 +337,16 @@ export default function PortfolioChart({
       });
 
       const tempChartData: any[] = [];
+
       Object.keys(myMap).forEach((key) => {
         tempChartData.push({
           date: formatDate(key),
-          nav: myMap[key] === undefined ? 0 : Number(myMap[key].toFixed(2)),
+          // nav: myMap[key] === undefined ? 0 : Number(myMap[key].toFixed(2)),
+          // actualDate: key,
+          nav:
+            myMap[key] === undefined
+              ? 0
+              : Number(((myMap[key] * Number(initialAmount)) / 100).toFixed(2)),
         });
       });
       const tempPortfolioReturn =
@@ -333,12 +354,12 @@ export default function PortfolioChart({
       setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
       setInitialValue(100);
       setFinalValue(tempChartData[tempChartData.length - 1].nav);
-      console.log(tempChartData);
       generateIndexData().then((indexData) => {
         for (let i = 0; i < indexData.length; i++) {
-          tempChartData[i].navIndex = indexData[i].nav;
+          tempChartData[i].navIndex = Number(
+            ((indexData[i].nav * Number(initialAmount)) / 100).toFixed(2)
+          );
         }
-        console.log(tempChartData);
         setChartData(tempChartData);
       });
 
