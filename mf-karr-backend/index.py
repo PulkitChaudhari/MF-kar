@@ -4,6 +4,7 @@ from flask_cors import CORS
 from services.instrument_service import InstrumentService
 from services.portfolio_service import PortfolioService
 from services.index_service import IndexService
+from services.portfolio_analysis import PortfolioAnalysis
 
 app = Flask(__name__)
 
@@ -44,6 +45,48 @@ def savePortfolio():
 def getPortfolios(emailId):
     result = PortfolioService.getPortfoliosForUser(emailId)
     return jsonify(result)
+
+@app.route('/api/portfolio/analyze', methods=['POST'])
+def analyze_portfolio():
+    data = request.json
+    
+    instruments_data = data.get('instrumentsData', {})
+    time_period = int(data.get('timePeriod', 1))
+    initial_amount = float(data.get('initialAmount', 100))
+    investment_mode = data.get('investmentMode', 'lump-sum')
+    
+    portfolio_analysis = PortfolioAnalysis()
+    result = portfolio_analysis.process_portfolio_data(
+        instruments_data, 
+        time_period, 
+        initial_amount, 
+        investment_mode
+    )
+    
+    return jsonify(result)
+
+# Add endpoint for index comparison
+@app.route('/api/portfolio/compare-index', methods=['POST'])
+def compare_with_index():
+    data = request.json
+    
+    index_name = data.get('indexName', 'nifty_50')
+    time_period = int(data.get('timePeriod', 1))
+    initial_amount = float(data.get('initialAmount', 100))
+    investment_mode = data.get('investmentMode', 'lump-sum')
+    
+    # Fetch index data
+    # ... your existing index data fetching logic
+    
+    portfolio_analysis = PortfolioAnalysis()
+    index_data = portfolio_analysis.process_index_data(
+        index_name,
+        time_period,
+        initial_amount,
+        investment_mode
+    )
+    
+    return jsonify(index_data)
 
 if __name__ == "__main__":
     instrumentService = InstrumentService()
