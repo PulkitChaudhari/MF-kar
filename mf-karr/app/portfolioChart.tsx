@@ -12,6 +12,10 @@ import {
   Autocomplete,
   AutocompleteItem,
   Tooltip,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
+  DropdownTrigger,
 } from "@nextui-org/react";
 
 import { TrendingDown, TrendingUp } from "lucide-react";
@@ -34,7 +38,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Button } from "@nextui-org/button";
-import { monthMapping } from "./constants";
+import { compareIndexValues, monthMapping } from "./constants";
 import { config } from "../config/config";
 import { apiResponse } from "./interfaces/interfaces";
 
@@ -43,11 +47,13 @@ export default function PortfolioChart({
   timePeriod,
   initialAmount,
   oldInitialNum,
+  investmentMode,
 }: {
   instrumentsData: any;
   timePeriod: Number;
   initialAmount: String;
   oldInitialNum: String;
+  investmentMode: String;
 }) {
   const chartConfig = {
     desktop: {
@@ -67,6 +73,8 @@ export default function PortfolioChart({
   const [indexData, setIndexData] = useState<any[]>([]);
   const [initialValue, setInitialValue] = useState(100);
   const [finalValue, setFinalValue] = useState(100);
+  const [selectedCompareIndex, setSelectedCompareIndex] =
+    useState("Saved Portfolios");
 
   function calculateMaxDrawdown(data: any[]): number {
     if (!data || data.length === 0) return 0;
@@ -86,7 +94,6 @@ export default function PortfolioChart({
         }
       }
     }
-
     return maxDrawdown;
   }
 
@@ -187,7 +194,7 @@ export default function PortfolioChart({
   }
 
   async function generateIndexData() {
-    return await fetchIndexData("nifty_50", 1).then((resp: any) => {
+    return await fetchIndexData("nifty_50", timePeriod).then((resp: any) => {
       const navsForRange = getNAVsForRange(
         resp.nifty_50.indexData,
         Number(timePeriod)
@@ -235,18 +242,29 @@ export default function PortfolioChart({
         }
       }
 
+      const firstDate: Date = dateArray[0];
+      const firstSipDate: Number = firstDate.getDate() - 1;
+      let sipIncrement = 100 / navsForRange[0].nav;
+
       for (let idx = 0; idx < dateArray.length; idx++) {
         const currentDate = dateArray[idx];
-        if (myMap[currentDate] === undefined) {
-          if (navsForRange.length === 0) myMap[currentDate] = 100;
-          else myMap[currentDate] = schemeDataAsObj[currentDate];
-        } else {
-          if (navsForRange.length === 0)
-            myMap[currentDate] = myMap[currentDate] + 100;
-          else
-            myMap[currentDate] =
-              myMap[currentDate] + schemeDataAsObj[currentDate];
+        const date = new Date(currentDate).getDate();
+        if (date == firstSipDate && investmentMode == "monthly-sip") {
+          sipIncrement += 100 / schemeDataAsObj[currentDate];
         }
+        schemeDataAsObj[currentDate] *= sipIncrement;
+      }
+
+      for (let idx = 0; idx < dateArray.length; idx++) {
+        const currentDate = dateArray[idx];
+        myMap[currentDate] =
+          myMap[currentDate] === undefined
+            ? navsForRange.length === 0
+              ? 100
+              : schemeDataAsObj[currentDate]
+            : navsForRange.length === 0
+              ? myMap[currentDate] + 100
+              : myMap[currentDate] + schemeDataAsObj[currentDate];
       }
 
       const tempChartData: any[] = [];
@@ -289,17 +307,20 @@ export default function PortfolioChart({
         myMap[currentDate] = undefined;
       }
 
+      const firstDate: Date = dateArray[0];
+      const firstSipDate: Number = firstDate.getDate() - 1;
+
       Object.keys(instrumentsData).map((key) => {
         const instrumentData: any = instrumentsData[key];
         const weightage = instrumentData.weightage;
-        let unitsBought =
-          instrumentData.navData.length > 0
-            ? weightage / instrumentData.navData[0].nav
-            : 0;
+        // let unitsBought =
+        //   instrumentData.navData.length > 0
+        //     ? weightage / instrumentData.navData[0].nav
+        //     : 0;
 
         const schemeDataAsObj: any = {};
         instrumentData.navData.forEach((data: any) => {
-          schemeDataAsObj[data.date] = data.nav * unitsBought;
+          schemeDataAsObj[data.date] = data.nav;
         });
 
         for (let idx = 0; idx < dateArray.length; idx++) {
@@ -319,19 +340,30 @@ export default function PortfolioChart({
           }
         }
 
+        let sipIncrement =
+          instrumentData.navData.length > 0
+            ? weightage / instrumentData.navData[0].nav
+            : 0;
+
         for (let idx = 0; idx < dateArray.length; idx++) {
           const currentDate = dateArray[idx];
-          if (myMap[currentDate] === undefined) {
-            if (instrumentData.navData.length === 0)
-              myMap[currentDate] = weightage;
-            else myMap[currentDate] = schemeDataAsObj[currentDate];
-          } else {
-            if (instrumentData.navData.length === 0)
-              myMap[currentDate] = myMap[currentDate] + weightage;
-            else
-              myMap[currentDate] =
-                myMap[currentDate] + schemeDataAsObj[currentDate];
+          const date = new Date(currentDate).getDate();
+          if (date == firstSipDate && investmentMode == "monthly-sip") {
+            sipIncrement += weightage / schemeDataAsObj[currentDate];
           }
+          schemeDataAsObj[currentDate] *= sipIncrement;
+        }
+
+        for (let idx = 0; idx < dateArray.length; idx++) {
+          const currentDate = dateArray[idx];
+          myMap[currentDate] =
+            myMap[currentDate] === undefined
+              ? instrumentData.navData.length === 0
+                ? weightage
+                : schemeDataAsObj[currentDate]
+              : instrumentData.navData.length === 0
+                ? myMap[currentDate] + weightage
+                : myMap[currentDate] + schemeDataAsObj[currentDate];
         }
       });
 
@@ -353,14 +385,14 @@ export default function PortfolioChart({
       setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
       setInitialValue(100);
       setFinalValue(tempChartData[tempChartData.length - 1].nav);
-      generateIndexData().then((indexData) => {
-        for (let i = 0; i < indexData.length; i++) {
-          tempChartData[i].navIndex = Number(
-            ((indexData[i].nav * Number(initialAmount)) / 100).toFixed(2)
-          );
-        }
-        setChartData(tempChartData);
-      });
+      // generateIndexData().then((indexData) => {
+      //   for (let i = 0; i < indexData.length; i++) {
+      //     tempChartData[i].navIndex = Number(
+      //       ((indexData[i].nav * Number(initialAmount)) / 100).toFixed(2)
+      //     );
+      //   }
+      setChartData(tempChartData);
+      // });
 
       const calculatedMaxDrawdown = calculateMaxDrawdown(tempChartData);
       setMaxDrawdown(calculatedMaxDrawdown);
@@ -398,6 +430,27 @@ export default function PortfolioChart({
     }
     dateArray = dateArray.reverse();
     return dateArray;
+  }
+
+  async function changeCompareIndex(indexKey: any) {
+    let tempChartData = JSON.parse(JSON.stringify(chartData));
+    if (indexKey == "nifty_50") {
+      await generateIndexData().then((indexData) => {
+        for (let i = 0; i < indexData.length; i++) {
+          tempChartData[i].navIndex = Number(
+            ((indexData[i].nav * Number(initialAmount)) / 100).toFixed(2)
+          );
+        }
+      });
+    } else {
+      for (let i = 0; i < indexData.length; i++) {
+        tempChartData[i].navIndex = 0;
+      }
+    }
+    setChartData(tempChartData);
+    setSelectedCompareIndex(
+      indexKey == "nifty_50" ? "Nifty 50" : "Saved Portfolios"
+    );
   }
 
   return (
@@ -495,6 +548,22 @@ export default function PortfolioChart({
         <Card>
           <CardHeader></CardHeader>
           <CardContent>
+            <div className="flex justify-end">
+              <Dropdown id="line-graph">
+                <DropdownTrigger>
+                  <Button variant="bordered">{selectedCompareIndex}</Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  onAction={(key) => changeCompareIndex(key)}
+                  aria-label="Compare Index Actions"
+                  items={compareIndexValues}
+                >
+                  {(item) => (
+                    <DropdownItem key={item.key}>{item.label}</DropdownItem>
+                  )}
+                </DropdownMenu>
+              </Dropdown>
+            </div>
             <ChartContainer config={chartConfig}>
               <LineChart
                 accessibilityLayer

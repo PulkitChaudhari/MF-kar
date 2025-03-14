@@ -15,6 +15,8 @@ import {
   ModalFooter,
   Input,
   Form,
+  Tab,
+  Tabs,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 import { GiInjustice } from "react-icons/gi";
@@ -29,24 +31,6 @@ import { useSession, signIn } from "next-auth/react";
 import { FaCheck } from "react-icons/fa6";
 import { CiExport } from "react-icons/ci";
 
-const columns = [
-  {
-    key: "schemeName",
-    label: "Scheme Name",
-  },
-  {
-    key: "cagr",
-    label: "1YR CAGR",
-  },
-  {
-    key: "weightage",
-    label: "Weightage",
-  },
-  { label: "Actions", key: "actions" },
-];
-
-const apiLinkPrefix: string = "http://localhost:8081/api/instrument";
-
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
     useState<boolean>(false);
@@ -60,7 +44,6 @@ export default function Home() {
   );
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] =
     useState<boolean>(false);
-  const [isShowTable, setIsShowTable] = useState<Boolean>(true);
   const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
     useState<boolean>(false);
   const [portfolioName, setPortfolioName] = useState("");
@@ -69,9 +52,10 @@ export default function Home() {
     useState<boolean>(false);
   const [userSavedPortfolios, setUserSavedPortfolios] = useState<any[]>([]);
   const { data: session } = useSession();
-  const [initialAmount, setInitialAmount] = useState<string>("100000");
+  const [initialAmount, setInitialAmount] = useState<string>("100");
+  const [investmentMode, setInvestmentMode] = useState<any>("lumpsum");
 
-  function getNAVsForRange(apiData: any, timePeriod: Number): any[] {
+  function getNAVsForRange(apiData: any): any[] {
     let convertedData: any[] = [];
 
     for (let idx = apiData.length - 1; idx >= 0; idx--) {
@@ -145,8 +129,7 @@ export default function Home() {
     return await fetchInstrumentData(instrumentCode, timePeriod).then(
       (apiData: any) => {
         const navsForRange = getNAVsForRange(
-          apiData[instrumentCode].instrumentData,
-          Number(timePeriod)
+          apiData[instrumentCode].instrumentData
         );
 
         const instrumentObj: any = {
@@ -281,7 +264,7 @@ export default function Home() {
     e.preventDefault();
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-    const result = savePortfolio(data).then((resp) => {
+    await savePortfolio(data).then((resp) => {
       resp.json().then((res) => {
         if (res == "Duplicate Portfolio name")
           setShowSavePortfolioNameModal(false);
@@ -524,13 +507,29 @@ export default function Home() {
                 setTableDataWeightageCopy={setTableDataWeightageCopy}
               />
               <div className="flex flex-col gap-2 justify-end">
-                <Input
-                  label="Initial Amount"
-                  type="number"
-                  value={initialAmount}
-                  onValueChange={(val) => setInitialAmount(val)}
-                  name="portfolioName"
-                />
+                <div className="flex w-full gap-2">
+                  <Input
+                    label={
+                      investmentMode == "lumpsum"
+                        ? "Initial Amount"
+                        : "Monthly SIP Amount"
+                    }
+                    type="number"
+                    value={initialAmount}
+                    onValueChange={(val) => setInitialAmount(val)}
+                    name="portfolioName"
+                  />
+                  <Tabs
+                    aria-label="Options"
+                    fullWidth
+                    selectedKey={investmentMode}
+                    size="md"
+                    onSelectionChange={setInvestmentMode}
+                  >
+                    <Tab key="lumpsum" title="Lumpsum"></Tab>
+                    <Tab key="monthly-sip" title="Monthly Sip"></Tab>
+                  </Tabs>
+                </div>
                 <div className="flex gap-2 justify-end">
                   <Button
                     isIconOnly
@@ -577,6 +576,7 @@ export default function Home() {
                   )}
                 </Autocomplete>
                 <PortfolioChart
+                  investmentMode={investmentMode}
                   instrumentsData={selectedInstrumentsData}
                   timePeriod={Number(selectedTimePeriod)}
                   initialAmount={initialAmount}

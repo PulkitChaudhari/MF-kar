@@ -38,6 +38,17 @@ export const cagrValues: any[] = [
   },
 ];
 
+export const compareIndexValues: any[] = [
+  {
+    label: "Nifty 50",
+    key: "nifty_50",
+  },
+  {
+    label: "Saved Portfolios",
+    key: "saved_portfolios",
+  },
+];
+
 export const monthMapping: string[] = [
   "Jan",
   "Feb",
