@@ -1,30 +1,17 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  getKeyValue,
-  useDisclosure,
-  Autocomplete,
-  AutocompleteItem,
-  Tooltip,
   Dropdown,
   DropdownMenu,
   DropdownItem,
   DropdownTrigger,
 } from "@nextui-org/react";
 
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -32,8 +19,6 @@ import {
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
@@ -66,11 +51,9 @@ export default function PortfolioChart({
     },
   } satisfies ChartConfig;
 
-  const [portfolioReturn, setPortfolioReturn] = useState<Number>(0);
   const [maxDrawdown, setMaxDrawdown] = useState<number>(0);
   const [sharpeRatio, setSharpeRatio] = useState<number>(0);
   const [chartData, setChartData] = useState<any[]>([]);
-  const [indexData, setIndexData] = useState<any[]>([]);
   const [initialValue, setInitialValue] = useState(100);
   const [finalValue, setFinalValue] = useState(100);
   const [selectedCompareIndex, setSelectedCompareIndex] =
@@ -107,7 +90,7 @@ export default function PortfolioChart({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        indexCode: "nifty_50",
+        indexCode: indexName,
         timePeriod: timePeriod,
       }),
     }).then(async (resp) => {
@@ -382,7 +365,6 @@ export default function PortfolioChart({
       });
       const tempPortfolioReturn =
         tempChartData[tempChartData.length - 1].nav - 100;
-      setPortfolioReturn(Math.max(tempPortfolioReturn, 0));
       setInitialValue(100);
       setFinalValue(tempChartData[tempChartData.length - 1].nav);
       // generateIndexData().then((indexData) => {
@@ -443,8 +425,8 @@ export default function PortfolioChart({
         }
       });
     } else {
-      for (let i = 0; i < indexData.length; i++) {
-        tempChartData[i].navIndex = 0;
+      for (let i = 0; i < tempChartData.length; i++) {
+        tempChartData[i].navIndex = undefined;
       }
     }
     setChartData(tempChartData);
