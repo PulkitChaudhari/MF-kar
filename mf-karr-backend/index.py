@@ -5,11 +5,15 @@ from services.instrument_service import InstrumentService
 from services.portfolio_service import PortfolioService
 from services.index_service import IndexService
 from services.portfolio_analysis import PortfolioAnalysis
+from services.portfolio_management import PortfolioManagement
 
 app = Flask(__name__)
 
 # Enable CORS for all routes and allow specific origins
 CORS(app)  # Adjust the origin as needed
+
+# Initialize the service
+portfolio_management = PortfolioManagement()
 
 @app.route('/api/instruments/<string:instrumentNamePattern>', methods=['GET'])
 def getInstruments(instrumentNamePattern):
@@ -87,6 +91,65 @@ def compare_with_index():
     )
     
     return jsonify(index_data)
+
+# Add these endpoints
+@app.route('/api/portfolio/add-instrument', methods=['POST'])
+def add_instrument():
+    data = request.json
+    
+    instrument_code = data.get('instrumentCode')
+    time_period = int(data.get('timePeriod', 1))
+    current_instruments = data.get('currentInstruments', {})
+    
+    result = portfolio_management.add_instrument(
+        instrument_code,
+        time_period,
+        current_instruments
+    )
+    
+    return jsonify(result)
+
+@app.route('/api/portfolio/remove-instrument', methods=['POST'])
+def remove_instrument():
+    data = request.json
+    
+    instrument_code = data.get('instrumentCode')
+    current_instruments = data.get('currentInstruments', {})
+    
+    result = portfolio_management.remove_instrument(
+        instrument_code,
+        current_instruments
+    )
+    
+    return jsonify(result)
+
+@app.route('/api/portfolio/change-time-period', methods=['POST'])
+def change_time_period():
+    data = request.json
+    
+    time_period = int(data.get('timePeriod', 1))
+    current_instruments = data.get('currentInstruments', {})
+    
+    result = portfolio_management.change_time_period(
+        time_period,
+        current_instruments
+    )
+    
+    return jsonify(result)
+
+@app.route('/api/portfolio/load', methods=['POST'])
+def load_portfolio():
+    data = request.json
+    
+    portfolio_data = data.get('portfolioData', {})
+    time_period = int(data.get('timePeriod', 1))
+    
+    result = portfolio_management.load_portfolio(
+        portfolio_data,
+        time_period
+    )
+    
+    return jsonify(result)
 
 if __name__ == "__main__":
     instrumentService = InstrumentService()

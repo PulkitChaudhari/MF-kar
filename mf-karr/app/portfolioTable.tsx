@@ -26,6 +26,7 @@ export default function PortfolioTable({
   isSaveEnabled,
   tableDataWeightageCopy,
   setTableDataWeightageCopy,
+  isLoading,
 }: {
   selectedNavData: any[];
   removeMututalFundFn: any;
@@ -34,6 +35,7 @@ export default function PortfolioTable({
   isSaveEnabled: any;
   tableDataWeightageCopy: any[];
   setTableDataWeightageCopy: any;
+  isLoading: boolean;
 }) {
   const [tableData, setTableData] = useState<any[]>([]);
   const [tableHeaders, setTableHeaders] = useState<any[]>(columns);
@@ -95,88 +97,100 @@ export default function PortfolioTable({
 
   return (
     <div className="flex gap-2 flex-col grow">
-      {!isAdjustWeightageEnabled
-        ? tableData.map((row) => {
-            return (
-              <Card
-                key={row.instrumentCode}
-                className="flex grid grid-cols-5 grid-rows-1 p-2 m-1 group relative"
-              >
-                <div className="col-span-4 flex flex-col align-center justify-center">
-                  <div className="text-sm">
-                    {row?.instrumentName}. CAGR: {row.cagr}
-                  </div>
-                  <div className="flex gap-1 align-center">
-                    <Slider
-                      maxValue={100}
-                      minValue={0}
-                      step={0.01}
-                      isDisabled={true}
-                      value={row.weightage}
-                      className="w-3/5 self-center"
-                      onChange={(newValue) => changeWeightage(newValue, row)}
-                    />
-                    <Input
-                      labelPlacement="outside"
-                      value={row.weightage}
-                      onChange={(e: any) =>
-                        changeWeightage(e.target.value, row)
-                      }
-                      isDisabled={true}
-                      type="number"
-                      className="w-2/5"
-                      variant="underlined"
-                    />
-                  </div>
-                </div>
-                <div className="absolute right-0 top-0 h-full w-8 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
-                  <DeleteIcon
-                    className="cursor-pointer text-white"
-                    onClick={() => removeMututalFundFn(row)}
-                  />
-                </div>
-              </Card>
-            );
-          })
-        : tableDataWeightageCopy.map((row) => {
-            return (
-              <Card
-                key={row.instrumentCode}
-                className="flex grid grid-cols-5 grid-rows-1 p-2 m-1 group relative"
-              >
-                <div className="col-span-4 flex flex-col align-center justify-center">
-                  <div>{row?.instrumentName}</div>
-                  <div className="flex gap-1 align-center">
-                    <Slider
-                      maxValue={100}
-                      minValue={0}
-                      step={0.01}
-                      isDisabled={!isAdjustWeightageEnabled}
-                      value={row.weightage}
-                      className="w-3/5 self-center"
-                      onChange={(newValue) => changeWeightage(newValue, row)}
-                    />
-                    <Input
-                      labelPlacement="outside"
-                      value={row.weightage}
-                      onChange={(e: any) =>
-                        changeWeightage(e.target.value, row)
-                      }
-                      type="number"
-                      className="w-2/5"
-                      variant="underlined"
-                    />
-                  </div>
-                </div>
-                <div className="absolute right-0 top-0 h-full w-12 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
-                  <DeleteIcon
-                    className="cursor-pointer text-white"
-                    onClick={() => removeMututalFundFn(row)}
-                  />
-                </div>
-              </Card>
-            );
-          })}
+      {isLoading ? (
+        <div className="flex justify-center items-center p-4">
+          Loading portfolio data...
+        </div>
+      ) : (
+        <>
+          {!isAdjustWeightageEnabled
+            ? tableData.map((row) => {
+                return (
+                  <Card
+                    key={row.instrumentCode}
+                    className="flex grid grid-cols-5 grid-rows-1 p-2 m-1 group relative"
+                  >
+                    <div className="col-span-4 flex flex-col align-center justify-center">
+                      <div className="text-sm">
+                        {row?.instrumentName}. CAGR: {row.cagr}
+                      </div>
+                      <div className="flex gap-1 align-center">
+                        <Slider
+                          maxValue={100}
+                          minValue={0}
+                          step={0.01}
+                          isDisabled={true}
+                          value={row.weightage}
+                          className="w-3/5 self-center"
+                          onChange={(newValue) =>
+                            changeWeightage(newValue, row)
+                          }
+                        />
+                        <Input
+                          labelPlacement="outside"
+                          value={row.weightage}
+                          onChange={(e: any) =>
+                            changeWeightage(e.target.value, row)
+                          }
+                          isDisabled={true}
+                          type="number"
+                          className="w-2/5"
+                          variant="underlined"
+                        />
+                      </div>
+                    </div>
+                    <div className="absolute right-0 top-0 h-full w-8 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
+                      <DeleteIcon
+                        className="cursor-pointer text-white"
+                        onClick={() => removeMututalFundFn(row)}
+                      />
+                    </div>
+                  </Card>
+                );
+              })
+            : tableDataWeightageCopy.map((row) => {
+                return (
+                  <Card
+                    key={row.instrumentCode}
+                    className="flex grid grid-cols-5 grid-rows-1 p-2 m-1 group relative"
+                  >
+                    <div className="col-span-4 flex flex-col align-center justify-center">
+                      <div>{row?.instrumentName}</div>
+                      <div className="flex gap-1 align-center">
+                        <Slider
+                          maxValue={100}
+                          minValue={0}
+                          step={0.01}
+                          isDisabled={!isAdjustWeightageEnabled}
+                          value={row.weightage}
+                          className="w-3/5 self-center"
+                          onChange={(newValue) =>
+                            changeWeightage(newValue, row)
+                          }
+                        />
+                        <Input
+                          labelPlacement="outside"
+                          value={row.weightage}
+                          onChange={(e: any) =>
+                            changeWeightage(e.target.value, row)
+                          }
+                          type="number"
+                          className="w-2/5"
+                          variant="underlined"
+                        />
+                      </div>
+                    </div>
+                    <div className="absolute right-0 top-0 h-full w-12 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
+                      <DeleteIcon
+                        className="cursor-pointer text-white"
+                        onClick={() => removeMututalFundFn(row)}
+                      />
+                    </div>
+                  </Card>
+                );
+              })}
+        </>
+      )}
     </div>
   );
 }

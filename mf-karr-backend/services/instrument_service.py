@@ -35,11 +35,11 @@ class InstrumentService:
         threshold_date = today - timedelta(days=timePeriod * 365)  # Approximate year length
 
         for keys in SORTED_RESULTS: 
-            if (SORTED_RESULTS[keys][0] <= instrumentCode and SORTED_RESULTS[keys][1] >= instrumentCode): 
+            if (SORTED_RESULTS[keys][0] <= int(instrumentCode) and SORTED_RESULTS[keys][1] >= int(instrumentCode)): 
                 cursor.execute(f"""
                     SELECT nav_date, nav_value 
                     FROM mf_data_results_{keys[0]}_{keys[1]} 
-                    WHERE fund_id={instrumentCode} 
+                    WHERE fund_id={int(instrumentCode)} 
                     AND nav_date >= '{threshold_date.strftime('%Y-%m-%d')}'
                     ORDER BY nav_date 
                 """)
@@ -47,7 +47,7 @@ class InstrumentService:
 
                 matching_funds = [
                     fund for fund in mf_data 
-                    if instrumentCode == fund['instrumentCode']
+                    if int(instrumentCode) == fund['instrumentCode']
                 ]
                 return {
                     instrumentCode: {

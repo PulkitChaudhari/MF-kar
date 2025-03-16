@@ -83,12 +83,7 @@ class PortfolioAnalysis:
     
     def process_portfolio_data(self, instruments_data, time_period, initial_amount, investment_mode):
         """Process portfolio data and return chart data with metrics"""
-        print(time_period)
-        print(initial_amount)
-        print(investment_mode)
-        print(instruments_data)
         date_array = self.generate_date_array(time_period)
-        print(date_array)
         
         # Initialize data map
         data_map = {date.strftime("%Y-%m-%d"): None for date in date_array}
@@ -104,7 +99,9 @@ class PortfolioAnalysis:
             # Convert nav_data to dictionary for easier lookup
             scheme_data = {}
             for data_point in nav_data:
-                scheme_data[data_point['date']] = data_point['nav']
+                date_object = datetime.strptime(data_point['date'], "%a, %d %b %Y %H:%M:%S %Z")
+                tempDate = date_object.strftime("%Y-%m-%d") + 'T00:00:00.000Z'
+                scheme_data[tempDate] = data_point['nav']
             
             # Fill in missing dates (forward fill)
             for i, date in enumerate(date_array):
@@ -152,11 +149,6 @@ class PortfolioAnalysis:
                         data_map[date_str] = weightage
                     else:
                         data_map[date_str] += weightage
-            
-            for date_str, value in scheme_data.items():
-                print(date_str, value)
-        
-        print(data_map)
 
         # Format chart data
         chart_data = []
@@ -289,7 +281,7 @@ class PortfolioAnalysis:
         
         for idx in range(len(index_data) - 1, -1, -1):
             nav = float(index_data[idx][1])
-            date = datetime.strptime(index_data[idx][0], "%Y-%m-%d")
+            date = index_data[idx][0]
             
             converted_data.append({
                 "date": date.strftime("%Y-%m-%d"),

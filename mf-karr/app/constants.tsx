@@ -40,6 +40,10 @@ export const cagrValues: any[] = [
 
 export const compareIndexValues: any[] = [
   {
+    label: "None",
+    key: "none",
+  },
+  {
     label: "Nifty 50",
     key: "nifty_50",
   },

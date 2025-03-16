@@ -40,7 +40,7 @@ export default function Home() {
     []
   );
   const [selectedInstrumentsData, setSelectedInstrumentsData] = useState<any>(
-    []
+    {}
   );
   const [isSaveButtonEnabled, setIsSaveButtonEnabled] =
     useState<boolean>(false);
@@ -54,140 +54,112 @@ export default function Home() {
   const { data: session } = useSession();
   const [initialAmount, setInitialAmount] = useState<string>("100");
   const [investmentMode, setInvestmentMode] = useState<any>("lumpsum");
-
-  function getNAVsForRange(apiData: any): any[] {
-    let convertedData: any[] = [];
-
-    for (let idx = apiData.length - 1; idx >= 0; idx--) {
-      const nav = Number(apiData[idx][1]);
-      const date = new Date(Date.parse(apiData[idx][0]));
-      // if (date <= thresholdDate) break;
-      convertedData.push({
-        date: date,
-        nav: nav,
-      });
-    }
-
-    convertedData.reverse();
-    return convertedData;
-  }
-
-  function updateWeight(tempInstrumentData: any) {
-    const instrumentCodes = Object.keys(tempInstrumentData);
-    instrumentCodes.forEach((code) => {
-      tempInstrumentData[code].weightage = Math.floor(
-        100 / instrumentCodes.length
-      );
-    });
-    if (100 % instrumentCodes.length != 0 && instrumentCodes.length > 0) {
-      const code = instrumentCodes[0];
-      tempInstrumentData[code].weightage = Math.ceil(
-        100 / instrumentCodes.length
-      );
-    }
-    return tempInstrumentData;
-  }
-
-  function calculateCAGR(navsForRange: any[], timePeriod: Number) {
-    let vFinal = -1,
-      vBegin = -1;
-
-    if (navsForRange.length > 0) {
-      vBegin = navsForRange[0].nav;
-      vFinal = navsForRange[navsForRange.length - 1].nav;
-    }
-    return (
-      (Math.pow(vFinal / vBegin, 1 / Number(timePeriod)) - 1) *
-      100
-    ).toFixed(2);
-  }
-
-  async function fetchInstrumentData(
-    schemeCode: any,
-    timePeriod: any
-  ): Promise<apiResponse> {
-    return await fetch(config.apiUrl + `/api/instrument`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        instrumentCode: schemeCode,
-        timePeriod: timePeriod,
-      }),
-    }).then(async (resp) => {
-      return await resp.json().then((apiData: apiResponse) => {
-        return apiData;
-      });
-    });
-  }
-
-  async function generateInstrumentData(
-    instrumentCode: number,
-    timePeriod: String
-  ) {
-    return await fetchInstrumentData(instrumentCode, timePeriod).then(
-      (apiData: any) => {
-        const navsForRange = getNAVsForRange(
-          apiData[instrumentCode].instrumentData
-        );
-
-        const instrumentObj: any = {
-          instrumentName: apiData[instrumentCode].instrumentName,
-          cagr: calculateCAGR(navsForRange, Number(timePeriod)),
-          weightage: "",
-          navData: navsForRange,
-        };
-
-        return instrumentObj;
-      }
-    );
-  }
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   async function addInstrument(instrumentValue: any) {
     if (instrumentValue !== null) {
-      const instrumentData = await generateInstrumentData(
-        instrumentValue,
-        selectedTimePeriod
-      );
-      let tempInstrumentData = await {
-        ...selectedInstrumentsData,
-        [instrumentValue]: instrumentData,
-      };
-      tempInstrumentData = updateWeight(tempInstrumentData);
-      setSelectedInstrumentsData(tempInstrumentData);
-      return tempInstrumentData;
+      setIsLoading(true);
+      try {
+        const response = await fetch(
+          config.apiUrl + `/api/portfolio/add-instrument`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              instrumentCode: instrumentValue,
+              timePeriod: selectedTimePeriod,
+              currentInstruments: selectedInstrumentsData,
+            }),
+          }
+        );
+
+        const updatedInstruments = await response.json();
+        setSelectedInstrumentsData(updatedInstruments);
+      } catch (error) {
+        console.error("Error adding instrument:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
   }
 
-  const removeMutualFund = (item: any) => {
-    // Removing scheme from the table
-    let tempData = { ...selectedInstrumentsData };
-    delete tempData[item.instrumentCode];
-    tempData = updateWeight(tempData);
-    setSelectedInstrumentsData(tempData);
+  const removeMutualFund = async (item: any) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        config.apiUrl + `/api/portfolio/remove-instrument`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            instrumentCode: item.instrumentCode,
+            currentInstruments: selectedInstrumentsData,
+          }),
+        }
+      );
+
+      const updatedInstruments = await response.json();
+      setSelectedInstrumentsData(updatedInstruments);
+    } catch (error) {
+      console.error("Error removing instrument:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   async function changeTimePeriod(timePeriod: any) {
-    let tempSelectedInstrumentsData: any = {};
-    const instrumentCodes = Object.keys(selectedInstrumentsData);
-
-    // Collect all promises
-    const promises = instrumentCodes.map(async (key) => {
-      const newInstrumentData = await generateInstrumentData(
-        Number(key),
-        timePeriod
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        config.apiUrl + `/api/portfolio/change-time-period`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            timePeriod: timePeriod,
+            currentInstruments: selectedInstrumentsData,
+          }),
+        }
       );
-      tempSelectedInstrumentsData = {
-        ...tempSelectedInstrumentsData,
-        [key]: newInstrumentData,
-      };
-    });
-    await Promise.all(promises);
-    tempSelectedInstrumentsData = updateWeight(tempSelectedInstrumentsData);
 
-    setSelectedInstrumentsData(tempSelectedInstrumentsData);
-    setSelectedTimePeriod(timePeriod.toString());
+      const updatedInstruments = await response.json();
+      setSelectedInstrumentsData(updatedInstruments);
+      setSelectedTimePeriod(timePeriod.toString());
+    } catch (error) {
+      console.error("Error changing time period:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function loadPortfolio(row: any) {
+    setIsLoading(true);
+    try {
+      const response = await fetch(config.apiUrl + `/api/portfolio/load`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          portfolioData: row,
+          timePeriod: selectedTimePeriod,
+        }),
+      });
+
+      const loadedPortfolio = await response.json();
+      setSelectedInstrumentsData(loadedPortfolio);
+      setShowSavedPortolioModal(false);
+    } catch (error) {
+      console.error("Error loading portfolio:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const list: any = useAsyncList({
@@ -295,23 +267,6 @@ export default function Home() {
     });
   }
 
-  function loadPortfolio(row: any) {
-    let tmepvar: any = {};
-    row.instruments.forEach(async (instrument: any) => {
-      const instrumentData = await generateInstrumentData(
-        instrument.instrumentCode,
-        selectedTimePeriod
-      );
-      tmepvar = {
-        ...tmepvar,
-        [instrument.instrumentCode]: instrumentData,
-      };
-      // tmepvar = updateWeight(tmepvar, instrument.weightage);
-      tmepvar[instrument.instrumentCode].weightage = instrument.weightage;
-      setSelectedInstrumentsData(tmepvar);
-    });
-  }
-
   const usePrevious = (value: any) => {
     const ref = useRef<any>();
     useEffect(() => {
@@ -382,7 +337,6 @@ export default function Home() {
                     isIconOnly
                     variant="bordered"
                     className="w-full hover:bg-green-200 transition-all"
-                    // onPress={() => savePortfolio()}
                     type="submit"
                   >
                     <FaCheck />
@@ -446,7 +400,10 @@ export default function Home() {
           <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
             <Card className="col-span-1 sm:col-span-1 gap-2 flex p-3 overflow-y-auto">
               <div className="flex gap-2 w-full">
-                <Dropdown isDisabled={isAdjustWeightageEnabled} id="line-graph">
+                <Dropdown
+                  isDisabled={isAdjustWeightageEnabled || isLoading}
+                  id="line-graph"
+                >
                   <DropdownTrigger>
                     <Button variant="bordered">{selectedTimePeriod}Y</Button>
                   </DropdownTrigger>
@@ -488,14 +445,11 @@ export default function Home() {
                     variant="bordered"
                     onPress={() => setIsAdjustWeightageEnabled(true)}
                     className="w-full"
+                    isDisabled={isLoading}
                   >
                     <GiInjustice />
                   </Button>
                 )}
-                {/* <Tabs isDisabled={true} aria-label="Options" className="w-full">
-            <Tab key="photos" title="One-Time"></Tab>
-            <Tab key="music" title="SIP"></Tab>
-          </Tabs> */}
               </div>
               <PortfolioTable
                 selectedNavData={selectedInstrumentsData}
@@ -505,6 +459,7 @@ export default function Home() {
                 isSaveEnabled={isSaveEnabled}
                 tableDataWeightageCopy={tableDataWeightageCopy}
                 setTableDataWeightageCopy={setTableDataWeightageCopy}
+                isLoading={isLoading}
               />
               <div className="flex flex-col gap-2 justify-end">
                 <div className="flex w-full gap-2">
@@ -518,6 +473,7 @@ export default function Home() {
                     value={initialAmount}
                     onValueChange={(val) => setInitialAmount(val)}
                     name="portfolioName"
+                    isDisabled={isLoading}
                   />
                   <Tabs
                     aria-label="Options"
@@ -525,6 +481,7 @@ export default function Home() {
                     selectedKey={investmentMode}
                     size="md"
                     onSelectionChange={setInvestmentMode}
+                    isDisabled={isLoading}
                   >
                     <Tab key="lumpsum" title="Lumpsum"></Tab>
                     <Tab key="monthly-sip" title="Monthly Sip"></Tab>
@@ -536,6 +493,10 @@ export default function Home() {
                     variant="bordered"
                     className="w-full"
                     onPress={() => setShowSavePortfolioNameModal(true)}
+                    isDisabled={
+                      isLoading ||
+                      Object.keys(selectedInstrumentsData).length === 0
+                    }
                   >
                     <TfiSave />
                   </Button>
@@ -544,6 +505,7 @@ export default function Home() {
                     variant="bordered"
                     className="w-full"
                     onPress={() => openPortfolioModal()}
+                    isDisabled={isLoading}
                   >
                     <CiExport />
                   </Button>
@@ -564,7 +526,7 @@ export default function Home() {
                   listboxProps={{
                     emptyContent: "No results found",
                   }}
-                  isDisabled={isAdjustWeightageEnabled}
+                  isDisabled={isAdjustWeightageEnabled || isLoading}
                 >
                   {(item: any) => (
                     <AutocompleteItem
@@ -580,7 +542,7 @@ export default function Home() {
                   instrumentsData={selectedInstrumentsData}
                   timePeriod={Number(selectedTimePeriod)}
                   initialAmount={initialAmount}
-                  oldInitialNum={oldInitialNum}
+                  oldInitialNum={oldInitialNum || initialAmount}
                 />
               </div>
             </Card>

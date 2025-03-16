@@ -5,6 +5,10 @@ import {
   DropdownMenu,
   DropdownItem,
   DropdownTrigger,
+  Modal,
+  ModalContent,
+  ModalFooter,
+  ModalBody,
 } from "@nextui-org/react";
 
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
@@ -23,8 +27,12 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Button } from "@nextui-org/button";
-import { compareIndexValues, monthMapping } from "./constants";
+import { compareIndexValues } from "./constants";
 import { config } from "../config/config";
+import { RxCross2 } from "react-icons/rx";
+import { FaCheck } from "react-icons/fa6";
+import { apiResponse } from "./interfaces/interfaces";
+import { useSession } from "next-auth/react";
 
 export default function PortfolioChart({
   instrumentsData,
@@ -55,9 +63,14 @@ export default function PortfolioChart({
   const [chartData, setChartData] = useState<any[]>([]);
   const [initialValue, setInitialValue] = useState(100);
   const [finalValue, setFinalValue] = useState(100);
-  const [selectedCompareIndex, setSelectedCompareIndex] =
-    useState("Saved Portfolios");
+  const [selectedCompareIndex, setSelectedCompareIndex] = useState("None");
   const [isLoading, setIsLoading] = useState(false);
+  const [showCompareSavedPortfolioModal, setShowCompareSavedPortfolioModal] =
+    useState<boolean>(false);
+  const [compareSavedPortfolios, setCompareSavedPortfolios] = useState<any[]>(
+    []
+  );
+  const { data: session } = useSession();
 
   // Fetch portfolio analysis data from backend
   async function fetchPortfolioAnalysis() {
@@ -77,7 +90,6 @@ export default function PortfolioChart({
       });
 
       const data = await response.json();
-      console.log(data);
       setChartData(data.chartData);
       setMaxDrawdown(data.metrics.maxDrawdown);
       setSharpeRatio(data.metrics.sharpeRatio);
@@ -124,12 +136,17 @@ export default function PortfolioChart({
   }
 
   useEffect(() => {
-    console.log(instrumentsData, timePeriod, investmentMode);
     if (
       instrumentsData !== undefined &&
       Object.keys(instrumentsData).length > 0
     ) {
       fetchPortfolioAnalysis();
+    } else {
+      setChartData([]);
+      setMaxDrawdown(0);
+      setSharpeRatio(0);
+      setInitialValue(100);
+      setFinalValue(100);
     }
   }, [instrumentsData, timePeriod, investmentMode]);
 
@@ -153,18 +170,133 @@ export default function PortfolioChart({
     if (indexKey === "nifty_50") {
       await fetchIndexComparison(indexKey);
       setSelectedCompareIndex("Nifty 50");
+    } else if (indexKey === "saved_portfolios") {
+      openPortfolioModal();
     } else {
       const updatedChartData = chartData.map((item) => ({
         ...item,
-        navIndex: 0,
+        navIndex: undefined,
       }));
       setChartData(updatedChartData);
+      setSelectedCompareIndex("None");
+    }
+  }
+
+  function fetchSavedPortfolio() {
+    return fetch(
+      config.apiUrl + `/api/portfolio/getPortfolios/` + session?.user?.email
+    );
+  }
+
+  function openPortfolioModal() {
+    fetchSavedPortfolio().then((resp) => {
+      resp.json().then((res) => {
+        let tempPortfolios: any[] = [];
+        res.forEach((portfolio: any) => {
+          tempPortfolios.push({
+            portfolioName: portfolio[2],
+            instruments: JSON.parse(portfolio[1]),
+          });
+        });
+        setCompareSavedPortfolios(tempPortfolios);
+        setShowCompareSavedPortfolioModal(true);
+      });
+    });
+  }
+
+  async function loadPortfolio(row: any) {
+    setIsLoading(true);
+    try {
+      const response = await fetch(config.apiUrl + `/api/portfolio/load`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          portfolioData: row,
+          timePeriod: timePeriod,
+        }),
+      });
+
+      const loadedPortfolio = await response.json();
+
+      // Create a copy of the chart data with the comparison portfolio
+      const response2 = await fetch(config.apiUrl + `/api/portfolio/analyze`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          instrumentsData: loadedPortfolio,
+          timePeriod: Number(timePeriod),
+          initialAmount: Number(initialAmount),
+          investmentMode: investmentMode,
+        }),
+      });
+
+      const portfolioData = await response2.json();
+
+      // Merge the comparison portfolio data with the current chart data
+      const updatedChartData = chartData.map((item, index) => ({
+        ...item,
+        navIndex: portfolioData.chartData[index]?.nav || 0,
+      }));
+
+      setChartData(updatedChartData);
       setSelectedCompareIndex("Saved Portfolios");
+      setShowCompareSavedPortfolioModal(false);
+    } catch (error) {
+      console.error("Error loading portfolio for comparison:", error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
   return (
     <div className="flex gap-2 flex-col">
+      <Modal
+        isDismissable={true}
+        isKeyboardDismissDisabled={true}
+        isOpen={showCompareSavedPortfolioModal}
+        hideCloseButton={false}
+        className="p-2"
+        onClose={() => setShowCompareSavedPortfolioModal(false)}
+      >
+        <ModalContent className="w-full">
+          <ModalBody className="w-full">
+            {compareSavedPortfolios.map((row) => {
+              return (
+                <Card key={row.portfolioName} className="flex p-2 m-1">
+                  <div className="col-span-4 flex align-center justify-between p-2">
+                    <div className="text-sm flex items-center">
+                      {row?.portfolioName}
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        isIconOnly
+                        variant="bordered"
+                        className="hover:bg-green-200 transition-all"
+                        onPress={() => loadPortfolio(row)}
+                        type="submit"
+                      >
+                        <FaCheck />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        variant="bordered"
+                        className="hover:bg-red-200 transition-all"
+                      >
+                        <RxCross2 />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </ModalBody>
+          <ModalFooter className="w-full pt-0"></ModalFooter>
+        </ModalContent>
+      </Modal>
       <div>
         <Card>
           <CardHeader>
