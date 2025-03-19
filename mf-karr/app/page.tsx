@@ -30,6 +30,7 @@ import { config } from "../config/config";
 import { useSession, signIn } from "next-auth/react";
 import { FaCheck } from "react-icons/fa6";
 import { CiExport } from "react-icons/ci";
+import { apiService } from "./services/api.service";
 
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
@@ -60,22 +61,11 @@ export default function Home() {
     if (instrumentValue !== null) {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          config.apiUrl + `/api/portfolio/add-instrument`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              instrumentCode: instrumentValue,
-              timePeriod: selectedTimePeriod,
-              currentInstruments: selectedInstrumentsData,
-            }),
-          }
+        const updatedInstruments = await apiService.addInstrument(
+          instrumentValue,
+          selectedTimePeriod.toString(),
+          selectedInstrumentsData
         );
-
-        const updatedInstruments = await response.json();
         setSelectedInstrumentsData(updatedInstruments);
       } catch (error) {
         console.error("Error adding instrument:", error);
@@ -88,21 +78,10 @@ export default function Home() {
   const removeMutualFund = async (item: any) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        config.apiUrl + `/api/portfolio/remove-instrument`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            instrumentCode: item.instrumentCode,
-            currentInstruments: selectedInstrumentsData,
-          }),
-        }
+      const updatedInstruments = await apiService.removeInstrument(
+        item.instrumentCode,
+        selectedInstrumentsData
       );
-
-      const updatedInstruments = await response.json();
       setSelectedInstrumentsData(updatedInstruments);
     } catch (error) {
       console.error("Error removing instrument:", error);
@@ -114,21 +93,10 @@ export default function Home() {
   async function changeTimePeriod(timePeriod: any) {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        config.apiUrl + `/api/portfolio/change-time-period`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            timePeriod: timePeriod,
-            currentInstruments: selectedInstrumentsData,
-          }),
-        }
+      const updatedInstruments = await apiService.changeTimePeriod(
+        timePeriod,
+        selectedInstrumentsData
       );
-
-      const updatedInstruments = await response.json();
       setSelectedInstrumentsData(updatedInstruments);
       setSelectedTimePeriod(timePeriod.toString());
     } catch (error) {
@@ -141,18 +109,10 @@ export default function Home() {
   async function loadPortfolio(row: any) {
     setIsLoading(true);
     try {
-      const response = await fetch(config.apiUrl + `/api/portfolio/load`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          portfolioData: row,
-          timePeriod: selectedTimePeriod,
-        }),
-      });
-
-      const loadedPortfolio = await response.json();
+      const loadedPortfolio = await apiService.loadPortfolio(
+        row,
+        Number(selectedTimePeriod)
+      );
       setSelectedInstrumentsData(loadedPortfolio);
       setShowSavedPortolioModal(false);
     } catch (error) {
@@ -169,11 +129,8 @@ export default function Home() {
           items: [],
         };
       }
-      let res = await fetch(config.apiUrl + `/api/instruments/${filterText}`, {
-        signal,
-      });
-      let json: any[] = await res.json();
-      json = json.filter((scheme) => {
+      let json = await apiService.searchInstruments(filterText || "");
+      json = json.filter((scheme: any) => {
         const keysArr = Object.keys(selectedInstrumentsData);
         if (keysArr.length > 0)
           return !keysArr.includes(scheme.instrumentCode.toString());
@@ -219,51 +176,43 @@ export default function Home() {
       const weightage = selectedInstrumentsData[key].weightage;
       toBeSentData.push({ instrumentCode: key, weightage: weightage });
     });
-    return fetch(config.apiUrl + `/api/portfolio/save`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        emailId: session?.user?.email,
-        instrumentsData: toBeSentData,
-        portfolioName: data.portfolioName,
-      }),
-    });
+
+    return apiService.savePortfolio(
+      session?.user?.email || "",
+      toBeSentData,
+      data.portfolioName
+    );
   }
 
   const onSubmit = async (e: any) => {
     e.preventDefault();
 
     const data = Object.fromEntries(new FormData(e.currentTarget));
-    await savePortfolio(data).then((resp) => {
-      resp.json().then((res) => {
-        if (res == "Duplicate Portfolio name")
-          setShowSavePortfolioNameModal(false);
-        else setErrors({ portfolioName: res });
-      });
+    await savePortfolio(data).then((res) => {
+      if (res == "Duplicate Portfolio name")
+        setShowSavePortfolioNameModal(false);
+      else setErrors({ portfolioName: res });
     });
   };
 
   function fetchSavedPortfolio() {
-    return fetch(
-      config.apiUrl + `/api/portfolio/getPortfolios/` + session?.user?.email
-    );
+    if (session?.user?.email) {
+      return apiService.getPortfolios(session.user.email);
+    }
+    return Promise.resolve([]);
   }
 
   function openPortfolioModal() {
-    fetchSavedPortfolio().then((resp) => {
-      resp.json().then((res) => {
-        let tempPortfolios: any[] = [];
-        res.forEach((portfolio: any) => {
-          tempPortfolios.push({
-            portfolioName: portfolio[2],
-            instruments: JSON.parse(portfolio[1]),
-          });
+    fetchSavedPortfolio().then((res) => {
+      let tempPortfolios: any[] = [];
+      res.forEach((portfolio: any) => {
+        tempPortfolios.push({
+          portfolioName: portfolio[2],
+          instruments: JSON.parse(portfolio[1]),
         });
-        setUserSavedPortfolios(tempPortfolios);
-        setShowSavedPortolioModal(true);
       });
+      setUserSavedPortfolios(tempPortfolios);
+      setShowSavedPortolioModal(true);
     });
   }
 

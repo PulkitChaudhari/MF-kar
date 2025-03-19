@@ -44,6 +44,7 @@ export default function PortfolioTable({
     let tempTableData: any[] = [];
     Object.keys(selectedNavData).forEach((key: any) => {
       const instrumentInfo = selectedNavData[key];
+      console.log(instrumentInfo, selectedNavData, key);
       tempTableData.push({
         instrumentCode: key,
         instrumentName: instrumentInfo.instrumentName,

@@ -84,7 +84,7 @@ class PortfolioAnalysis:
     def process_portfolio_data(self, instruments_data, time_period, initial_amount, investment_mode):
         """Process portfolio data and return chart data with metrics"""
         date_array = self.generate_date_array(time_period)
-        
+        print(instruments_data,time_period,initial_amount,investment_mode)
         # Initialize data map
         data_map = {date.strftime("%Y-%m-%d"): None for date in date_array}
         
@@ -99,7 +99,7 @@ class PortfolioAnalysis:
             # Convert nav_data to dictionary for easier lookup
             scheme_data = {}
             for data_point in nav_data:
-                date_object = datetime.strptime(data_point['date'], "%a, %d %b %Y %H:%M:%S %Z")
+                date_object = datetime.strptime(data_point['date'], "%Y-%m-%d")
                 tempDate = date_object.strftime("%Y-%m-%d") + 'T00:00:00.000Z'
                 scheme_data[tempDate] = data_point['nav']
             

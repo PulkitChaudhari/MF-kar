@@ -33,6 +33,7 @@ import { RxCross2 } from "react-icons/rx";
 import { FaCheck } from "react-icons/fa6";
 import { apiResponse } from "./interfaces/interfaces";
 import { useSession } from "next-auth/react";
+import { apiService } from "./services/api.service";
 
 export default function PortfolioChart({
   instrumentsData,
@@ -76,20 +77,13 @@ export default function PortfolioChart({
   async function fetchPortfolioAnalysis() {
     setIsLoading(true);
     try {
-      const response = await fetch(config.apiUrl + `/api/portfolio/analyze`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          instrumentsData,
-          timePeriod: Number(timePeriod),
-          initialAmount: Number(initialAmount),
-          investmentMode,
-        }),
-      });
-
-      const data = await response.json();
+      const data = await apiService.analyzePortfolio(
+        instrumentsData,
+        Number(timePeriod),
+        Number(initialAmount),
+        investmentMode
+      );
+      console.log(data);
       setChartData(data.chartData);
       setMaxDrawdown(data.metrics.maxDrawdown);
       setSharpeRatio(data.metrics.sharpeRatio);
@@ -105,23 +99,12 @@ export default function PortfolioChart({
   // Fetch index comparison data
   async function fetchIndexComparison(indexName: string) {
     try {
-      const response = await fetch(
-        config.apiUrl + `/api/portfolio/compare-index`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            indexName,
-            timePeriod: Number(timePeriod),
-            initialAmount: Number(initialAmount),
-            investmentMode,
-          }),
-        }
+      const indexData = await apiService.compareIndex(
+        indexName,
+        Number(timePeriod),
+        Number(initialAmount),
+        investmentMode.toString()
       );
-
-      const indexData = await response.json();
 
       // Merge index data with portfolio data
       const updatedChartData = chartData.map((item, index) => ({
@@ -182,59 +165,22 @@ export default function PortfolioChart({
     }
   }
 
-  function fetchSavedPortfolio() {
-    return fetch(
-      config.apiUrl + `/api/portfolio/getPortfolios/` + session?.user?.email
-    );
-  }
-
-  function openPortfolioModal() {
-    fetchSavedPortfolio().then((resp) => {
-      resp.json().then((res) => {
-        let tempPortfolios: any[] = [];
-        res.forEach((portfolio: any) => {
-          tempPortfolios.push({
-            portfolioName: portfolio[2],
-            instruments: JSON.parse(portfolio[1]),
-          });
-        });
-        setCompareSavedPortfolios(tempPortfolios);
-        setShowCompareSavedPortfolioModal(true);
-      });
-    });
-  }
-
+  // Load portfolio data
   async function loadPortfolio(row: any) {
     setIsLoading(true);
     try {
-      const response = await fetch(config.apiUrl + `/api/portfolio/load`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          portfolioData: row,
-          timePeriod: timePeriod,
-        }),
-      });
-
-      const loadedPortfolio = await response.json();
+      const loadedPortfolio = await apiService.loadPortfolio(
+        row,
+        Number(timePeriod)
+      );
 
       // Create a copy of the chart data with the comparison portfolio
-      const response2 = await fetch(config.apiUrl + `/api/portfolio/analyze`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          instrumentsData: loadedPortfolio,
-          timePeriod: Number(timePeriod),
-          initialAmount: Number(initialAmount),
-          investmentMode: investmentMode,
-        }),
-      });
-
-      const portfolioData = await response2.json();
+      const portfolioData = await apiService.analyzePortfolio(
+        loadedPortfolio,
+        Number(timePeriod),
+        Number(initialAmount),
+        investmentMode
+      );
 
       // Merge the comparison portfolio data with the current chart data
       const updatedChartData = chartData.map((item, index) => ({
@@ -250,6 +196,28 @@ export default function PortfolioChart({
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Fetch saved portfolios
+  function fetchSavedPortfolio() {
+    if (session?.user?.email) {
+      return apiService.getPortfolios(session.user.email);
+    }
+    return Promise.resolve([]);
+  }
+
+  function openPortfolioModal() {
+    fetchSavedPortfolio().then((res) => {
+      let tempPortfolios: any[] = [];
+      res.forEach((portfolio: any) => {
+        tempPortfolios.push({
+          portfolioName: portfolio[2],
+          instruments: JSON.parse(portfolio[1]),
+        });
+      });
+      setCompareSavedPortfolios(tempPortfolios);
+      setShowCompareSavedPortfolioModal(true);
+    });
   }
 
   return (

@@ -12,7 +12,7 @@ class PortfolioManagement:
         
         for idx in range(len(api_data) - 1, -1, -1):
             nav = float(api_data[idx][1])
-            date = api_data[idx][0]
+            date = api_data[idx][0].strftime('%Y-%m-%d')
             # date = datetime.strptim   e(api_data[idx][0], "%Y-%m-%d")
             
             converted_data.append({
@@ -66,6 +66,7 @@ class PortfolioManagement:
         instrument_name = api_data[instrument_code]["instrumentName"]
         
         # Process NAVs
+        print(instrument_data)
         navs_for_range = self.get_navs_for_range(instrument_data)
         
         # Calculate CAGR
@@ -84,17 +85,25 @@ class PortfolioManagement:
         """Add an instrument to the portfolio"""
         if not instrument_code:
             return current_instruments
-            
+        
         # Generate instrument data
         instrument_data = self.generate_instrument_data(instrument_code, time_period)
         
         # Add to current instruments
         updated_instruments = current_instruments.copy()
+
+        nav_data = instrument_data['navData']
+        temparr = []
+        for data in nav_data:
+            date = data['date']
+            nav = data['nav']
+            temparr.append({"date":date,"nav":nav})
+
+        instrument_data["navData"] = temparr
+
         updated_instruments[str(instrument_code)] = instrument_data
-        
         # Update weights
         updated_instruments = self.update_weight(updated_instruments)
-        
         return updated_instruments
     
     def remove_instrument(self, instrument_code, current_instruments):
