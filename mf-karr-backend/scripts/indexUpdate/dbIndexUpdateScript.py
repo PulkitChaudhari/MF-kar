@@ -3,6 +3,7 @@ import psycopg2
 from datetime import datetime
 import pandas as pd
 import time
+import requests  # Add this import
 # from utils.db_config import get_db_connection
 
 # Database connection parameters
@@ -31,37 +32,57 @@ not_successful = []
 
 def main():
     for index in indices:
-        end_date = datetime.now().strftime("%d-%b-%Y")  # Get today's date
+        end_date = datetime.now().strftime("%d-%m-%Y")
         start_date = end_date
-        data = index_history(index,start_date,end_date)
+        url = f"https://www.nseindia.com/api/historical/indicesHistory?indexType={index.replace(' ', '%20')}&from={start_date}&to={end_date}"
+        resp = requests.get(url,headers={
+            # "Host": "www.nseindia.com",
+            # "Referer": "https://www.nseindia.com/get-quotes/equity?symbol=ADANIPORTS",
+            "X-Requested-With": "XMLHttpRequest",
+            "pragma": "no-cache",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-origin",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate",
+            "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            })
+
+        data = resp.json()['data']['indexCloseOnlineRecords']
         print(f"Data fetched for {index} :- \n",data)
 
         time.sleep(3)
 
-        if data.empty:
+        if len(data) == 0:
             not_successful.append(index)
         else:
-            date_format = "%d-%b-%Y"
-            date_variable = datetime.strptime(end_date, date_format)
-            db_formatted_date = date_variable.strftime("%d-%m-%Y")
+            # date_format = "%d-%b-%Y"
+            # date_variable = datetime.strptime(end_date, date_format)
+            # db_formatted_date = date_variable.strftime("%d-%m-%Y")
 
-            for symbol, row in data.iterrows():
+            for row in data:
+
+                timestamp = datetime.strptime(row['EOD_TIMESTAMP'], "%d-%b-%Y")
+                formatted_date = timestamp.strftime("%d-%m-%Y")
 
                 cursor.execute(f"""
                     SELECT COUNT(*) FROM index_{index.lower().replace(' ', '_')} 
-                    WHERE nav_date=TO_DATE('{db_formatted_date}', 'dd-mm-yyyy')
+                    WHERE nav_date=TO_DATE('{formatted_date}', 'dd-mm-yyyy')
                 """)
                 results = cursor.fetchall()
 
                 if results and results[0][0] == 0:
                     cursor.execute(f"""
                         INSERT INTO index_{index.lower().replace(' ', '_')} (nav_date, nav_value)
-                        VALUES (TO_DATE('{db_formatted_date}', 'dd-mm-yyyy'), {float(row['CLOSE'])})
+                        VALUES (TO_DATE('{formatted_date}', 'dd-mm-yyyy'), {float(row['EOD_CLOSE_INDEX_VAL'])})
                     """)
-                    print(f"Insertion sucessful for {index} with {db_formatted_date}.")
+                    print(f"Insertion sucessful for {index} with {formatted_date}.")
             
                 else:
-                    print(f"Duplicate entry for {index} with {db_formatted_date} exists.")
+                    print(f"Duplicate entry for {index} with {formatted_date} exists.")
 
 
     if len(not_successful) > 0:
