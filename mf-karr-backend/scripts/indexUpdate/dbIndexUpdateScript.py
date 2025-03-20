@@ -52,7 +52,7 @@ def main():
             })
 
         data = resp.json()['data']['indexCloseOnlineRecords']
-        print(f"Data fetched for {index} :- \n",data)
+        print(f"Data fetched between {start_date} and {end_date} for {index} :- \n",data)
 
         time.sleep(3)
 
