@@ -1,9 +1,9 @@
-from nsepython import index_history
 import psycopg2
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import time
 import requests  # Add this import
+import yfinance as yf
 # from utils.db_config import get_db_connection
 
 # Database connection parameters
@@ -24,7 +24,7 @@ conn = psycopg2.connect(
 # )
 
 # indices = nse_get_index_list()
-indices = ['NIFTY 50']
+indices = ['^NSEI']
 
 cursor = conn.cursor()
 
@@ -32,52 +32,37 @@ not_successful = []
 
 def main():
     for index in indices:
-        end_date = datetime.now().strftime("%d-%m-%Y")
-        start_date = end_date
-        url = f"https://www.nseindia.com/api/historical/indicesHistory?indexType={index.replace(' ', '%20')}&from={start_date}&to={end_date}"
-        resp = requests.get(url,headers={
-            # "Host": "www.nseindia.com",
-            # "Referer": "https://www.nseindia.com/get-quotes/equity?symbol=ADANIPORTS",
-            "X-Requested-With": "XMLHttpRequest",
-            "pragma": "no-cache",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
-            "Accept": "*/*",
-            "Accept-Encoding": "gzip, deflate",
-            "Accept-Language": "en-GB,en-US;q=0.9,en;q=0.8",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            })
+        todaydate = datetime.now()
+        yesterday = todaydate - timedelta(days=1)
+        start_date = yesterday.strftime("%Y-%m-%d")
+        end_date=todaydate.strftime("%Y-%m-%d")
 
-        data = resp.json()['data']['indexCloseOnlineRecords']
-        print(f"Data fetched between {start_date} and {end_date} for {index} :- \n",data)
+        ticker = yf.Ticker(index)
+        data = ticker.history(start=start_date, end=end_date, interval="1d")
 
-        time.sleep(3)
+        print(f"Data fetched between {start_date} and {end_date} for {index} :- \n",data.head())
+
+        # time.sleep(3)
 
         if len(data) == 0:
             not_successful.append(index)
         else:
-            # date_format = "%d-%b-%Y"
-            # date_variable = datetime.strptime(end_date, date_format)
-            # db_formatted_date = date_variable.strftime("%d-%m-%Y")
 
-            for row in data:
+            for index, row in data.iterrows():
 
-                timestamp = datetime.strptime(row['EOD_TIMESTAMP'], "%d-%b-%Y")
+                timestamp = index.to_pydatetime()
                 formatted_date = timestamp.strftime("%d-%m-%Y")
 
                 cursor.execute(f"""
-                    SELECT COUNT(*) FROM index_{index.lower().replace(' ', '_')} 
+                    SELECT COUNT(*) FROM index_nifty_50
                     WHERE nav_date=TO_DATE('{formatted_date}', 'dd-mm-yyyy')
                 """)
                 results = cursor.fetchall()
 
                 if results and results[0][0] == 0:
                     cursor.execute(f"""
-                        INSERT INTO index_{index.lower().replace(' ', '_')} (nav_date, nav_value)
-                        VALUES (TO_DATE('{formatted_date}', 'dd-mm-yyyy'), {float(row['EOD_CLOSE_INDEX_VAL'])})
+                        INSERT INTO index_nifty_50 (nav_date, nav_value)
+                        VALUES (TO_DATE('{formatted_date}', 'dd-mm-yyyy'), {round(float(row['Close']),2)})
                     """)
                     print(f"Insertion sucessful for {index} with {formatted_date}.")
             
