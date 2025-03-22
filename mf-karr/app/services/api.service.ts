@@ -56,7 +56,6 @@ class ApiService {
     try {
       const response = await fetch(url, options);
       const encryptedData = await response.json();
-      console.log(this.decrypt(encryptedData));
       return this.decrypt(encryptedData);
     } catch (error) {
       console.error("API call error:", error);

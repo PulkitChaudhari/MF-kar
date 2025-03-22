@@ -66,7 +66,6 @@ class PortfolioManagement:
         instrument_name = api_data[instrument_code]["instrumentName"]
         
         # Process NAVs
-        print(instrument_data)
         navs_for_range = self.get_navs_for_range(instrument_data)
         
         # Calculate CAGR
@@ -77,7 +76,6 @@ class PortfolioManagement:
             "instrumentName": instrument_name,
             "cagr": cagr,
             "weightage": "",
-            "navData": navs_for_range
         }
         return instrument_obj
     
@@ -92,14 +90,14 @@ class PortfolioManagement:
         # Add to current instruments
         updated_instruments = current_instruments.copy()
 
-        nav_data = instrument_data['navData']
-        temparr = []
-        for data in nav_data:
-            date = data['date']
-            nav = data['nav']
-            temparr.append({"date":date,"nav":nav})
+        # nav_data = instrument_data['navData']
+        # temparr = []
+        # for data in nav_data:
+        #     date = data['date']
+        #     nav = data['nav']
+        #     temparr.append({"date":date,"nav":nav})
 
-        instrument_data["navData"] = temparr
+        # instrument_data["navData"] = temparr
 
         updated_instruments[str(instrument_code)] = instrument_data
         # Update weights

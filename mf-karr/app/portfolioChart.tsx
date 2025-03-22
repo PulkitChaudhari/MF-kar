@@ -36,17 +36,35 @@ import { useSession } from "next-auth/react";
 import { apiService } from "./services/api.service";
 
 export default function PortfolioChart({
-  instrumentsData,
-  timePeriod,
-  initialAmount,
-  oldInitialNum,
-  investmentMode,
+  chartData,
+  maxDrawdown,
+  sharpeRatio,
+  initialValue,
+  finalValue,
+  changeCompareIndex,
+  selectedCompareIndex,
+  loadComparePortfolio,
+  showCompareSavedPortfolioModal,
+  setShowCompareSavedPortfolioModal,
+  compareSavedPortfolios,
+  isLoading,
 }: {
-  instrumentsData: any;
   timePeriod: Number;
   initialAmount: String;
   oldInitialNum: String;
   investmentMode: String;
+  chartData: any[];
+  maxDrawdown: number;
+  sharpeRatio: number;
+  initialValue: number;
+  finalValue: number;
+  changeCompareIndex: any;
+  selectedCompareIndex: any;
+  loadComparePortfolio: any;
+  showCompareSavedPortfolioModal: any;
+  setShowCompareSavedPortfolioModal: any;
+  compareSavedPortfolios: any;
+  isLoading: any;
 }) {
   const chartConfig = {
     desktop: {
@@ -58,167 +76,6 @@ export default function PortfolioChart({
       color: "hsl(var(--chart-2))",
     },
   } satisfies ChartConfig;
-
-  const [maxDrawdown, setMaxDrawdown] = useState<number>(0);
-  const [sharpeRatio, setSharpeRatio] = useState<number>(0);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [initialValue, setInitialValue] = useState(100);
-  const [finalValue, setFinalValue] = useState(100);
-  const [selectedCompareIndex, setSelectedCompareIndex] = useState("None");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showCompareSavedPortfolioModal, setShowCompareSavedPortfolioModal] =
-    useState<boolean>(false);
-  const [compareSavedPortfolios, setCompareSavedPortfolios] = useState<any[]>(
-    []
-  );
-  const { data: session } = useSession();
-
-  // Fetch portfolio analysis data from backend
-  async function fetchPortfolioAnalysis() {
-    setIsLoading(true);
-    try {
-      const data = await apiService.analyzePortfolio(
-        instrumentsData,
-        Number(timePeriod),
-        Number(initialAmount),
-        investmentMode
-      );
-      console.log(data);
-      setChartData(data.chartData);
-      setMaxDrawdown(data.metrics.maxDrawdown);
-      setSharpeRatio(data.metrics.sharpeRatio);
-      setInitialValue(data.metrics.initialValue);
-      setFinalValue(data.metrics.finalValue);
-    } catch (error) {
-      console.error("Error fetching portfolio analysis:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Fetch index comparison data
-  async function fetchIndexComparison(indexName: string) {
-    try {
-      const indexData = await apiService.compareIndex(
-        indexName,
-        Number(timePeriod),
-        Number(initialAmount),
-        investmentMode.toString()
-      );
-
-      // Merge index data with portfolio data
-      const updatedChartData = chartData.map((item, index) => ({
-        ...item,
-        navIndex: indexData.chartData[index]?.nav || 0,
-      }));
-
-      setChartData(updatedChartData);
-    } catch (error) {
-      console.error("Error fetching index comparison:", error);
-    }
-  }
-
-  useEffect(() => {
-    if (
-      instrumentsData !== undefined &&
-      Object.keys(instrumentsData).length > 0
-    ) {
-      fetchPortfolioAnalysis();
-    } else {
-      setChartData([]);
-      setMaxDrawdown(0);
-      setSharpeRatio(0);
-      setInitialValue(100);
-      setFinalValue(100);
-    }
-  }, [instrumentsData, timePeriod, investmentMode]);
-
-  useEffect(() => {
-    if (chartData.length > 0 && initialAmount !== oldInitialNum) {
-      // Update chart data with new initial amount
-      const scaleFactor = Number(initialAmount) / Number(oldInitialNum);
-      const updatedChartData = chartData.map((data) => ({
-        ...data,
-        nav: Number((data.nav * scaleFactor).toFixed(2)),
-        navIndex: data.navIndex
-          ? Number((data.navIndex * scaleFactor).toFixed(2))
-          : 0,
-      }));
-
-      setChartData(updatedChartData);
-    }
-  }, [initialAmount]);
-
-  async function changeCompareIndex(indexKey: any) {
-    if (indexKey === "nifty_50") {
-      await fetchIndexComparison(indexKey);
-      setSelectedCompareIndex("Nifty 50");
-    } else if (indexKey === "saved_portfolios") {
-      openPortfolioModal();
-    } else {
-      const updatedChartData = chartData.map((item) => ({
-        ...item,
-        navIndex: undefined,
-      }));
-      setChartData(updatedChartData);
-      setSelectedCompareIndex("None");
-    }
-  }
-
-  // Load portfolio data
-  async function loadPortfolio(row: any) {
-    setIsLoading(true);
-    try {
-      const loadedPortfolio = await apiService.loadPortfolio(
-        row,
-        Number(timePeriod)
-      );
-
-      // Create a copy of the chart data with the comparison portfolio
-      const portfolioData = await apiService.analyzePortfolio(
-        loadedPortfolio,
-        Number(timePeriod),
-        Number(initialAmount),
-        investmentMode
-      );
-
-      // Merge the comparison portfolio data with the current chart data
-      const updatedChartData = chartData.map((item, index) => ({
-        ...item,
-        navIndex: portfolioData.chartData[index]?.nav || 0,
-      }));
-
-      setChartData(updatedChartData);
-      setSelectedCompareIndex("Saved Portfolios");
-      setShowCompareSavedPortfolioModal(false);
-    } catch (error) {
-      console.error("Error loading portfolio for comparison:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Fetch saved portfolios
-  function fetchSavedPortfolio() {
-    if (session?.user?.email) {
-      return apiService.getPortfolios(session.user.email);
-    }
-    return Promise.resolve([]);
-  }
-
-  function openPortfolioModal() {
-    fetchSavedPortfolio().then((res) => {
-      let tempPortfolios: any[] = [];
-      res.forEach((portfolio: any) => {
-        tempPortfolios.push({
-          portfolioName: portfolio[2],
-          instruments: JSON.parse(portfolio[1]),
-        });
-      });
-      setCompareSavedPortfolios(tempPortfolios);
-      setShowCompareSavedPortfolioModal(true);
-    });
-  }
 
   return (
     <div className="flex gap-2 flex-col">
@@ -232,7 +89,7 @@ export default function PortfolioChart({
       >
         <ModalContent className="w-full">
           <ModalBody className="w-full">
-            {compareSavedPortfolios.map((row) => {
+            {compareSavedPortfolios.map((row: any) => {
               return (
                 <Card key={row.portfolioName} className="flex p-2 m-1">
                   <div className="col-span-4 flex align-center justify-between p-2">
@@ -244,7 +101,7 @@ export default function PortfolioChart({
                         isIconOnly
                         variant="bordered"
                         className="hover:bg-green-200 transition-all"
-                        onPress={() => loadPortfolio(row)}
+                        onPress={() => loadComparePortfolio(row)}
                         type="submit"
                       >
                         <FaCheck />
@@ -288,7 +145,10 @@ export default function PortfolioChart({
                     <div className="flex flex-col items-center">
                       <div>Gain</div>
                       <div>
-                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}{" "}
+                        {(
+                          ((finalValue - initialValue) / initialValue) *
+                          100
+                        ).toFixed(2)}{" "}
                         %
                       </div>
                     </div>

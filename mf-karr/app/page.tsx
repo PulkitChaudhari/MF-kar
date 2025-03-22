@@ -17,6 +17,7 @@ import {
   Form,
   Tab,
   Tabs,
+  Divider,
 } from "@nextui-org/react";
 import { useAsyncList } from "@react-stately/data";
 import { GiInjustice } from "react-icons/gi";
@@ -24,13 +25,12 @@ import { TfiSave } from "react-icons/tfi";
 import { RxCross2 } from "react-icons/rx";
 import PortfolioChart from "./portfolioChart";
 import PortfolioTable from "./portfolioTable";
-import { apiResponse } from "./interfaces/interfaces";
 import { cagrValues } from "./constants";
-import { config } from "../config/config";
 import { useSession, signIn } from "next-auth/react";
 import { FaCheck } from "react-icons/fa6";
 import { CiExport } from "react-icons/ci";
 import { apiService } from "./services/api.service";
+import { VscGraphLine } from "react-icons/vsc";
 
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
@@ -56,6 +56,19 @@ export default function Home() {
   const [initialAmount, setInitialAmount] = useState<string>("100");
   const [investmentMode, setInvestmentMode] = useState<any>("lumpsum");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [maxDrawdown, setMaxDrawdown] = useState<number>(0);
+  const [sharpeRatio, setSharpeRatio] = useState<number>(0);
+  // const [chartData, setChartData] = useState<any[]>([]);
+  const [initialValue, setInitialValue] = useState(100);
+  const [finalValue, setFinalValue] = useState(100);
+  const [selectedCompareIndex, setSelectedCompareIndex] =
+    useState<string>("None");
+  const [showCompareSavedPortfolioModal, setShowCompareSavedPortfolioModal] =
+    useState<boolean>(false);
+  const [compareSavedPortfolios, setCompareSavedPortfolios] = useState<any[]>(
+    []
+  );
 
   async function addInstrument(instrumentValue: any) {
     if (instrumentValue !== null) {
@@ -226,6 +239,112 @@ export default function Home() {
 
   const oldInitialNum = usePrevious(initialAmount);
 
+  async function backtestPortfolio() {
+    setIsLoading(true);
+    try {
+      const data = await apiService.analyzePortfolio(
+        selectedInstrumentsData,
+        Number(selectedTimePeriod),
+        Number(initialAmount),
+        investmentMode
+      );
+      setChartData(data.chartData);
+      setMaxDrawdown(data.metrics.maxDrawdown);
+      setSharpeRatio(data.metrics.sharpeRatio);
+      setInitialValue(data.metrics.initialValue);
+      setFinalValue(data.metrics.finalValue);
+    } catch (error) {
+      console.error("Error fetching portfolio analysis:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // Fetch index comparison data
+  async function fetchIndexComparison(indexName: string) {
+    try {
+      const indexData = await apiService.compareIndex(
+        indexName,
+        Number(selectedTimePeriod),
+        Number(initialAmount),
+        investmentMode.toString()
+      );
+
+      // Merge index data with portfolio data
+      const updatedChartData = chartData.map((item, index) => ({
+        ...item,
+        navIndex: indexData.chartData[index]?.nav || 0,
+      }));
+
+      setChartData(updatedChartData);
+    } catch (error) {
+      console.error("Error fetching index comparison:", error);
+    }
+  }
+
+  async function changeCompareIndex(indexKey: any) {
+    if (indexKey === "nifty_50") {
+      await fetchIndexComparison(indexKey);
+      setSelectedCompareIndex("Nifty 50");
+    } else if (indexKey === "saved_portfolios") {
+      openComparePortfolioModal();
+    } else {
+      const updatedChartData = chartData.map((item) => ({
+        ...item,
+        navIndex: undefined,
+      }));
+      setChartData(updatedChartData);
+      setSelectedCompareIndex("None");
+    }
+  }
+
+  function openComparePortfolioModal() {
+    fetchSavedPortfolio().then((res) => {
+      let tempPortfolios: any[] = [];
+      res.forEach((portfolio: any) => {
+        tempPortfolios.push({
+          portfolioName: portfolio[2],
+          instruments: JSON.parse(portfolio[1]),
+        });
+      });
+      setCompareSavedPortfolios(tempPortfolios);
+      setShowCompareSavedPortfolioModal(true);
+    });
+  }
+
+  // Load portfolio data
+  async function loadComparePortfolio(row: any) {
+    setIsLoading(true);
+    try {
+      const loadedPortfolio = await apiService.loadPortfolio(
+        row,
+        Number(selectedTimePeriod)
+      );
+
+      // Create a copy of the chart data with the comparison portfolio
+      const portfolioData = await apiService.analyzePortfolio(
+        loadedPortfolio,
+        Number(selectedTimePeriod),
+        Number(initialAmount),
+        investmentMode
+      );
+
+      // Merge the comparison portfolio data with the current chart data
+      const updatedChartData = chartData.map((item, index) => ({
+        ...item,
+        navIndex: portfolioData.chartData[index]?.nav || 0,
+      }));
+
+      setChartData(updatedChartData);
+      setSelectedCompareIndex("Saved Portfolios");
+      setShowCompareSavedPortfolioModal(false);
+    } catch (error) {
+      console.error("Error loading portfolio for comparison:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div>
       {!session ? (
@@ -346,59 +465,71 @@ export default function Home() {
               <ModalFooter className="w-full pt-0"></ModalFooter>
             </ModalContent>
           </Modal>
-          <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[80vh]">
+          <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[85vh]">
             <Card className="col-span-1 sm:col-span-1 gap-2 flex p-3 overflow-y-auto">
-              <div className="flex gap-2 w-full">
-                <Dropdown
-                  isDisabled={isAdjustWeightageEnabled || isLoading}
-                  id="line-graph"
+              <div className="flex items-center gap-2">
+                <div>
+                  <b className="mx-[5px]">Selected Portfolio Funds </b>
+                </div>
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  onPress={() => setShowSavePortfolioNameModal(true)}
+                  isDisabled={
+                    isLoading ||
+                    Object.keys(selectedInstrumentsData).length === 0
+                  }
+                  size="sm"
                 >
-                  <DropdownTrigger>
-                    <Button variant="bordered">{selectedTimePeriod}Y</Button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    onAction={(timePeriod) => changeTimePeriod(timePeriod)}
-                    aria-label="Dynamic Actions"
-                    items={cagrValues}
-                  >
-                    {(item) => (
-                      <DropdownItem key={item.key}>{item.label}</DropdownItem>
-                    )}
-                  </DropdownMenu>
-                </Dropdown>
-                {isAdjustWeightageEnabled ? (
-                  <div className="flex gap-2 w-full">
+                  <TfiSave />
+                </Button>
+                <Button
+                  isIconOnly
+                  variant="bordered"
+                  onPress={() => openPortfolioModal()}
+                  isDisabled={isLoading}
+                  size="sm"
+                >
+                  <CiExport />
+                </Button>
+                <div className="flex-1 ">
+                  {isAdjustWeightageEnabled ? (
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        isIconOnly
+                        aria-label="Like"
+                        color="success"
+                        className="w-full"
+                        isDisabled={!isSaveButtonEnabled}
+                        onPress={() => onSave()}
+                        size="sm"
+                      >
+                        <FaCheck />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        aria-label="Like1"
+                        color="danger"
+                        onPress={() => onCancelWeightAdjust()}
+                        size="sm"
+                        className="w-full"
+                      >
+                        <RxCross2 />
+                      </Button>
+                    </div>
+                  ) : (
                     <Button
                       isIconOnly
-                      aria-label="Like"
-                      color="success"
-                      className="w-1/2"
-                      isDisabled={!isSaveButtonEnabled}
-                      onPress={() => onSave()}
+                      variant="bordered"
+                      onPress={() => setIsAdjustWeightageEnabled(true)}
+                      isDisabled={isLoading}
+                      size="sm"
+                      className="w-full"
                     >
-                      <FaCheck />
+                      <GiInjustice />
                     </Button>
-                    <Button
-                      isIconOnly
-                      aria-label="Like1"
-                      color="danger"
-                      onPress={() => onCancelWeightAdjust()}
-                      className="w-1/2"
-                    >
-                      <RxCross2 />
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    isIconOnly
-                    variant="bordered"
-                    onPress={() => setIsAdjustWeightageEnabled(true)}
-                    className="w-full"
-                    isDisabled={isLoading}
-                  >
-                    <GiInjustice />
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
               <PortfolioTable
                 selectedNavData={selectedInstrumentsData}
@@ -410,55 +541,87 @@ export default function Home() {
                 setTableDataWeightageCopy={setTableDataWeightageCopy}
                 isLoading={isLoading}
               />
-              <div className="flex flex-col gap-2 justify-end">
-                <div className="flex w-full gap-2">
-                  <Input
-                    label={
-                      investmentMode == "lumpsum"
-                        ? "Initial Amount"
-                        : "Monthly SIP Amount"
-                    }
-                    type="number"
-                    value={initialAmount}
-                    onValueChange={(val) => setInitialAmount(val)}
-                    name="portfolioName"
-                    isDisabled={isLoading}
-                  />
-                  <Tabs
-                    aria-label="Options"
-                    fullWidth
-                    selectedKey={investmentMode}
-                    size="md"
-                    onSelectionChange={setInvestmentMode}
-                    isDisabled={isLoading}
-                  >
-                    <Tab key="lumpsum" title="Lumpsum"></Tab>
-                    <Tab key="monthly-sip" title="Monthly Sip"></Tab>
-                  </Tabs>
+              <div className="my-1 flex flex-col gap-1">
+                <div className="flex items-center my-2">
+                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                  <b className="mx-3 whitespace-nowrap">Edit Time period</b>
+                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
                 </div>
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    isIconOnly
-                    variant="bordered"
-                    className="w-full"
-                    onPress={() => setShowSavePortfolioNameModal(true)}
-                    isDisabled={
-                      isLoading ||
-                      Object.keys(selectedInstrumentsData).length === 0
-                    }
-                  >
-                    <TfiSave />
-                  </Button>
-                  <Button
-                    isIconOnly
-                    variant="bordered"
-                    className="w-full"
-                    onPress={() => openPortfolioModal()}
-                    isDisabled={isLoading}
-                  >
-                    <CiExport />
-                  </Button>
+                <div className="mx-[5px]">
+                  <div className="flex gap-2">
+                    {cagrValues.map((year) => {
+                      return (
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          key={year.key}
+                          onPress={() => changeTimePeriod(Number(year.key))}
+                        >
+                          {year.label}
+                        </Button>
+                      );
+                    })}
+                    <Button
+                      className="flex-1"
+                      variant="bordered"
+                      size="sm"
+                      // onPress={() => changeTimePeriod(1)}
+                    >
+                      Custom
+                    </Button>
+                  </div>
                 </div>
+              </div>
+              <div className="my-1 flex flex-col gap-1">
+                <div className="flex items-center my-2">
+                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                  <b className="mx-3 whitespace-nowrap">Investment Amount</b>
+                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                </div>
+                <div className="flex flex-col gap-2 justify-end">
+                  <div className="flex w-full gap-2 items-center">
+                    <Input
+                      type="number"
+                      value={initialAmount}
+                      startContent={
+                        <div className="pointer-events-none flex items-center">
+                          <span className="text-default-400 text-small">₹</span>
+                        </div>
+                      }
+                      onValueChange={(val) => setInitialAmount(val)}
+                      name="portfolioName"
+                      isDisabled={isLoading}
+                      size="md"
+                      placeholder="Initial Amount"
+                      // labelPlacement="outside-left"
+                      labelPlacement="inside"
+                    />
+                    <Tabs
+                      aria-label="Options"
+                      fullWidth
+                      selectedKey={investmentMode}
+                      size="md"
+                      onSelectionChange={setInvestmentMode}
+                      isDisabled={isLoading}
+                    >
+                      <Tab key="lumpsum" title="Lumpsum"></Tab>
+                      <Tab key="monthly-sip" title="Monthly Sip"></Tab>
+                    </Tabs>
+                  </div>
+                </div>
+              </div>
+              <div className="flex my-1 gap-2 justify-end">
+                <Button
+                  variant="bordered"
+                  className="w-full"
+                  onPress={() => backtestPortfolio()}
+                  isDisabled={
+                    isLoading ||
+                    Object.keys(selectedInstrumentsData).length === 0
+                  }
+                >
+                  Backtest <VscGraphLine />
+                </Button>
               </div>
             </Card>
             <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
@@ -488,10 +651,25 @@ export default function Home() {
                 </Autocomplete>
                 <PortfolioChart
                   investmentMode={investmentMode}
-                  instrumentsData={selectedInstrumentsData}
                   timePeriod={Number(selectedTimePeriod)}
                   initialAmount={initialAmount}
                   oldInitialNum={oldInitialNum || initialAmount}
+                  chartData={chartData}
+                  maxDrawdown={maxDrawdown}
+                  sharpeRatio={sharpeRatio}
+                  initialValue={initialValue}
+                  finalValue={finalValue}
+                  changeCompareIndex={changeCompareIndex}
+                  selectedCompareIndex={selectedCompareIndex}
+                  loadComparePortfolio={loadComparePortfolio}
+                  showCompareSavedPortfolioModal={
+                    showCompareSavedPortfolioModal
+                  }
+                  setShowCompareSavedPortfolioModal={
+                    setShowCompareSavedPortfolioModal
+                  }
+                  compareSavedPortfolios={compareSavedPortfolios}
+                  isLoading={isLoading}
                 />
               </div>
             </Card>

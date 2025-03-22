@@ -1,6 +1,7 @@
 import numpy as np
 from datetime import datetime, timedelta
 from services.index_service import IndexService
+from services.portfolio_management import PortfolioManagement
 
 class PortfolioAnalysis:
     def calculate_max_drawdown(self, nav_data):
@@ -83,8 +84,8 @@ class PortfolioAnalysis:
     
     def process_portfolio_data(self, instruments_data, time_period, initial_amount, investment_mode):
         """Process portfolio data and return chart data with metrics"""
+        portfolioManagement = PortfolioManagement()
         date_array = self.generate_date_array(time_period)
-        print(instruments_data,time_period,initial_amount,investment_mode)
         # Initialize data map
         data_map = {date.strftime("%Y-%m-%d"): None for date in date_array}
         
@@ -94,7 +95,10 @@ class PortfolioAnalysis:
         # Process each instrument
         for instrument_key, instrument_data in instruments_data.items():
             weightage = instrument_data['weightage']
-            nav_data = instrument_data['navData']
+            # nav_data = instrument_data['navData']
+            # nav_data = portfolioManagement.generate_instrument_data(instrument_key, time_period)
+            nav_data = portfolioManagement.instrument_service.getInstrumentInfo(instrument_key, time_period)
+            nav_data = self.get_navs_for_range(nav_data[instrument_key]["instrumentData"],time_period)
             
             # Convert nav_data to dictionary for easier lookup
             scheme_data = {}
@@ -166,17 +170,16 @@ class PortfolioAnalysis:
         max_drawdown = self.calculate_max_drawdown(chart_data)
         sharpe_ratio = self.calculate_sharpe_ratio(chart_data)
         
-        initial_value = 100
         final_value = chart_data[-1]['nav'] if chart_data else 100
         
         return {
             "chartData": chart_data,
             "metrics": {
-                "initialValue": initial_value,
+                "initialValue": initial_amount,
                 "finalValue": final_value,
                 "maxDrawdown": round(max_drawdown, 2),
                 "sharpeRatio": round(sharpe_ratio, 2),
-                "gain": round(((final_value - initial_value) / 100) * 100, 2)
+                "gain": round(((final_value - initial_amount) / initial_amount) * 100, 2)
             }
         }
     
