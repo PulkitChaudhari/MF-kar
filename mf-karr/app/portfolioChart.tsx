@@ -11,7 +11,15 @@ import {
   ModalBody,
 } from "@nextui-org/react";
 
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   Card,
@@ -77,7 +85,7 @@ export default function PortfolioChart({
   } satisfies ChartConfig;
 
   return (
-    <div className="flex gap-10 flex-col">
+    <div className="flex gap-[5rem] flex-col p-2">
       <Modal
         isDismissable={true}
         isKeyboardDismissDisabled={true}
@@ -121,15 +129,15 @@ export default function PortfolioChart({
           <ModalFooter className="w-full pt-0"></ModalFooter>
         </ModalContent>
       </Modal>
-      <div>
+      <div className="flex flex-col gap-[2rem]">
         <div>
-          <div>
-            <div className="flex flex-row sm:flex-col w-full gap-1">
-              <div className="flex w-full gap-2 flex-col">
-                <div className="flex items-center gap-5">
-                  <b className="text-lg">Portfolio Returns</b>
-                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                </div>
+          <div className="flex flex-row sm:flex-col w-full gap-1">
+            <div className="flex items-center gap-3 mb-5">
+              <b className="text-lg">Portfolio Returns</b>
+              <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+            </div>
+            <div className="flex w-full gap-10 flex-col items-center">
+              <div className="w-11/12">
                 <div className="flex gap-2">
                   <div className="flex flex-col w-1/3">
                     <div>Invested Amount</div> <div>₹ {initialValue}</div>
@@ -172,91 +180,28 @@ export default function PortfolioChart({
                   </div>
                 </div>
               </div>
-              <div></div>
             </div>
-          </div>
-          <div>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                Loading chart data...
-              </div>
-            ) : (
-              <ChartContainer config={chartConfig}>
-                <LineChart
-                  accessibilityLayer
-                  data={chartData}
-                  margin={{
-                    left: 12,
-                    right: 12,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <YAxis
-                    dataKey="nav"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
-                  />
-                  <Line
-                    dataKey="nav"
-                    type="monotone"
-                    stroke="var(--color-desktop)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ChartContainer>
-            )}
           </div>
         </div>
-      </div>
-
-      <div className="flex items-center gap-5">
-        <b className="text-lg">Compare Returns</b>
-        <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-      </div>
-      <div>
-        <div>
-          <div>
-            <div className="flex justify-end">
-              <Dropdown id="line-graph">
-                <DropdownTrigger>
-                  <Button variant="bordered">{selectedCompareIndex}</Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  onAction={(key) => changeCompareIndex(key)}
-                  aria-label="Compare Index Actions"
-                  items={compareIndexValues}
-                >
-                  {(item) => (
-                    <DropdownItem key={item.key}>{item.label}</DropdownItem>
-                  )}
-                </DropdownMenu>
-              </Dropdown>
+        <div className="flex justify-center">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              Loading chart data...
             </div>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                Loading comparison data...
-              </div>
-            ) : (
+          ) : (
+            <div className="w-11/12">
               <ChartContainer config={chartConfig}>
                 <LineChart
-                  accessibilityLayer
-                  data={chartData}
+                  // accessibilityLayer
+                  // data={chartData}
                   margin={{
                     left: 12,
                     right: 12,
                   }}
+                  // width={width}
+                  // height={height}
+                  data={chartData}
+                  // margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid vertical={false} />
                   <XAxis
@@ -270,6 +215,7 @@ export default function PortfolioChart({
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
+                    domain={[0, "dataMax + 80"]}
                   />
                   <ChartTooltip
                     cursor={false}
@@ -282,20 +228,168 @@ export default function PortfolioChart({
                     strokeWidth={2}
                     dot={false}
                   />
-                  <Line
-                    dataKey="navIndex"
-                    type="monotone"
-                    stroke="var(--color-mobile)"
-                    strokeWidth={2}
-                    dot={false}
-                  />
                 </LineChart>
               </ChartContainer>
-            )}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-col gap-[2rem] mb-10">
+        <div className="flex items-center gap-3">
+          <b className="text-lg">Compare Returns with</b>
+          <div className="flex">
+            <Dropdown id="line-graph">
+              <DropdownTrigger>
+                <Button variant="bordered">{selectedCompareIndex}</Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                onAction={(key) => changeCompareIndex(key)}
+                aria-label="Compare Index Actions"
+                items={compareIndexValues}
+              >
+                {(item) => (
+                  <DropdownItem key={item.key}>{item.label}</DropdownItem>
+                )}
+              </DropdownMenu>
+            </Dropdown>
           </div>
+          <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+        </div>
+        <div>
           <div>
-            <div className="flex w-full items-start gap-2 text-sm">
-              <div className="grid gap-2"></div>
+            <div className="">
+              <div className="flex justify-center">
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    Loading comparison data...
+                  </div>
+                ) : (
+                  <div className="w-11/12">
+                    <ChartContainer config={chartConfig}>
+                      <AreaChart
+                        accessibilityLayer
+                        data={chartData}
+                        margin={{
+                          left: 12,
+                          right: 12,
+                        }}
+                      >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                        />
+                        {/* <YAxis
+                    dataKey="nav"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    domain={["dataMin", 500]}
+                  /> */}
+                        <YAxis
+                          dataKey="navIndex"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          domain={[0, "dataMax + 80"]}
+                        />
+                        <YAxis
+                          dataKey="nav"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          domain={[0, "dataMax + 80"]}
+                        />
+                        <ChartTooltip
+                          cursor={false}
+                          content={<ChartTooltipContent />}
+                        />
+                        <Line
+                          dataKey="nav"
+                          type="monotone"
+                          stroke="var(--color-desktop)"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                        <Line
+                          dataKey="navIndex"
+                          type="monotone"
+                          stroke="var(--color-mobile)"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+
+                        <defs>
+                          <linearGradient
+                            id="fillDesktop"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="var(--color-desktop)"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="var(--color-desktop)"
+                              stopOpacity={0.1}
+                            />
+                          </linearGradient>
+                          <linearGradient
+                            id="fillMobile"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="var(--color-mobile)"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="var(--color-mobile)"
+                              stopOpacity={0.1}
+                            />
+                          </linearGradient>
+                        </defs>
+
+                        <Area
+                          dataKey="nav"
+                          type="monotone"
+                          stroke="var(--color-desktop)"
+                          fill="url(#fillDesktop)"
+                          fillOpacity={0.2}
+                          strokeWidth={2}
+                          dot={false}
+                          stackId="1"
+                        />
+                        <Area
+                          dataKey="navIndex"
+                          type="monotone"
+                          stroke="var(--color-mobile)"
+                          fill="url(#fillMobile)"
+                          fillOpacity={0.2}
+                          strokeWidth={2}
+                          dot={false}
+                          // stackId="2"
+                        />
+                      </AreaChart>
+                    </ChartContainer>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="flex w-full items-start gap-2 text-sm">
+                <div className="grid gap-2"></div>
+              </div>
             </div>
           </div>
         </div>
