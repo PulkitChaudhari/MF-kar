@@ -49,7 +49,6 @@ export default function PortfolioChart({
   compareSavedPortfolios,
   isLoading,
 }: {
-  timePeriod: Number;
   initialAmount: String;
   oldInitialNum: String;
   investmentMode: String;
@@ -78,7 +77,7 @@ export default function PortfolioChart({
   } satisfies ChartConfig;
 
   return (
-    <div className="flex gap-2 flex-col">
+    <div className="flex gap-10 flex-col">
       <Modal
         isDismissable={true}
         isKeyboardDismissDisabled={true}
@@ -91,7 +90,7 @@ export default function PortfolioChart({
           <ModalBody className="w-full">
             {compareSavedPortfolios.map((row: any) => {
               return (
-                <Card key={row.portfolioName} className="flex p-2 m-1">
+                <div key={row.portfolioName} className="flex p-2 m-1">
                   <div className="col-span-4 flex align-center justify-between p-2">
                     <div className="text-sm flex items-center">
                       {row?.portfolioName}
@@ -115,7 +114,7 @@ export default function PortfolioChart({
                       </Button>
                     </div>
                   </div>
-                </Card>
+                </div>
               );
             })}
           </ModalBody>
@@ -123,26 +122,30 @@ export default function PortfolioChart({
         </ModalContent>
       </Modal>
       <div>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex gap-2 items-center w-full">
-              <div className="flex flex-row sm:flex-col gap-1">
+        <div>
+          <div>
+            <div className="flex flex-row sm:flex-col w-full gap-1">
+              <div className="flex w-full gap-2 flex-col">
+                <div className="flex items-center gap-5">
+                  <b className="text-lg">Portfolio Returns</b>
+                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                </div>
                 <div className="flex gap-2">
-                  <div className="flex flex-col justify-center items-center">
-                    <div>Invested Amount</div> <div>{initialValue}</div>
+                  <div className="flex flex-col w-1/3">
+                    <div>Invested Amount</div> <div>₹ {initialValue}</div>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <div>Final Amount</div> <div>{finalValue}</div>
+                  <div className="flex flex-col w-1/3">
+                    <div>Final Amount</div> <div>₹ {finalValue}</div>
                   </div>
                   {finalValue < initialValue ? (
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col w-1/3">
                       <div>Loss</div>
                       <div>
                         {(((finalValue - initialValue) / 100) * 100).toFixed(2)}
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col w-1/3">
                       <div>Gain</div>
                       <div>
                         {(
@@ -153,20 +156,26 @@ export default function PortfolioChart({
                       </div>
                     </div>
                   )}
-                  <div className="flex flex-col items-center">
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex flex-col w-1/3">
                     <div>Max Drawdown</div>
                     <div>{maxDrawdown.toFixed(2)}%</div>
                   </div>
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col w-1/3">
                     <div>Sharpe Ratio</div>
                     <div>{sharpeRatio.toFixed(2)}</div>
                   </div>
+                  <div className="flex flex-col w-1/3">
+                    <div>XIRR</div>
+                    <div>{sharpeRatio.toFixed(2)}</div>
+                  </div>
                 </div>
-                <div></div>
               </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+              <div></div>
+            </div>
+          </div>
+          <div>
             {isLoading ? (
               <div className="flex justify-center items-center h-64">
                 Loading chart data...
@@ -208,18 +217,17 @@ export default function PortfolioChart({
                 </LineChart>
               </ChartContainer>
             )}
-          </CardContent>
-          <CardFooter>
-            <div className="flex w-full items-start gap-2 text-sm">
-              <div className="grid gap-2"></div>
-            </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-5">
+        <b className="text-lg">Compare Returns</b>
+        <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
       </div>
       <div>
-        <Card>
-          <CardHeader></CardHeader>
-          <CardContent>
+        <div>
+          <div>
             <div className="flex justify-end">
               <Dropdown id="line-graph">
                 <DropdownTrigger>
@@ -284,13 +292,13 @@ export default function PortfolioChart({
                 </LineChart>
               </ChartContainer>
             )}
-          </CardContent>
-          <CardFooter>
+          </div>
+          <div>
             <div className="flex w-full items-start gap-2 text-sm">
               <div className="grid gap-2"></div>
             </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

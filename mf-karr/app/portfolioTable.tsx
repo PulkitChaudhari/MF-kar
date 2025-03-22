@@ -107,18 +107,18 @@ export default function PortfolioTable({
             ? tableData.map((row) => {
                 return (
                   <div key={row.instrumentCode} className="flex p-2 m-1">
-                    <div className="col-span-4 flex flex-col align-center justify-center">
-                      <div className="text-sm">
-                        {row?.instrumentName}. CAGR: {row.cagr}
+                    <div className="flex flex-col align-center justify-center grow">
+                      <div className="text-sm w-full">
+                        {row?.instrumentName}
                       </div>
-                      <div className="flex gap-1 align-center">
+                      <div className="flex gap-1 align-center w-full">
                         <Slider
                           maxValue={100}
                           minValue={0}
                           step={0.01}
                           isDisabled={true}
                           value={row.weightage}
-                          className="w-3/5 self-center"
+                          className="w-4/5 self-center"
                           size="sm"
                           onChange={(newValue) =>
                             changeWeightage(newValue, row)
@@ -132,36 +132,35 @@ export default function PortfolioTable({
                           }
                           isDisabled={true}
                           type="number"
-                          className="w-2/5"
+                          className="w-1/5"
                           variant="underlined"
                         />
                       </div>
                     </div>
-                    {/* <div className="absolute right-0 top-0 h-full w-8 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
+                    <div className="flex items-center">
                       <DeleteIcon
-                        className="cursor-pointer text-white"
+                        className="cursor-pointer text-red-500"
                         onClick={() => removeMututalFundFn(row)}
                       />
-                    </div> */}
+                    </div>
                   </div>
                 );
               })
             : tableDataWeightageCopy.map((row) => {
                 return (
-                  <div
-                    key={row.instrumentCode}
-                    className="flex p-2 m-1 overflow-visible"
-                  >
-                    <div className="col-span-4 flex flex-col align-center justify-center">
-                      <div>{row?.instrumentName}</div>
-                      <div className="flex gap-1 align-center">
+                  <div key={row.instrumentCode} className="flex p-2 m-1">
+                    <div className="col-span-4 flex flex-col align-center justify-center grow">
+                      <div className="text-sm w-full">
+                        {row?.instrumentName}
+                      </div>
+                      <div className="flex gap-1 align-center w-full">
                         <Slider
                           maxValue={100}
                           minValue={0}
                           step={0.01}
                           isDisabled={!isAdjustWeightageEnabled}
                           value={row.weightage}
-                          className="w-3/5 self-center"
+                          className="w-4/5 self-center"
                           size="sm"
                           onChange={(newValue) =>
                             changeWeightage(newValue, row)
@@ -174,17 +173,19 @@ export default function PortfolioTable({
                             changeWeightage(e.target.value, row)
                           }
                           type="number"
-                          className="w-2/5"
+                          className="w-1/5"
                           variant="underlined"
                         />
                       </div>
                     </div>
-                    {/* <div className="absolute right-0 top-0 h-full w-12 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
+                    <div
+                    // className="absolute right-0 top-0 h-full w-12 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
+                    >
                       <DeleteIcon
                         className="cursor-pointer text-white"
                         onClick={() => removeMututalFundFn(row)}
                       />
-                    </div> */}
+                    </div>
                   </div>
                 );
               })}

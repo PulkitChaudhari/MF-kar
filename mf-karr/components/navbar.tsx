@@ -26,36 +26,16 @@ import { useSession } from "next-auth/react";
 export const Navbar = () => {
   const { data: session } = useSession();
 
-  const searchInput = (
-    <Input
-      aria-label="Search"
-      classNames={{
-        inputWrapper: "bg-default-100",
-        input: "text-sm",
-      }}
-      endContent={
-        <Kbd className="hidden lg:inline-block" keys={["command"]}>
-          K
-        </Kbd>
-      }
-      labelPlacement="outside"
-      placeholder="Search..."
-      startContent={
-        <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-      }
-      type="search"
-    />
-  );
-
   if (session)
     return (
-      <NextUINavbar maxWidth="xl" position="sticky">
-        <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-          <NavbarBrand as="li" className="gap-3 max-w-fit">
-            <NextLink
-              className="flex justify-start items-center gap-1"
-              href="/"
-            >
+      <NextUINavbar
+        className="fixed top-0 left-0 right-0 z-50 items justify-between max-w-full"
+        maxWidth="full"
+        position="sticky"
+      >
+        <NavbarContent justify="start">
+          <NavbarBrand as="li" className="gap-3">
+            <NextLink className="flex justify-start gap-1" href="/">
               <p className="font-bold text-inherit">MF-karr</p>
             </NextLink>
           </NavbarBrand>
@@ -77,7 +57,7 @@ export const Navbar = () => {
           </ul>
         </NavbarContent>
 
-        <NavbarContent className="flex basis-1/5 sm:basis-full" justify="end">
+        <NavbarContent className="flex" justify="end">
           <NavbarItem className="flex gap-2">
             <Link isExternal aria-label="LinkedIn" href={siteConfig.links.mail}>
               <GMailIcon className="text-default-500" />

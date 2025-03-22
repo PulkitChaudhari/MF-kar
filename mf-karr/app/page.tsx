@@ -18,7 +18,11 @@ import {
   Tab,
   Tabs,
   Divider,
+  Calendar,
+  DateInput,
 } from "@nextui-org/react";
+import { FaRegEdit } from "react-icons/fa";
+import { parseDate } from "@internationalized/date";
 import { useAsyncList } from "@react-stately/data";
 import { GiInjustice } from "react-icons/gi";
 import { TfiSave } from "react-icons/tfi";
@@ -63,12 +67,42 @@ export default function Home() {
   const [initialValue, setInitialValue] = useState(100);
   const [finalValue, setFinalValue] = useState(100);
   const [selectedCompareIndex, setSelectedCompareIndex] =
-    useState<string>("None");
+    useState<string>("Nifty 50");
   const [showCompareSavedPortfolioModal, setShowCompareSavedPortfolioModal] =
     useState<boolean>(false);
   const [compareSavedPortfolios, setCompareSavedPortfolios] = useState<any[]>(
     []
   );
+  const [isCustomTimePeriod, setIsCustomTimePeriod] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<any>(parseDate("2024-04-04"));
+  const [endDate, setEndDate] = useState<any>(parseDate("2024-04-04"));
+  const [isEditFunds, setIsEditFunds] = useState<boolean>(true);
+
+  const CalendarIcon = (props: any) => {
+    return (
+      <svg
+        aria-hidden="true"
+        fill="none"
+        focusable="false"
+        height="1em"
+        role="presentation"
+        viewBox="0 0 24 24"
+        width="1em"
+        {...props}
+      >
+        <path
+          d="M7.75 2.5a.75.75 0 0 0-1.5 0v1.58c-1.44.115-2.384.397-3.078 1.092c-.695.694-.977 1.639-1.093 3.078h19.842c-.116-1.44-.398-2.384-1.093-3.078c-.694-.695-1.639-.977-3.078-1.093V2.5a.75.75 0 0 0-1.5 0v1.513C15.585 4 14.839 4 14 4h-4c-.839 0-1.585 0-2.25.013z"
+          fill="currentColor"
+        />
+        <path
+          clipRule="evenodd"
+          d="M2 12c0-.839 0-1.585.013-2.25h19.974C22 10.415 22 11.161 22 12v2c0 3.771 0 5.657-1.172 6.828C19.657 22 17.771 22 14 22h-4c-3.771 0-5.657 0-6.828-1.172C2 19.657 2 17.771 2 14zm15 2a1 1 0 1 0 0-2a1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2a1 1 0 0 0 0 2m-4-5a1 1 0 1 1-2 0a1 1 0 0 1 2 0m0 4a1 1 0 1 1-2 0a1 1 0 0 1 2 0m-6-3a1 1 0 1 0 0-2a1 1 0 0 0 0 2m0 4a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
+          fill="currentColor"
+          fillRule="evenodd"
+        />
+      </svg>
+    );
+  };
 
   async function addInstrument(instrumentValue: any) {
     if (instrumentValue !== null) {
@@ -102,22 +136,6 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
-  async function changeTimePeriod(timePeriod: any) {
-    setIsLoading(true);
-    try {
-      const updatedInstruments = await apiService.changeTimePeriod(
-        timePeriod,
-        selectedInstrumentsData
-      );
-      setSelectedInstrumentsData(updatedInstruments);
-      setSelectedTimePeriod(timePeriod.toString());
-    } catch (error) {
-      console.error("Error changing time period:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   async function loadPortfolio(row: any) {
     setIsLoading(true);
@@ -253,6 +271,7 @@ export default function Home() {
       setSharpeRatio(data.metrics.sharpeRatio);
       setInitialValue(data.metrics.initialValue);
       setFinalValue(data.metrics.finalValue);
+      setIsEditFunds(false);
     } catch (error) {
       console.error("Error fetching portfolio analysis:", error);
     } finally {
@@ -288,13 +307,6 @@ export default function Home() {
       setSelectedCompareIndex("Nifty 50");
     } else if (indexKey === "saved_portfolios") {
       openComparePortfolioModal();
-    } else {
-      const updatedChartData = chartData.map((item) => ({
-        ...item,
-        navIndex: undefined,
-      }));
-      setChartData(updatedChartData);
-      setSelectedCompareIndex("None");
     }
   }
 
@@ -346,7 +358,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className="h-full w-full">
       {!session ? (
         <Modal
           isDismissable={false}
@@ -377,7 +389,7 @@ export default function Home() {
           </ModalContent>
         </Modal>
       ) : (
-        <div>
+        <div className="h-full w-full">
           <Modal
             isDismissable={false}
             isKeyboardDismissDisabled={true}
@@ -465,214 +477,275 @@ export default function Home() {
               <ModalFooter className="w-full pt-0"></ModalFooter>
             </ModalContent>
           </Modal>
-          <div className="w-full gap-2 grid grid-cols-3 grid-rows-1 px-1 max-h-[85vh]">
-            <Card className="col-span-1 sm:col-span-1 gap-2 flex p-3 overflow-y-auto">
-              <div className="flex items-center gap-2">
-                <div>
-                  <b className="mx-[5px]">Selected Portfolio Funds </b>
-                </div>
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  onPress={() => setShowSavePortfolioNameModal(true)}
-                  isDisabled={
-                    isLoading ||
-                    Object.keys(selectedInstrumentsData).length === 0
-                  }
-                  size="sm"
-                >
-                  <TfiSave />
-                </Button>
-                <Button
-                  isIconOnly
-                  variant="bordered"
-                  onPress={() => openPortfolioModal()}
-                  isDisabled={isLoading}
-                  size="sm"
-                >
-                  <CiExport />
-                </Button>
-                <div className="flex-1 ">
-                  {isAdjustWeightageEnabled ? (
-                    <div className="flex gap-2 w-full">
+          <div className="w-full h-full flex">
+            <div className="gap-2 h-full w-4/12 flex flex-col">
+              <div className="bg-gray-950 flex flex-col h-full p-5 ml-2 mr-1 my-2 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div>
+                    <b className="text-sm mx-[5px]">
+                      Selected Portfolio Funds{" "}
+                    </b>
+                  </div>
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    onPress={() => setShowSavePortfolioNameModal(true)}
+                    isDisabled={
+                      isLoading ||
+                      Object.keys(selectedInstrumentsData).length === 0
+                    }
+                    size="sm"
+                  >
+                    <TfiSave />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    variant="bordered"
+                    onPress={() => openPortfolioModal()}
+                    isDisabled={isLoading}
+                    size="sm"
+                  >
+                    <CiExport />
+                  </Button>
+                  <div className="flex-1 ">
+                    {isAdjustWeightageEnabled ? (
+                      <div className="flex gap-2 w-full">
+                        <Button
+                          isIconOnly
+                          aria-label="Like"
+                          color="success"
+                          className="w-full"
+                          isDisabled={!isSaveButtonEnabled}
+                          onPress={() => onSave()}
+                          size="sm"
+                        >
+                          <FaCheck />
+                        </Button>
+                        <Button
+                          isIconOnly
+                          aria-label="Like1"
+                          color="danger"
+                          onPress={() => onCancelWeightAdjust()}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <RxCross2 />
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
                         isIconOnly
-                        aria-label="Like"
-                        color="success"
-                        className="w-full"
-                        isDisabled={!isSaveButtonEnabled}
-                        onPress={() => onSave()}
-                        size="sm"
-                      >
-                        <FaCheck />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        aria-label="Like1"
-                        color="danger"
-                        onPress={() => onCancelWeightAdjust()}
+                        variant="bordered"
+                        onPress={() => setIsAdjustWeightageEnabled(true)}
+                        isDisabled={isLoading}
                         size="sm"
                         className="w-full"
                       >
-                        <RxCross2 />
+                        <GiInjustice />
                       </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      isIconOnly
-                      variant="bordered"
-                      onPress={() => setIsAdjustWeightageEnabled(true)}
-                      isDisabled={isLoading}
-                      size="sm"
-                      className="w-full"
-                    >
-                      <GiInjustice />
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-              <PortfolioTable
-                selectedNavData={selectedInstrumentsData}
-                removeMututalFundFn={removeMutualFund}
-                timePeriod={Number(selectedTimePeriod)}
-                isAdjustWeightageEnabled={isAdjustWeightageEnabled}
-                isSaveEnabled={isSaveEnabled}
-                tableDataWeightageCopy={tableDataWeightageCopy}
-                setTableDataWeightageCopy={setTableDataWeightageCopy}
-                isLoading={isLoading}
-              />
-              <div className="my-1 flex flex-col gap-1">
-                <div className="flex items-center my-2">
-                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                  <b className="mx-3 whitespace-nowrap">Edit Time period</b>
-                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                </div>
-                <div className="mx-[5px]">
-                  <div className="flex gap-2">
-                    {cagrValues.map((year) => {
-                      return (
+                <PortfolioTable
+                  selectedNavData={selectedInstrumentsData}
+                  removeMututalFundFn={removeMutualFund}
+                  timePeriod={Number(selectedTimePeriod)}
+                  isAdjustWeightageEnabled={isAdjustWeightageEnabled}
+                  isSaveEnabled={isSaveEnabled}
+                  tableDataWeightageCopy={tableDataWeightageCopy}
+                  setTableDataWeightageCopy={setTableDataWeightageCopy}
+                  isLoading={isLoading}
+                />
+                <div className="my-1 flex flex-col gap-1">
+                  <div className="flex items-center my-2">
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                    <b className="mx-3 text-sm whitespace-nowrap">
+                      Edit Time period
+                    </b>
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                  </div>
+                  <div className="mx-[5px]">
+                    {isCustomTimePeriod ? (
+                      <div className="flex gap-2 items-end">
+                        <DateInput
+                          label="From"
+                          labelPlacement="outside"
+                          startContent={
+                            <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                          }
+                          size="sm"
+                          value={startDate}
+                          onChange={(date) => console.log(date)}
+                        />
+                        <DateInput
+                          label="To"
+                          labelPlacement="outside"
+                          startContent={
+                            <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                          }
+                          size="sm"
+                          value={endDate}
+                          onChange={(date) => console.log(date)}
+                        />
                         <Button
                           variant="bordered"
                           size="sm"
-                          key={year.key}
-                          onPress={() => changeTimePeriod(Number(year.key))}
+                          onPress={() => {
+                            setIsCustomTimePeriod(false);
+                          }}
                         >
-                          {year.label}
+                          <RxCross2 />
                         </Button>
-                      );
-                    })}
-                    <Button
-                      className="flex-1"
-                      variant="bordered"
-                      size="sm"
-                      // onPress={() => changeTimePeriod(1)}
-                    >
-                      Custom
-                    </Button>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        {cagrValues.map((year) => {
+                          return (
+                            <Button
+                              variant="bordered"
+                              size="sm"
+                              key={year.key}
+                              onPress={() => setSelectedTimePeriod(year.key)}
+                              isDisabled={selectedTimePeriod == year.key}
+                            >
+                              {year.label}
+                            </Button>
+                          );
+                        })}
+                        <Button
+                          className="flex-1"
+                          variant="bordered"
+                          size="sm"
+                          onPress={() => {
+                            setIsCustomTimePeriod(true);
+                          }}
+                        >
+                          Custom
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-              <div className="my-1 flex flex-col gap-1">
-                <div className="flex items-center my-2">
-                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                  <b className="mx-3 whitespace-nowrap">Investment Amount</b>
-                  <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                <div className="my-1 flex flex-col gap-1">
+                  <div className="flex items-center my-2">
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                    <b className="mx-3 text-sm whitespace-nowrap">
+                      Investment Amount
+                    </b>
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                  </div>
+                  <div className="flex flex-col gap-2 justify-end">
+                    <div className="flex w-full gap-2 items-center">
+                      <Input
+                        type="number"
+                        value={initialAmount}
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small">
+                              ₹
+                            </span>
+                          </div>
+                        }
+                        onValueChange={(val) => setInitialAmount(val)}
+                        name="portfolioName"
+                        isDisabled={isLoading}
+                        size="md"
+                        placeholder="Initial Amount"
+                        // labelPlacement="outside-left"
+                        labelPlacement="inside"
+                      />
+                      <Tabs
+                        aria-label="Options"
+                        fullWidth
+                        selectedKey={investmentMode}
+                        size="md"
+                        onSelectionChange={setInvestmentMode}
+                        isDisabled={isLoading}
+                      >
+                        <Tab key="lumpsum" title="Lumpsum"></Tab>
+                        <Tab key="monthly-sip" title="Monthly Sip"></Tab>
+                      </Tabs>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-2 justify-end">
-                  <div className="flex w-full gap-2 items-center">
-                    <Input
-                      type="number"
-                      value={initialAmount}
-                      startContent={
-                        <div className="pointer-events-none flex items-center">
-                          <span className="text-default-400 text-small">₹</span>
-                        </div>
+                <div className="flex my-1 gap-2 justify-end">
+                  <Button
+                    variant="bordered"
+                    className="w-full"
+                    onPress={() => backtestPortfolio()}
+                    isDisabled={
+                      isLoading ||
+                      Object.keys(selectedInstrumentsData).length === 0
+                    }
+                  >
+                    Backtest <VscGraphLine />
+                  </Button>
+                  <Button
+                    variant="bordered"
+                    className="w-full"
+                    onPress={() => setIsEditFunds(true)}
+                  >
+                    Edit Funds <FaRegEdit />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <div
+              // className="h-full w-8/12">
+              className="gap-2 h-full w-8/12 flex flex-col"
+            >
+              <div className="bg-gray-950 flex flex-col h-full p-5 my-2 ml-1 mr-2 overflow-y-auto rounded-lg">
+                <div className="flex flex-col gap-3 w-full">
+                  {isEditFunds ? (
+                    <Autocomplete
+                      inputValue={list.filterText}
+                      isLoading={list.isLoading}
+                      items={list.items}
+                      label="Select an instrument"
+                      onInputChange={list.setFilterText}
+                      onSelectionChange={($event) => addInstrument($event)}
+                      menuTrigger="input"
+                      className="w-full"
+                      listboxProps={{
+                        emptyContent: "No results found",
+                      }}
+                      isDisabled={isAdjustWeightageEnabled || isLoading}
+                    >
+                      {(item: any) => (
+                        <AutocompleteItem
+                          key={item.instrumentCode}
+                          className="capitalize"
+                        >
+                          {item.instrumentName}
+                        </AutocompleteItem>
+                      )}
+                    </Autocomplete>
+                  ) : (
+                    <PortfolioChart
+                      investmentMode={investmentMode}
+                      initialAmount={initialAmount}
+                      oldInitialNum={oldInitialNum || initialAmount}
+                      chartData={chartData}
+                      maxDrawdown={maxDrawdown}
+                      sharpeRatio={sharpeRatio}
+                      initialValue={initialValue}
+                      finalValue={finalValue}
+                      changeCompareIndex={changeCompareIndex}
+                      selectedCompareIndex={selectedCompareIndex}
+                      loadComparePortfolio={loadComparePortfolio}
+                      showCompareSavedPortfolioModal={
+                        showCompareSavedPortfolioModal
                       }
-                      onValueChange={(val) => setInitialAmount(val)}
-                      name="portfolioName"
-                      isDisabled={isLoading}
-                      size="md"
-                      placeholder="Initial Amount"
-                      // labelPlacement="outside-left"
-                      labelPlacement="inside"
+                      setShowCompareSavedPortfolioModal={
+                        setShowCompareSavedPortfolioModal
+                      }
+                      compareSavedPortfolios={compareSavedPortfolios}
+                      isLoading={isLoading}
                     />
-                    <Tabs
-                      aria-label="Options"
-                      fullWidth
-                      selectedKey={investmentMode}
-                      size="md"
-                      onSelectionChange={setInvestmentMode}
-                      isDisabled={isLoading}
-                    >
-                      <Tab key="lumpsum" title="Lumpsum"></Tab>
-                      <Tab key="monthly-sip" title="Monthly Sip"></Tab>
-                    </Tabs>
-                  </div>
+                  )}
                 </div>
               </div>
-              <div className="flex my-1 gap-2 justify-end">
-                <Button
-                  variant="bordered"
-                  className="w-full"
-                  onPress={() => backtestPortfolio()}
-                  isDisabled={
-                    isLoading ||
-                    Object.keys(selectedInstrumentsData).length === 0
-                  }
-                >
-                  Backtest <VscGraphLine />
-                </Button>
-              </div>
-            </Card>
-            <Card className="col-span-2 sm:col-span-2 h-full gap-2 grid-rows-2 p-3 overflow-y-auto">
-              <div className="flex flex-col gap-3">
-                <Autocomplete
-                  inputValue={list.filterText}
-                  isLoading={list.isLoading}
-                  items={list.items}
-                  label="Select an instrument"
-                  onInputChange={list.setFilterText}
-                  onSelectionChange={($event) => addInstrument($event)}
-                  menuTrigger="input"
-                  className="w-full"
-                  listboxProps={{
-                    emptyContent: "No results found",
-                  }}
-                  isDisabled={isAdjustWeightageEnabled || isLoading}
-                >
-                  {(item: any) => (
-                    <AutocompleteItem
-                      key={item.instrumentCode}
-                      className="capitalize"
-                    >
-                      {item.instrumentName}
-                    </AutocompleteItem>
-                  )}
-                </Autocomplete>
-                <PortfolioChart
-                  investmentMode={investmentMode}
-                  timePeriod={Number(selectedTimePeriod)}
-                  initialAmount={initialAmount}
-                  oldInitialNum={oldInitialNum || initialAmount}
-                  chartData={chartData}
-                  maxDrawdown={maxDrawdown}
-                  sharpeRatio={sharpeRatio}
-                  initialValue={initialValue}
-                  finalValue={finalValue}
-                  changeCompareIndex={changeCompareIndex}
-                  selectedCompareIndex={selectedCompareIndex}
-                  loadComparePortfolio={loadComparePortfolio}
-                  showCompareSavedPortfolioModal={
-                    showCompareSavedPortfolioModal
-                  }
-                  setShowCompareSavedPortfolioModal={
-                    setShowCompareSavedPortfolioModal
-                  }
-                  compareSavedPortfolios={compareSavedPortfolios}
-                  isLoading={isLoading}
-                />
-              </div>
-            </Card>
+            </div>
           </div>
         </div>
       )}
