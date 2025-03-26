@@ -7,42 +7,40 @@ import json  # Importing json module
 from utils.db_config import get_db_connection
 
 class PortfolioService:
-    
-    @staticmethod
-    def savePortfolioForUser(emailId: str, instrumentsData: List[dict], portfolioName: str) -> dict:
-        # Connect to PostgreSQL database
-        # conn = psycopg2.connect(
-        #     dbname='postgres',
-        #     user='postgres',
-        #     password='Pulkit#0102',
-        #     host='mfkarrdatabase.cz0iiwuys84w.ap-south-1.rds.amazonaws.com',
-        #     port='5432'
-        # )
+
+    def savePortfolioForUser(self,emailId: str, instrumentsData: List[dict], portfolioName: str) -> dict:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(f"""
             SELECT COUNT(*) FROM user_portfolios where portfolioname=%s and email_id=%s
         """, (portfolioName,emailId )) 
 
-        result = cursor.fetchall()
-
-        resp = "Duplicate Portfolio name"
+        result:tuple = cursor.fetchall()
 
         if result and result[0][0] == 0:
             instrumentsDataJson = json.dumps(instrumentsData)
             cursor.execute(f"""
                 INSERT INTO user_portfolios (email_id, instrumentsdata, portfolioname) values (%s, %s, %s)
-            """, (emailId, instrumentsDataJson, portfolioName))  # Using parameterized query for safety
-            resp = "successful"
+            """, (emailId, instrumentsDataJson, portfolioName))
+            self.closeConnection(conn,cursor)
+            return self.createPayload("success","Saved Successfully",f"""{portfolioName} saved successfully""")
 
+        self.closeConnection(conn,cursor)
+        return self.createPayload("danger","Save Failed","A Portfolio with this name already exists")
+    
+    def createPayload(self,type:str,title:str,description:str): 
+        return {
+            "type": type,
+            "title": title,
+            "description": description
+        }
+    
+    def closeConnection(self,conn,cursor): 
         conn.commit()
         cursor.close()
         conn.close()
-        return resp
-    
 
-    @staticmethod
-    def getPortfoliosForUser(emailId: str) -> dict:
+    def getPortfoliosForUser(self,emailId: str) -> dict:
         # Connect to PostgreSQL database
         # conn = psycopg2.connect(
         #     dbname='postgres',

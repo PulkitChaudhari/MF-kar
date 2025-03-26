@@ -22,6 +22,16 @@ export interface apiNavData {
   nav: string;
 }
 
+export type ToastColor =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "foreground"
+  | undefined;
+
 export interface navData {
   date: Date;
   nav: string;

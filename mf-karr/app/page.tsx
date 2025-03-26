@@ -36,6 +36,8 @@ import { CiExport } from "react-icons/ci";
 import { apiService } from "./services/api.service";
 import { VscGraphLine } from "react-icons/vsc";
 import { MdModeEditOutline } from "react-icons/md";
+import { addToast } from "@heroui/toast";
+import { ToastColor } from "./interfaces/interfaces";
 
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
@@ -207,30 +209,31 @@ export default function Home() {
     setIsAdjustWeightageEnabled(false);
   }
 
-  async function savePortfolio(data: any) {
+  function displayToast(toastData: {
+    type: ToastColor;
+    title: string;
+    description: string;
+  }) {
+    addToast({
+      title: toastData.title,
+      description: toastData.description,
+      color: toastData.type,
+    });
+  }
+
+  async function savePortfolio() {
     const toBeSentData: any[] = [];
     Object.keys(selectedInstrumentsData).forEach((key) => {
       const weightage = selectedInstrumentsData[key].weightage;
       toBeSentData.push({ instrumentCode: key, weightage: weightage });
     });
 
-    return apiService.savePortfolio(
-      session?.user?.email || "",
-      toBeSentData,
-      data.portfolioName
-    );
+    return apiService
+      .savePortfolio(session?.user?.email || "", toBeSentData, portfolioName)
+      .then((toastData: any) => {
+        displayToast(toastData);
+      });
   }
-
-  const onSubmit = async (e: any) => {
-    e.preventDefault();
-
-    const data = Object.fromEntries(new FormData(e.currentTarget));
-    await savePortfolio(data).then((res) => {
-      if (res == "Duplicate Portfolio name")
-        setShowSavePortfolioNameModal(false);
-      else setErrors({ portfolioName: res });
-    });
-  };
 
   function fetchSavedPortfolio() {
     if (session?.user?.email) {
@@ -427,11 +430,7 @@ export default function Home() {
             className="p-2"
           >
             <ModalContent className="w-full">
-              <Form
-                className="w-full"
-                validationErrors={errors}
-                onSubmit={onSubmit}
-              >
+              <Form className="w-full" validationErrors={errors}>
                 <ModalBody className="w-full">
                   <Input
                     label="Portfolio Name"
@@ -547,7 +546,7 @@ export default function Home() {
                   <Button
                     isIconOnly
                     variant="bordered"
-                    onPress={() => setShowSavePortfolioNameModal(true)}
+                    onPress={() => savePortfolio()}
                     isDisabled={
                       isLoading ||
                       Object.keys(selectedInstrumentsData).length === 0

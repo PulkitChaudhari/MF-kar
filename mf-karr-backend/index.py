@@ -13,9 +13,6 @@ app = Flask(__name__)
 # Enable CORS for all routes and allow specific origins
 CORS(app)  # Adjust the origin as needed
 
-# Initialize the service
-portfolio_management = PortfolioManagement()
-encryption_service = EncryptionService()
 
 def encrypt_response(data):
     """Helper function to encrypt response data"""
@@ -48,12 +45,12 @@ def savePortfolio():
     emailId = str(data.get('emailId'))
     instrumentsData = list[dict](data.get('instrumentsData'))
     portfolioName = str(data.get('portfolioName'))
-    result = PortfolioService.savePortfolioForUser(emailId, instrumentsData,portfolioName)
+    result = portfolioService.savePortfolioForUser(emailId, instrumentsData,portfolioName)
     return encrypt_response(result)
 
 @app.route('/api/portfolio/getPortfolios/<string:emailId>', methods=['GET'])
 def getPortfolios(emailId):
-    result = PortfolioService.getPortfoliosForUser(emailId)
+    result = portfolioService.getPortfoliosForUser(emailId)
     return encrypt_response(result)
 
 @app.route('/api/portfolio/analyze', methods=['POST'])
@@ -154,6 +151,8 @@ def load_portfolio():
     return encrypt_response(result)
 
 if __name__ == "__main__":
+    portfolio_management = PortfolioManagement()
+    encryption_service = EncryptionService()
     instrumentService = InstrumentService()
     portfolioService = PortfolioService()
     indexService = IndexService()
