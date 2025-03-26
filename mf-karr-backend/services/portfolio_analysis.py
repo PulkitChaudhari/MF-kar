@@ -250,9 +250,22 @@ class PortfolioAnalysis:
                     "date": formatted_date,
                     "nav": round((scheme_data[date_str] * initial_amount) / 100, 2)
                 })
+
+        # Calculate metrics
+        max_drawdown = self.calculate_max_drawdown(chart_data)
+        sharpe_ratio = self.calculate_sharpe_ratio(chart_data)
+        
+        final_value = chart_data[-1]['nav'] if chart_data else 100
         
         return {
-            "chartData": chart_data
+            "chartData": chart_data,
+            "metrics": {
+                "initialValue": initial_amount,
+                "finalValue": final_value,
+                "maxDrawdown": round(max_drawdown, 2),
+                "sharpeRatio": round(sharpe_ratio, 2),
+                "gain": round(((final_value - initial_amount) / initial_amount) * 100, 2)
+            }
         }
 
     def fetch_index_data(self, index_name, time_period):

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Dropdown,
   DropdownMenu,
@@ -9,25 +9,15 @@ import {
   ModalContent,
   ModalFooter,
   ModalBody,
+  Table,
+  TableCell,
+  TableBody,
+  TableRow,
+  TableColumn,
+  TableHeader,
 } from "@nextui-org/react";
 
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Area, AreaChart, CartesianGrid, Line, XAxis, YAxis } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
@@ -36,12 +26,8 @@ import {
 } from "@/components/ui/chart";
 import { Button } from "@nextui-org/button";
 import { compareIndexValues } from "./constants";
-import { config } from "../config/config";
 import { RxCross2 } from "react-icons/rx";
 import { FaCheck } from "react-icons/fa6";
-import { apiResponse } from "./interfaces/interfaces";
-import { useSession } from "next-auth/react";
-import { apiService } from "./services/api.service";
 
 export default function PortfolioChart({
   chartData,
@@ -56,6 +42,8 @@ export default function PortfolioChart({
   setShowCompareSavedPortfolioModal,
   compareSavedPortfolios,
   isLoading,
+  portfolioMetrics,
+  comparePortfolioReturnDiff,
 }: {
   initialAmount: String;
   oldInitialNum: String;
@@ -72,6 +60,8 @@ export default function PortfolioChart({
   setShowCompareSavedPortfolioModal: any;
   compareSavedPortfolios: any;
   isLoading: any;
+  portfolioMetrics: any[];
+  comparePortfolioReturnDiff: any;
 }) {
   const chartConfig = {
     desktop: {
@@ -137,13 +127,22 @@ export default function PortfolioChart({
               <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
             </div>
             <div className="flex w-full gap-10 flex-col items-center">
-              <div className="w-11/12">
+              <div className="w-11/12 gap-7 flex flex-col">
                 <div className="flex gap-2">
                   <div className="flex flex-col w-1/3">
                     <div>Invested Amount</div> <div>₹ {initialValue}</div>
                   </div>
                   <div className="flex flex-col w-1/3">
-                    <div>Final Amount</div> <div>₹ {finalValue}</div>
+                    <div>Final Amount</div>{" "}
+                    <div
+                      className={
+                        finalValue > initialValue
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }
+                    >
+                      ₹ {finalValue}
+                    </div>
                   </div>
                   {finalValue < initialValue ? (
                     <div className="flex flex-col w-1/3">
@@ -155,7 +154,13 @@ export default function PortfolioChart({
                   ) : (
                     <div className="flex flex-col w-1/3">
                       <div>Gain</div>
-                      <div>
+                      <div
+                        className={
+                          finalValue > initialValue
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }
+                      >
                         {(
                           ((finalValue - initialValue) / initialValue) *
                           100
@@ -168,7 +173,9 @@ export default function PortfolioChart({
                 <div className="flex gap-2">
                   <div className="flex flex-col w-1/3">
                     <div>Max Drawdown</div>
-                    <div>{maxDrawdown.toFixed(2)}%</div>
+                    <div className="text-red-400">
+                      - {maxDrawdown.toFixed(2)}%
+                    </div>
                   </div>
                   <div className="flex flex-col w-1/3">
                     <div>Sharpe Ratio</div>
@@ -191,7 +198,7 @@ export default function PortfolioChart({
           ) : (
             <div className="w-11/12">
               <ChartContainer config={chartConfig}>
-                <LineChart
+                <AreaChart
                   // accessibilityLayer
                   // data={chartData}
                   margin={{
@@ -228,7 +235,38 @@ export default function PortfolioChart({
                     strokeWidth={2}
                     dot={false}
                   />
-                </LineChart>
+
+                  <defs>
+                    <linearGradient
+                      id="fillDesktop"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-desktop)"
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-desktop)"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <Area
+                    dataKey="nav"
+                    type="monotone"
+                    stroke="var(--color-desktop)"
+                    fill="url(#fillDesktop)"
+                    fillOpacity={0.2}
+                    strokeWidth={2}
+                    dot={false}
+                    // stackId="2"
+                  />
+                </AreaChart>
               </ChartContainer>
             </div>
           )}
@@ -243,7 +281,7 @@ export default function PortfolioChart({
                 <Button variant="bordered">{selectedCompareIndex}</Button>
               </DropdownTrigger>
               <DropdownMenu
-                onAction={(key) => changeCompareIndex(key)}
+                onAction={(key) => changeCompareIndex(chartData, key)}
                 aria-label="Compare Index Actions"
                 items={compareIndexValues}
               >
@@ -255,142 +293,192 @@ export default function PortfolioChart({
           </div>
           <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
         </div>
-        <div>
-          <div>
-            <div className="">
-              <div className="flex justify-center">
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    Loading comparison data...
-                  </div>
-                ) : (
-                  <div className="w-11/12">
-                    <ChartContainer config={chartConfig}>
-                      <AreaChart
-                        accessibilityLayer
-                        data={chartData}
-                        margin={{
-                          left: 12,
-                          right: 12,
-                        }}
-                      >
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                        />
-                        {/* <YAxis
+        <div className="flex flex-col items-center gap-5">
+          <div className="flex gap-1">
+            {/* <b
+              className={
+                chartData[chartData.length - 1].navIndex >
+                chartData[chartData.length - 1].nav
+                  ? "text-green-400 text-lg"
+                  : "text-red-400 text-lg"
+              }
+            >
+              {(
+                ((chartData[chartData.length - 1].navIndex >
+                chartData[chartData.length - 1].nav
+                  ? chartData[chartData.length - 1].navIndex -
+                    chartData[chartData.length - 1].nav
+                  : chartData[chartData.length - 1].nav -
+                    chartData[chartData.length - 1].navIndex) /
+                  chartData[chartData.length - 1].nav) *
+                100
+              ).toFixed(2)}
+              %
+            </b> */}
+            {comparePortfolioReturnDiff < 0 ? (
+              <b className="text-red-400 text-lg">
+                {comparePortfolioReturnDiff.toFixed(2)}% lower compared to{" "}
+                {selectedCompareIndex}
+              </b>
+            ) : (
+              <b className="text-green-400 text-lg">
+                {comparePortfolioReturnDiff.toFixed(2)}% higher compared to{" "}
+                {selectedCompareIndex}
+              </b>
+            )}
+          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              Loading comparison data...
+            </div>
+          ) : (
+            <div className="w-11/12">
+              <ChartContainer config={chartConfig}>
+                <AreaChart
+                  accessibilityLayer
+                  data={chartData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                  }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                  />
+                  {/* <YAxis
                     dataKey="nav"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
                     domain={["dataMin", 500]}
                   /> */}
-                        <YAxis
-                          dataKey="navIndex"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          domain={[0, "dataMax + 80"]}
-                        />
-                        <YAxis
-                          dataKey="nav"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          domain={[0, "dataMax + 80"]}
-                        />
-                        <ChartTooltip
-                          cursor={false}
-                          content={<ChartTooltipContent />}
-                        />
-                        <Line
-                          dataKey="nav"
-                          type="monotone"
-                          stroke="var(--color-desktop)"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                        <Line
-                          dataKey="navIndex"
-                          type="monotone"
-                          stroke="var(--color-mobile)"
-                          strokeWidth={2}
-                          dot={false}
-                        />
+                  <YAxis
+                    dataKey="navIndex"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    domain={[0, "dataMax + 40"]}
+                  />
+                  <YAxis
+                    dataKey="nav"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    domain={[0, "dataMax + 40"]}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent />}
+                  />
+                  <Line
+                    dataKey="nav"
+                    type="monotone"
+                    stroke="var(--color-desktop)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    dataKey="navIndex"
+                    type="monotone"
+                    stroke="var(--color-mobile)"
+                    strokeWidth={2}
+                    dot={false}
+                  />
 
-                        <defs>
-                          <linearGradient
-                            id="fillDesktop"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="var(--color-desktop)"
-                              stopOpacity={0.8}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="var(--color-desktop)"
-                              stopOpacity={0.1}
-                            />
-                          </linearGradient>
-                          <linearGradient
-                            id="fillMobile"
-                            x1="0"
-                            y1="0"
-                            x2="0"
-                            y2="1"
-                          >
-                            <stop
-                              offset="5%"
-                              stopColor="var(--color-mobile)"
-                              stopOpacity={0.8}
-                            />
-                            <stop
-                              offset="95%"
-                              stopColor="var(--color-mobile)"
-                              stopOpacity={0.1}
-                            />
-                          </linearGradient>
-                        </defs>
+                  <defs>
+                    <linearGradient
+                      id="fillDesktop"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-desktop)"
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-desktop)"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                    <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-mobile)"
+                        stopOpacity={0.8}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-mobile)"
+                        stopOpacity={0.1}
+                      />
+                    </linearGradient>
+                  </defs>
 
-                        <Area
-                          dataKey="nav"
-                          type="monotone"
-                          stroke="var(--color-desktop)"
-                          fill="url(#fillDesktop)"
-                          fillOpacity={0.2}
-                          strokeWidth={2}
-                          dot={false}
-                          stackId="1"
-                        />
-                        <Area
-                          dataKey="navIndex"
-                          type="monotone"
-                          stroke="var(--color-mobile)"
-                          fill="url(#fillMobile)"
-                          fillOpacity={0.2}
-                          strokeWidth={2}
-                          dot={false}
-                          // stackId="2"
-                        />
-                      </AreaChart>
-                    </ChartContainer>
-                  </div>
-                )}
-              </div>
+                  <Area
+                    dataKey="nav"
+                    type="monotone"
+                    stroke="var(--color-desktop)"
+                    fill="url(#fillDesktop)"
+                    fillOpacity={0.2}
+                    strokeWidth={2}
+                    dot={false}
+                    stackId="1"
+                  />
+                  <Area
+                    dataKey="navIndex"
+                    type="monotone"
+                    stroke="var(--color-mobile)"
+                    fill="url(#fillMobile)"
+                    fillOpacity={0.2}
+                    strokeWidth={2}
+                    dot={false}
+                    // stackId="2"
+                  />
+                </AreaChart>
+              </ChartContainer>
             </div>
-            <div>
-              <div className="flex w-full items-start gap-2 text-sm">
-                <div className="grid gap-2"></div>
-              </div>
-            </div>
+          )}
+          <div className="w-11/12">
+            <Table isStriped aria-label="Example static collection table">
+              <TableHeader>
+                <TableColumn>{""}</TableColumn>
+                <TableColumn>Final Value</TableColumn>
+                <TableColumn>Gain</TableColumn>
+                <TableColumn>Max Drawdown</TableColumn>
+                <TableColumn>Sharpe Ratio</TableColumn>
+                <TableColumn>XIRR</TableColumn>
+              </TableHeader>
+              <TableBody>
+                {portfolioMetrics.map((metric) => {
+                  return (
+                    <TableRow key={metric.name}>
+                      <TableCell>{metric.name}</TableCell>
+                      <TableCell>{metric.finalValue}</TableCell>
+                      <TableCell>{metric.gain}</TableCell>
+                      <TableCell>{metric.maxDrawdown}</TableCell>
+                      <TableCell>{metric.sharpeRatio}</TableCell>
+                      <TableCell>{metric.xirr}</TableCell>
+                    </TableRow>
+                  );
+                })}
+                {/* <TableRow key="1">
+                  <TableCell>Tony Reichert</TableCell>
+                  <TableCell>CEO</TableCell>
+                  <TableCell>Active</TableCell>
+                  <TableCell>Tony Reichert</TableCell>
+                  <TableCell>CEO</TableCell>
+                  <TableCell>Active</TableCell>
+                </TableRow> */}
+              </TableBody>
+            </Table>
           </div>
         </div>
       </div>

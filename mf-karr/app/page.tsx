@@ -35,6 +35,7 @@ import { FaCheck } from "react-icons/fa6";
 import { CiExport } from "react-icons/ci";
 import { apiService } from "./services/api.service";
 import { VscGraphLine } from "react-icons/vsc";
+import { MdModeEditOutline } from "react-icons/md";
 
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
@@ -51,7 +52,7 @@ export default function Home() {
     useState<boolean>(false);
   const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
     useState<boolean>(false);
-  const [portfolioName, setPortfolioName] = useState("");
+  const [portfolioName, setPortfolioName] = useState("Your Portfolio Name");
   const [errors, setErrors] = useState({});
   const [showSavedPortolioModal, setShowSavedPortolioModal] =
     useState<boolean>(false);
@@ -77,6 +78,11 @@ export default function Home() {
   const [startDate, setStartDate] = useState<any>(parseDate("2024-04-04"));
   const [endDate, setEndDate] = useState<any>(parseDate("2024-04-04"));
   const [isEditFunds, setIsEditFunds] = useState<boolean>(true);
+  const [portfolioMetrics, setPortfolioMetrics] = useState<any[]>([]);
+  const [comparePortfolioReturnDiff, setComparePortfolioReturnDiff] =
+    useState<any>(0);
+  const [isEditPortfolioName, setIsEditPortfolioName] =
+    useState<boolean>(false);
 
   const CalendarIcon = (props: any) => {
     return (
@@ -266,12 +272,13 @@ export default function Home() {
         Number(initialAmount),
         investmentMode
       );
-      setChartData(data.chartData);
+      // setChartData(data.chartData);
       setMaxDrawdown(data.metrics.maxDrawdown);
       setSharpeRatio(data.metrics.sharpeRatio);
       setInitialValue(data.metrics.initialValue);
       setFinalValue(data.metrics.finalValue);
       setIsEditFunds(false);
+      changeCompareIndex(data, "nifty_50");
     } catch (error) {
       console.error("Error fetching portfolio analysis:", error);
     } finally {
@@ -280,7 +287,7 @@ export default function Home() {
   }
 
   // Fetch index comparison data
-  async function fetchIndexComparison(indexName: string) {
+  async function fetchIndexComparison(data: any, indexName: string) {
     try {
       const indexData = await apiService.compareIndex(
         indexName,
@@ -288,22 +295,44 @@ export default function Home() {
         Number(initialAmount),
         investmentMode.toString()
       );
-
       // Merge index data with portfolio data
-      const updatedChartData = chartData.map((item, index) => ({
+      const updatedChartData = data.chartData.map((item: any, index: any) => ({
         ...item,
         navIndex: indexData.chartData[index]?.nav || 0,
       }));
-
+      const tempPortfolioMetrics = [];
+      tempPortfolioMetrics.push({
+        name: "Your Portfolio",
+        maxDrawdown: data.metrics.maxDrawdown,
+        sharpeRatio: data.metrics.sharpeRatio,
+        initialAmount: data.metrics.initialValue,
+        finalValue: data.metrics.finalValue,
+        xirr: 1,
+        gain: 10,
+      });
+      tempPortfolioMetrics.push({
+        name: "Compared Index/Portfolio",
+        maxDrawdown: indexData.metrics.maxDrawdown,
+        sharpeRatio: indexData.metrics.sharpeRatio,
+        initialAmount: indexData.metrics.initialValue,
+        finalValue: indexData.metrics.finalValue,
+        xirr: 1,
+        gain: 10,
+      });
+      setComparePortfolioReturnDiff(
+        updatedChartData[updatedChartData.length - 1].nav -
+          updatedChartData[updatedChartData.length - 1].navIndex
+      );
+      setPortfolioMetrics(tempPortfolioMetrics);
       setChartData(updatedChartData);
     } catch (error) {
       console.error("Error fetching index comparison:", error);
     }
   }
 
-  async function changeCompareIndex(indexKey: any) {
+  async function changeCompareIndex(data: any, indexKey: any) {
     if (indexKey === "nifty_50") {
-      await fetchIndexComparison(indexKey);
+      await fetchIndexComparison(data, indexKey);
       setSelectedCompareIndex("Nifty 50");
     } else if (indexKey === "saved_portfolios") {
       openComparePortfolioModal();
@@ -408,7 +437,6 @@ export default function Home() {
                     label="Portfolio Name"
                     type="text"
                     value={portfolioName}
-                    onValueChange={setPortfolioName}
                     name="portfolioName"
                   />
                 </ModalBody>
@@ -481,10 +509,40 @@ export default function Home() {
             <div className="gap-2 h-full w-4/12 flex flex-col">
               <div className="bg-gray-950 flex flex-col h-full p-5 ml-2 mr-1 my-2 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <div>
-                    <b className="text-sm mx-[5px]">
-                      Selected Portfolio Funds{" "}
-                    </b>
+                  <div className="w-1/2">
+                    <div className="group cursor-pointer">
+                      <div
+                        className={
+                          isEditPortfolioName
+                            ? "flex gap-2 items-center w-full h-full"
+                            : "pb-[5px] h-full w-full flex gap-2 items-center text-sm border-b-2 border-transparent group-hover:border-dotted group-hover:border-current"
+                        }
+                      >
+                        {isEditPortfolioName ? (
+                          <Input
+                            type="text"
+                            variant="underlined"
+                            value={portfolioName}
+                            onFocusChange={(eve) => {
+                              setIsEditPortfolioName(eve);
+                            }}
+                            size="sm"
+                            className="h-full"
+                            autoFocus={isEditPortfolioName}
+                            onValueChange={setPortfolioName}
+                          />
+                        ) : (
+                          <div className="flex gap-2 w-full items-center overflow-hidden">
+                            <p className="text-sm whitespace-nowrap overflow-ellipsis overflow-hidden">
+                              {portfolioName}
+                            </p>
+                            <MdModeEditOutline
+                              onClick={() => setIsEditPortfolioName(true)}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <Button
                     isIconOnly
@@ -566,7 +624,7 @@ export default function Home() {
                   </div>
                   <div className="mx-[5px]">
                     {isCustomTimePeriod ? (
-                      <div className="flex gap-2 items-end">
+                      <div className="flex gap-2 items-end overflow-y-auto">
                         <DateInput
                           label="From"
                           labelPlacement="outside"
@@ -598,7 +656,7 @@ export default function Home() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 overflow-y-auto">
                         {cagrValues.map((year) => {
                           return (
                             <Button
@@ -646,6 +704,7 @@ export default function Home() {
                             </span>
                           </div>
                         }
+                        variant="bordered"
                         onValueChange={(val) => setInitialAmount(val)}
                         name="portfolioName"
                         isDisabled={isLoading}
@@ -661,6 +720,7 @@ export default function Home() {
                         size="md"
                         onSelectionChange={setInvestmentMode}
                         isDisabled={isLoading}
+                        variant="bordered"
                       >
                         <Tab key="lumpsum" title="Lumpsum"></Tab>
                         <Tab key="monthly-sip" title="Monthly Sip"></Tab>
@@ -741,6 +801,8 @@ export default function Home() {
                       }
                       compareSavedPortfolios={compareSavedPortfolios}
                       isLoading={isLoading}
+                      portfolioMetrics={portfolioMetrics}
+                      comparePortfolioReturnDiff={comparePortfolioReturnDiff}
                     />
                   )}
                 </div>
