@@ -89,7 +89,6 @@ def analyze_portfolio():
         initial_amount, 
         investment_mode
     )
-    time.sleep(10)
     return encrypt_response(result)
 
 # Add endpoint for index comparison

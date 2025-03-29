@@ -96,17 +96,20 @@ export default function PortfolioTable({
   }
 
   return (
-    <div className="flex gap-2 flex-col grow overflow-y-auto">
+    <div className="flex gap-2 flex-col grow">
       {isLoading ? (
         <div className="flex justify-center items-center p-4">
           Loading portfolio data...
         </div>
       ) : (
-        <>
+        <div className="mt-5 flex flex-col gap-2">
           {!isAdjustWeightageEnabled
             ? tableData.map((row) => {
                 return (
-                  <div key={row.instrumentCode} className="flex p-2 m-1">
+                  <div
+                    key={row.instrumentCode}
+                    className="flex p-3 m-1 border border-gray-500 hover:border-white transition-colors duration-200 rounded-lg"
+                  >
                     <div className="flex flex-col align-center justify-center grow">
                       <div className="text-sm w-full">
                         {row?.instrumentName}
@@ -148,7 +151,10 @@ export default function PortfolioTable({
               })
             : tableDataWeightageCopy.map((row) => {
                 return (
-                  <div key={row.instrumentCode} className="flex p-2 m-1">
+                  <div
+                    key={row.instrumentCode}
+                    className="flex p-3 m-1 border border-gray-500 hover:border-red-500 transition-colors duration-200 rounded-lg"
+                  >
                     <div className="col-span-4 flex flex-col align-center justify-center grow">
                       <div className="text-sm w-full">
                         {row?.instrumentName}
@@ -178,18 +184,16 @@ export default function PortfolioTable({
                         />
                       </div>
                     </div>
-                    <div
-                    // className="absolute right-0 top-0 h-full w-12 transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300 bg-red-600 flex items-center justify-center">
-                    >
+                    <div className="flex items-center">
                       <DeleteIcon
-                        className="cursor-pointer text-white"
+                        className="cursor-pointer text-red-500"
                         onClick={() => removeMututalFundFn(row)}
                       />
                     </div>
                   </div>
                 );
               })}
-        </>
+        </div>
       )}
     </div>
   );

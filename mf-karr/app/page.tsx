@@ -38,8 +38,10 @@ import { VscGraphLine } from "react-icons/vsc";
 import { MdModeEditOutline } from "react-icons/md";
 import { addToast } from "@heroui/toast";
 import { ToastColor } from "./interfaces/interfaces";
-import { DeleteIcon } from "./DeleteIcon";
 import { IoLockClosed } from "react-icons/io5";
+import LoginComponent from "./LoginModalComponent";
+import ReplacePortfolioModalComponent from "./ReplacePortfolioModalComponent";
+import LoadPortfolioModalComponent from "./LoadPortfolioModalComponent";
 
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
@@ -57,7 +59,6 @@ export default function Home() {
   const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
     useState<boolean>(false);
   const [portfolioName, setPortfolioName] = useState("Your Portfolio Name");
-  const [errors, setErrors] = useState({});
   const [showSavedPortolioModal, setShowSavedPortolioModal] =
     useState<boolean>(false);
   const [userSavedPortfolios, setUserSavedPortfolios] = useState<any[]>([]);
@@ -420,294 +421,195 @@ export default function Home() {
   return (
     <div className="h-full w-full">
       {!session ? (
-        <Modal
-          isDismissable={false}
-          isKeyboardDismissDisabled={true}
-          isOpen={true}
-          hideCloseButton={true}
-          className="p-2"
-        >
-          <ModalContent>
-            <ModalBody>
-              <Button
-                isIconOnly
-                variant="bordered"
-                onPress={() => signIn("github")}
-                className="w-full p-2"
-              >
-                Sign In Github
-              </Button>
-              <Button
-                isIconOnly
-                variant="bordered"
-                onPress={() => signIn("google")}
-                className="w-full p-2"
-              >
-                Sign In Google
-              </Button>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
+        <LoginComponent />
       ) : (
         <div className="h-full w-full">
-          <Modal
-            isDismissable={false}
-            isKeyboardDismissDisabled={true}
-            isOpen={showSavePortfolioNameModal}
-            hideCloseButton={true}
-            className="p-2"
-          >
-            <ModalContent className="w-full">
-              <ModalBody className="w-full items-center text-center justify-center">
-                {modalContent}
-              </ModalBody>
-              <ModalFooter className="w-full h-full ">
-                <Button
-                  variant="bordered"
-                  className="w-1/2 hover:bg-green-400 transition-all"
-                  onPress={() => replacePortfolio()}
-                >
-                  <div className="flex flex-col w-full">Replace</div>
-                </Button>
-                <Button
-                  variant="bordered"
-                  className="w-1/2 hover:bg-red-400 transition-all"
-                  onPress={() => setShowSavePortfolioNameModal(false)}
-                >
-                  Cancel
-                </Button>
-              </ModalFooter>
-            </ModalContent>
-          </Modal>
-
-          <Modal
-            isDismissable={true}
-            isKeyboardDismissDisabled={true}
-            isOpen={showSavedPortolioModal}
-            hideCloseButton={false}
-            className="p-2"
-            onClose={() => setShowSavedPortolioModal(false)}
-            size="sm"
-          >
-            <ModalContent>
-              <ModalBody className="max-h-[50vh]">
-                <div className="overflow-y-auto">
-                  {userSavedPortfolios.length > 0 ? (
-                    userSavedPortfolios.map((row) => {
-                      return (
-                        <div key={row.portfolioName} className="w-full flex">
-                          <div className="col-span-4 flex w-full justify-between p-2">
-                            <div className="text-sm flex items-center">
-                              {row?.portfolioName}
-                            </div>
-                            <div className="flex gap-2 mr-1">
-                              <Button
-                                isIconOnly
-                                variant="bordered"
-                                className="hover:bg-green-400 transition-all"
-                                onPress={() => loadPortfolio(row)}
-                                type="submit"
-                              >
-                                <CiExport className="cursor-pointer text-green-500" />
-                              </Button>
-                              <Button
-                                isIconOnly
-                                variant="bordered"
-                                className="hover:bg-red-400 transition-all"
-                              >
-                                <DeleteIcon
-                                  className="cursor-pointer text-red-500"
-                                  onClick={() => {
-                                    deletePortfolio(row);
-                                  }}
-                                />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div>You haven't saved any portfolios yet</div>
-                  )}
-                </div>
-              </ModalBody>
-            </ModalContent>
-          </Modal>
+          <ReplacePortfolioModalComponent
+            showSavePortfolioNameModal={showSavePortfolioNameModal}
+            modalContent={modalContent}
+            replacePortfolio={replacePortfolio}
+            setShowSavePortfolioNameModal={setShowSavePortfolioNameModal}
+          />
+          <LoadPortfolioModalComponent
+            showSavedPortolioModal={showSavedPortolioModal}
+            setShowSavedPortolioModal={setShowSavedPortolioModal}
+            userSavedPortfolios={userSavedPortfolios}
+            loadPortfolio={loadPortfolio}
+            deletePortfolio={deletePortfolio}
+          />
           <div className="w-full h-full flex">
-            <div className="gap-2 h-full w-4/12 flex flex-col">
-              <div className="bg-gray-950 flex flex-col h-full ml-2 mr-1 my-2 rounded-lg">
-                <div className="relative bg-gray-950 flex flex-col h-full px-5 pt-5 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1/2">
-                      <div className="group cursor-pointer">
-                        <div
-                          className={
-                            isEditPortfolioName
-                              ? "flex gap-2 items-center w-full h-full"
-                              : "pb-[5px] h-full w-full flex gap-2 items-center text-sm border-b-2 border-transparent group-hover:border-dotted group-hover:border-current"
-                          }
-                        >
-                          {isEditPortfolioName ? (
-                            <Input
-                              type="text"
-                              variant="underlined"
-                              value={portfolioName}
-                              onFocusChange={(eve) => {
-                                setIsEditPortfolioName(eve);
-                              }}
-                              size="sm"
-                              className="h-full"
-                              autoFocus={isEditPortfolioName}
-                              onValueChange={setPortfolioName}
-                            />
-                          ) : (
-                            <div
-                              onClick={() => setIsEditPortfolioName(true)}
-                              className="flex gap-2 w-full items-center overflow-hidden"
-                            >
-                              <p className="grow text-sm whitespace-nowrap overflow-ellipsis overflow-hidden">
-                                {portfolioName}
-                              </p>
-                              <MdModeEditOutline />
-                            </div>
-                          )}
-                        </div>
+            <div className="gap-2 w-4/12 flex flex-col bg-gray-950 h-full ml-2 mr-1 py-2 mt-2 rounded-lg">
+              <div className="flex flex-col gap-2 rounded-lg grow p-5">
+                <div className="flex items-center gap-2">
+                  <div className="w-1/2">
+                    <div className="group cursor-pointer">
+                      <div
+                        className={
+                          isEditPortfolioName
+                            ? "flex gap-2 items-center w-full h-full"
+                            : "pb-[5px] h-full w-full flex gap-2 items-center text-sm border-b-2 border-transparent group-hover:border-dotted group-hover:border-current"
+                        }
+                      >
+                        {isEditPortfolioName ? (
+                          <Input
+                            type="text"
+                            variant="underlined"
+                            value={portfolioName}
+                            onFocusChange={(eve) => {
+                              setIsEditPortfolioName(eve);
+                            }}
+                            size="sm"
+                            className="h-full"
+                            autoFocus={isEditPortfolioName}
+                            onValueChange={setPortfolioName}
+                          />
+                        ) : (
+                          <div
+                            onClick={() => setIsEditPortfolioName(true)}
+                            className="flex gap-2 w-full items-center overflow-hidden"
+                          >
+                            <p className="grow text-sm whitespace-nowrap overflow-ellipsis overflow-hidden">
+                              {portfolioName}
+                            </p>
+                            <MdModeEditOutline />
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="relative flex gap-2">
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      isIconOnly
+                      variant="bordered"
+                      onPress={() => savePortfolio()}
+                      isDisabled={
+                        isLoading ||
+                        Object.keys(selectedInstrumentsData).length === 0
+                      }
+                      size="sm"
+                    >
+                      <TfiSave />
+                    </Button>
+                    <Button
+                      isIconOnly
+                      variant="bordered"
+                      onPress={() => openPortfolioModal()}
+                      isDisabled={isLoading}
+                      size="sm"
+                    >
+                      <CiExport />
+                    </Button>
+                  </div>
+                  <div className="flex-1 ">
+                    {isAdjustWeightageEnabled ? (
+                      <div className="flex gap-2 w-full">
+                        <Button
+                          isIconOnly
+                          aria-label="Like"
+                          color="success"
+                          className="w-full"
+                          isDisabled={!isSaveButtonEnabled}
+                          onPress={() => onSave()}
+                          size="sm"
+                        >
+                          <FaCheck />
+                        </Button>
+                        <Button
+                          isIconOnly
+                          aria-label="Like1"
+                          color="danger"
+                          onPress={() => onCancelWeightAdjust()}
+                          size="sm"
+                          className="w-full"
+                        >
+                          <RxCross2 />
+                        </Button>
+                      </div>
+                    ) : (
                       <Button
                         isIconOnly
                         variant="bordered"
-                        onPress={() => savePortfolio()}
+                        onPress={() => setIsAdjustWeightageEnabled(true)}
                         isDisabled={
                           isLoading ||
                           Object.keys(selectedInstrumentsData).length === 0
                         }
                         size="sm"
+                        className="w-full"
                       >
-                        <TfiSave />
+                        <GiInjustice />
                       </Button>
-                      <Button
-                        isIconOnly
-                        variant="bordered"
-                        onPress={() => openPortfolioModal()}
-                        isDisabled={isLoading}
-                        size="sm"
-                      >
-                        <CiExport />
-                      </Button>
-                    </div>
-                    <div className="flex-1 ">
-                      {isAdjustWeightageEnabled ? (
-                        <div className="flex gap-2 w-full">
-                          <Button
-                            isIconOnly
-                            aria-label="Like"
-                            color="success"
-                            className="w-full"
-                            isDisabled={!isSaveButtonEnabled}
-                            onPress={() => onSave()}
-                            size="sm"
-                          >
-                            <FaCheck />
-                          </Button>
-                          <Button
-                            isIconOnly
-                            aria-label="Like1"
-                            color="danger"
-                            onPress={() => onCancelWeightAdjust()}
-                            size="sm"
-                            className="w-full"
-                          >
-                            <RxCross2 />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          isIconOnly
-                          variant="bordered"
-                          onPress={() => setIsAdjustWeightageEnabled(true)}
-                          isDisabled={
-                            isLoading ||
-                            Object.keys(selectedInstrumentsData).length === 0
+                    )}
+                  </div>
+                </div>
+                <PortfolioTable
+                  selectedNavData={selectedInstrumentsData}
+                  removeMututalFundFn={removeMutualFund}
+                  timePeriod={Number(selectedTimePeriod)}
+                  isAdjustWeightageEnabled={isAdjustWeightageEnabled}
+                  isSaveEnabled={isSaveEnabled}
+                  tableDataWeightageCopy={tableDataWeightageCopy}
+                  setTableDataWeightageCopy={setTableDataWeightageCopy}
+                  isLoading={isLoading}
+                />
+                <div className="my-1 flex flex-col gap-1">
+                  <div className="flex items-center my-2">
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                    <b className="mx-3 text-sm whitespace-nowrap">
+                      Edit Time period
+                    </b>
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                  </div>
+                  <div className="mx-[5px]">
+                    {isCustomTimePeriod ? (
+                      <div className="flex gap-2 items-end overflow-y-auto">
+                        <DateInput
+                          label="From"
+                          labelPlacement="outside"
+                          startContent={
+                            <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
                           }
                           size="sm"
-                          className="w-full"
+                          value={startDate}
+                          onChange={(date) => console.log(date)}
+                        />
+                        <DateInput
+                          label="To"
+                          labelPlacement="outside"
+                          startContent={
+                            <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
+                          }
+                          size="sm"
+                          value={endDate}
+                          onChange={(date) => console.log(date)}
+                        />
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          onPress={() => {
+                            setIsCustomTimePeriod(false);
+                          }}
                         >
-                          <GiInjustice />
+                          <RxCross2 />
                         </Button>
-                      )}
-                    </div>
-                  </div>
-                  <PortfolioTable
-                    selectedNavData={selectedInstrumentsData}
-                    removeMututalFundFn={removeMutualFund}
-                    timePeriod={Number(selectedTimePeriod)}
-                    isAdjustWeightageEnabled={isAdjustWeightageEnabled}
-                    isSaveEnabled={isSaveEnabled}
-                    tableDataWeightageCopy={tableDataWeightageCopy}
-                    setTableDataWeightageCopy={setTableDataWeightageCopy}
-                    isLoading={isLoading}
-                  />
-                  <div className="my-1 flex flex-col gap-1">
-                    <div className="flex items-center my-2">
-                      <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                      <b className="mx-3 text-sm whitespace-nowrap">
-                        Edit Time period
-                      </b>
-                      <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                    </div>
-                    <div className="mx-[5px]">
-                      {isCustomTimePeriod ? (
-                        <div className="flex gap-2 items-end overflow-y-auto">
-                          <DateInput
-                            label="From"
-                            labelPlacement="outside"
-                            startContent={
-                              <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                            }
-                            size="sm"
-                            value={startDate}
-                            onChange={(date) => console.log(date)}
-                          />
-                          <DateInput
-                            label="To"
-                            labelPlacement="outside"
-                            startContent={
-                              <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
-                            }
-                            size="sm"
-                            value={endDate}
-                            onChange={(date) => console.log(date)}
-                          />
-                          <Button
-                            variant="bordered"
-                            size="sm"
-                            onPress={() => {
-                              setIsCustomTimePeriod(false);
-                            }}
-                          >
-                            <RxCross2 />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex gap-2 w-full overflow-y-auto">
-                          {cagrValues.map((year) => {
-                            return (
-                              <Button
-                                variant="bordered"
-                                size="sm"
-                                key={year.key}
-                                className="w-full"
-                                onPress={() => setSelectedTimePeriod(year.key)}
-                                isDisabled={selectedTimePeriod == year.key}
-                              >
-                                {year.label}
-                              </Button>
-                            );
-                          })}
-                          {/* <Button
+                      </div>
+                    ) : (
+                      <div className="flex gap-2 w-full overflow-y-auto">
+                        {cagrValues.map((year) => {
+                          return (
+                            <Button
+                              variant="bordered"
+                              size="sm"
+                              key={year.key}
+                              className="w-full"
+                              onPress={() => setSelectedTimePeriod(year.key)}
+                              isDisabled={selectedTimePeriod == year.key}
+                            >
+                              {year.label}
+                            </Button>
+                          );
+                        })}
+                        {/* <Button
                           className="flex-1"
                           variant="bordered"
                           size="sm"
@@ -717,96 +619,95 @@ export default function Home() {
                         >
                           Custom
                         </Button> */}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="my-1 flex flex-col gap-1">
-                    <div className="flex items-center my-2">
-                      <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                      <b className="mx-3 text-sm whitespace-nowrap">
-                        Investment Amount
-                      </b>
-                      <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
-                    </div>
-                    <div className="flex flex-col gap-2 justify-end">
-                      <div className="flex w-full gap-2 items-center">
-                        <Input
-                          type="number"
-                          value={initialAmount}
-                          startContent={
-                            <div className="pointer-events-none flex items-center">
-                              <span className="text-default-400 text-small">
-                                ₹
-                              </span>
-                            </div>
-                          }
-                          variant="bordered"
-                          onValueChange={(val) => setInitialAmount(val)}
-                          name="portfolioName"
-                          isDisabled={isLoading}
-                          size="md"
-                          placeholder="Initial Amount"
-                          // labelPlacement="outside-left"
-                          labelPlacement="inside"
-                        />
-                        <Tabs
-                          aria-label="Options"
-                          fullWidth
-                          selectedKey={investmentMode}
-                          size="md"
-                          onSelectionChange={setInvestmentMode}
-                          isDisabled={isLoading}
-                          variant="bordered"
-                        >
-                          <Tab key="lumpsum" title="Lumpsum"></Tab>
-                          <Tab key="monthly-sip" title="Monthly Sip"></Tab>
-                        </Tabs>
                       </div>
+                    )}
+                  </div>
+                </div>
+                <div className="my-1 flex flex-col gap-1">
+                  <div className="flex items-center my-2">
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                    <b className="mx-3 text-sm whitespace-nowrap">
+                      Investment Amount
+                    </b>
+                    <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+                  </div>
+                  <div className="flex flex-col gap-2 justify-end">
+                    <div className="flex w-full gap-2 items-center">
+                      <Input
+                        type="number"
+                        value={initialAmount}
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small">
+                              ₹
+                            </span>
+                          </div>
+                        }
+                        variant="bordered"
+                        onValueChange={(val) => setInitialAmount(val)}
+                        name="portfolioName"
+                        isDisabled={isLoading}
+                        size="md"
+                        placeholder="Initial Amount"
+                        // labelPlacement="outside-left"
+                        labelPlacement="inside"
+                      />
+                      <Tabs
+                        aria-label="Options"
+                        fullWidth
+                        selectedKey={investmentMode}
+                        size="md"
+                        onSelectionChange={setInvestmentMode}
+                        isDisabled={isLoading}
+                        variant="bordered"
+                      >
+                        <Tab key="lumpsum" title="Lumpsum"></Tab>
+                        <Tab key="monthly-sip" title="Monthly Sip"></Tab>
+                      </Tabs>
                     </div>
                   </div>
-                  {!isEditFunds && (
-                    <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
-                      <IoLockClosed className="text-foreground-400" />
-                      Please edit funds to unlock this section
-                    </div>
-                  )}
-                  {isLoading && (
-                    <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
-                      Loading data
-                    </div>
-                  )}
                 </div>
-                <div className="flex my-1 gap-2 px-5 pb-5 justify-end">
-                  {isEditFunds ? (
-                    <Button
-                      variant="bordered"
-                      className="w-full"
-                      onPress={() => backtestPortfolio()}
-                      isDisabled={
-                        isLoading ||
-                        Object.keys(selectedInstrumentsData).length === 0
-                      }
-                    >
-                      Backtest <VscGraphLine />
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="bordered"
-                      className="w-full"
-                      onPress={() => setIsEditFunds(true)}
-                    >
-                      Edit Funds <FaRegEdit />
-                    </Button>
-                  )}
-                </div>
+                {!isEditFunds && (
+                  <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
+                    <IoLockClosed className="text-foreground-400" />
+                    Please edit funds to unlock this section
+                  </div>
+                )}
+                {isLoading && (
+                  <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
+                    Loading data
+                  </div>
+                )}
+              </div>
+              <div className="flex w-full mt-1 gap-2 ">
+                {isEditFunds ? (
+                  <Button
+                    variant="bordered"
+                    className="w-full"
+                    onPress={() => backtestPortfolio()}
+                    isDisabled={
+                      isLoading ||
+                      Object.keys(selectedInstrumentsData).length === 0
+                    }
+                  >
+                    Backtest <VscGraphLine />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="bordered"
+                    className="w-full"
+                    onPress={() => setIsEditFunds(true)}
+                  >
+                    Edit Funds <FaRegEdit />
+                  </Button>
+                )}
               </div>
             </div>
             <div
               // className="h-full w-8/12">
               className="gap-2 h-full w-8/12 flex flex-col"
             >
-              <div className="bg-gray-950 flex flex-col h-full p-5 my-2 ml-1 mr-2 overflow-y-auto rounded-lg relative">
+              <div className="bg-gray-950 flex flex-col h-full p-5 my-2 ml-1 mr-2 overflow-y-auto rounded-lg">
                 <div className="flex flex-col gap-3 w-full">
                   {isEditFunds ? (
                     <Autocomplete

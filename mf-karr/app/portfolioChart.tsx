@@ -295,26 +295,6 @@ export default function PortfolioChart({
         </div>
         <div className="flex flex-col items-center gap-5">
           <div className="flex gap-1">
-            {/* <b
-              className={
-                chartData[chartData.length - 1].navIndex >
-                chartData[chartData.length - 1].nav
-                  ? "text-green-400 text-lg"
-                  : "text-red-400 text-lg"
-              }
-            >
-              {(
-                ((chartData[chartData.length - 1].navIndex >
-                chartData[chartData.length - 1].nav
-                  ? chartData[chartData.length - 1].navIndex -
-                    chartData[chartData.length - 1].nav
-                  : chartData[chartData.length - 1].nav -
-                    chartData[chartData.length - 1].navIndex) /
-                  chartData[chartData.length - 1].nav) *
-                100
-              ).toFixed(2)}
-              %
-            </b> */}
             {comparePortfolioReturnDiff < 0 ? (
               <b className="text-red-400 text-lg">
                 {comparePortfolioReturnDiff.toFixed(2)}% lower compared to{" "}
@@ -349,22 +329,15 @@ export default function PortfolioChart({
                     axisLine={false}
                     tickMargin={8}
                   />
-                  {/* <YAxis
-                    dataKey="nav"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    domain={["dataMin", 500]}
-                  /> */}
                   <YAxis
-                    dataKey="navIndex"
+                    dataKey="nav"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
                     domain={[0, "dataMax + 40"]}
                   />
                   <YAxis
-                    dataKey="nav"
+                    dataKey="navIndex"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
