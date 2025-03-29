@@ -157,6 +157,37 @@ class ApiService {
     });
   }
 
+  async replacePortfolio(
+    emailId: string,
+    instrumentsData: any[],
+    portfolioName: string
+  ) {
+    return this.fetchWithDecryption(`${config.apiUrl}/api/portfolio/replace`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailId,
+        instrumentsData,
+        portfolioName,
+      }),
+    });
+  }
+
+  async deletePortfolio(emailId: string, portfolioName: string) {
+    return this.fetchWithDecryption(`${config.apiUrl}/api/portfolio/delete`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailId,
+        portfolioName,
+      }),
+    });
+  }
+
   async savePortfolio(
     emailId: string,
     instrumentsData: any[],

@@ -7,6 +7,8 @@ from services.index_service import IndexService
 from services.portfolio_analysis import PortfolioAnalysis
 from services.portfolio_management import PortfolioManagement
 from services.encryption_service import EncryptionService
+import json  # Importing json module
+import time 
 
 app = Flask(__name__)
 
@@ -43,9 +45,27 @@ def getIndexData():
 def savePortfolio():
     data = request.get_json() 
     emailId = str(data.get('emailId'))
-    instrumentsData = list[dict](data.get('instrumentsData'))
+    instrumentsData = json.dumps(list[dict](data.get('instrumentsData')))
     portfolioName = str(data.get('portfolioName'))
     result = portfolioService.savePortfolioForUser(emailId, instrumentsData,portfolioName)
+    return encrypt_response(result)
+
+@app.route('/api/portfolio/replace', methods=['POST'])
+def replacePortfolio():
+    data = request.get_json() 
+    emailId = str(data.get('emailId'))
+    instrumentsData = json.dumps(list[dict](data.get('instrumentsData')))
+    portfolioName = str(data.get('portfolioName'))
+    result = portfolioService.replacePortfolio(emailId, instrumentsData,portfolioName)
+    return encrypt_response(result)
+
+@app.route('/api/portfolio/delete', methods=['POST'])
+def deletePortfolio():
+    data = request.get_json() 
+    print(data)
+    emailId = str(data.get('emailId'))
+    portfolioName = str(data.get('portfolioName'))
+    result = portfolioService.deletePortfolio(emailId,portfolioName)
     return encrypt_response(result)
 
 @app.route('/api/portfolio/getPortfolios/<string:emailId>', methods=['GET'])
@@ -69,7 +89,7 @@ def analyze_portfolio():
         initial_amount, 
         investment_mode
     )
-    
+    time.sleep(10)
     return encrypt_response(result)
 
 # Add endpoint for index comparison
@@ -147,6 +167,7 @@ def load_portfolio():
         portfolio_data,
         time_period
     )
+
     
     return encrypt_response(result)
 
