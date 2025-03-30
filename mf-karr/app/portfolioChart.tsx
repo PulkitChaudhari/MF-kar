@@ -75,7 +75,12 @@ export default function PortfolioChart({
   } satisfies ChartConfig;
 
   return (
-    <div className="flex gap-[5rem] flex-col p-2">
+    <div className="relative flex gap-[5rem] flex-col p-2">
+      {isLoading && (
+        <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
+          Loading datadscvfgbryht
+        </div>
+      )}
       <Modal
         isDismissable={true}
         isKeyboardDismissDisabled={true}
@@ -89,8 +94,8 @@ export default function PortfolioChart({
             {compareSavedPortfolios.map((row: any) => {
               return (
                 <div key={row.portfolioName} className="flex p-2 m-1">
-                  <div className="col-span-4 flex align-center justify-between p-2">
-                    <div className="text-sm flex items-center">
+                  <div className="col-span-4 w-full flex align-center justify-between p-2">
+                    <div className="text-sm flex grow items-center">
                       {row?.portfolioName}
                     </div>
                     <div className="flex gap-2">
