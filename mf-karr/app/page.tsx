@@ -46,6 +46,8 @@ import PortfolioNameComponent from "./PortfolioNameComponent";
 import PortfolioToolbarComponent from "./PortfolioToolbarComponent";
 import PortflioDurationComponent from "./PortfolioDurationComponent";
 import PortfolioInvestmentAmountComponent from "./PortfolioInvestmentAmountComponent";
+import PortfolioEditBacktestButtonComponent from "./PortfolioEditBacktestButtonComponent";
+import PortfolioSearchComponent from "./PortfolioSearchComponent";
 
 export default function Home() {
   const [isAdjustWeightageEnabled, setIsAdjustWeightageEnabled] =
@@ -308,18 +310,29 @@ export default function Home() {
         Number(initialAmount),
         investmentMode.toString()
       );
+      let chartData = data;
+      if (data["chartData"] != null) chartData = data.chartData;
+      let metrics =
+        data["metrics"] != null
+          ? data.metrics
+          : {
+              maxDrawdown: "-1",
+              sharpeRatio: "-1",
+              initialAmount: "-1",
+              finalValue: "-1",
+            };
       // Merge index data with portfolio data
-      const updatedChartData = data.chartData.map((item: any, index: any) => ({
+      const updatedChartData = chartData.map((item: any, index: any) => ({
         ...item,
         navIndex: indexData.chartData[index]?.nav || 0,
       }));
       const tempPortfolioMetrics = [];
       tempPortfolioMetrics.push({
         name: "Your Portfolio",
-        maxDrawdown: data.metrics.maxDrawdown,
-        sharpeRatio: data.metrics.sharpeRatio,
-        initialAmount: data.metrics.initialValue,
-        finalValue: data.metrics.finalValue,
+        maxDrawdown: metrics.maxDrawdown,
+        sharpeRatio: metrics.sharpeRatio,
+        initialAmount: metrics.initialValue,
+        finalValue: metrics.finalValue,
         xirr: 1,
         gain: 10,
       });
@@ -443,7 +456,7 @@ export default function Home() {
           />
           <div className="w-full h-full flex relative">
             <div className="gap-2 w-4/12 flex flex-col bg-gray-950 ml-2 mr-1 py-2 my-2 rounded-lg overflow-y-auto">
-              <div className="relative flex flex-col gap-2 rounded-lg grow px-5 pt-5 ">
+              <div className="relative flex flex-col gap-2 rounded-lg grow px-5 pt-5">
                 <div className="flex items-center gap-2">
                   <PortfolioNameComponent
                     isEditPortfolioName={isEditPortfolioName}
@@ -495,29 +508,13 @@ export default function Home() {
                   </div>
                 )}
               </div>
-              <div className="flex w-full gap-2 px-5">
-                {isEditFunds ? (
-                  <Button
-                    variant="bordered"
-                    className="w-full"
-                    onPress={() => backtestPortfolio()}
-                    isDisabled={
-                      isLoading ||
-                      Object.keys(selectedInstrumentsData).length === 0
-                    }
-                  >
-                    Backtest <VscGraphLine />
-                  </Button>
-                ) : (
-                  <Button
-                    variant="bordered"
-                    className="w-full"
-                    onPress={() => setIsEditFunds(true)}
-                  >
-                    Edit Funds <FaRegEdit />
-                  </Button>
-                )}
-              </div>
+              <PortfolioEditBacktestButtonComponent
+                isEditFunds={isEditFunds}
+                backtestPortfolio={backtestPortfolio}
+                isLoading={isLoading}
+                selectedInstrumentsData={selectedInstrumentsData}
+                setIsEditFunds={setIsEditFunds}
+              />
             </div>
             <div
               // className="h-full w-8/12">
@@ -526,29 +523,12 @@ export default function Home() {
               <div className="bg-gray-950 flex flex-col h-full p-5 my-2 ml-1 mr-2 overflow-y-auto rounded-lg">
                 <div className="flex flex-col gap-3 w-full">
                   {isEditFunds ? (
-                    <Autocomplete
-                      inputValue={list.filterText}
-                      isLoading={list.isLoading}
-                      items={list.items}
-                      label="Select an instrument"
-                      onInputChange={list.setFilterText}
-                      onSelectionChange={($event) => addInstrument($event)}
-                      menuTrigger="input"
-                      className="w-full"
-                      listboxProps={{
-                        emptyContent: "No results found",
-                      }}
-                      isDisabled={isAdjustWeightageEnabled || isLoading}
-                    >
-                      {(item: any) => (
-                        <AutocompleteItem
-                          key={item.instrumentCode}
-                          className="capitalize"
-                        >
-                          {item.instrumentName}
-                        </AutocompleteItem>
-                      )}
-                    </Autocomplete>
+                    <PortfolioSearchComponent
+                      list={list}
+                      addInstrument={addInstrument}
+                      isAdjustWeightageEnabled={isAdjustWeightageEnabled}
+                      isLoading={isLoading}
+                    />
                   ) : (
                     <PortfolioChart
                       investmentMode={investmentMode}
