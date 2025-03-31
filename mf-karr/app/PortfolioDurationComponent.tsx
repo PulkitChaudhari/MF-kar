@@ -38,7 +38,6 @@ export default function PortflioDurationComponent({
               }
               size="sm"
               value={startDate}
-              onChange={(date) => console.log(date)}
             />
             <DateInput
               label="To"
@@ -48,7 +47,6 @@ export default function PortflioDurationComponent({
               }
               size="sm"
               value={endDate}
-              onChange={(date) => console.log(date)}
             />
             <Button
               variant="bordered"

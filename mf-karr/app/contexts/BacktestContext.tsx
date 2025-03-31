@@ -21,6 +21,7 @@ type BacktestContextType = {
   isEditFunds: boolean;
   showCompareSavedPortfolioModal: boolean;
   compareSavedPortfolios: any[];
+  selectedTimePeriod: string;
   // Backtest actions
   setShowCompareSavedPortfolioModal: (flag: boolean) => void;
   backtestPortfolio: (
@@ -48,6 +49,7 @@ const BacktestContext = createContext<BacktestContextType>({
   isEditFunds: true,
   showCompareSavedPortfolioModal: false,
   compareSavedPortfolios: [],
+  selectedTimePeriod: "",
   setShowCompareSavedPortfolioModal: async () => {},
   // Default functions (will be overridden by provider)
   backtestPortfolio: async () => {},
@@ -180,11 +182,6 @@ export const BacktestProvider = ({
         gain: 10,
       });
 
-      console.log(
-        updatedChartData[updatedChartData.length - 1].nav -
-          updatedChartData[updatedChartData.length - 1].navIndex
-      );
-
       setComparePortfolioReturnDiff(
         updatedChartData[updatedChartData.length - 1].nav -
           updatedChartData[updatedChartData.length - 1].navIndex
@@ -218,7 +215,6 @@ export const BacktestProvider = ({
         });
       });
       setCompareSavedPortfolios(tempPortfolios);
-      console.log(tempPortfolios);
       setShowCompareSavedPortfolioModal(true);
     });
   };
@@ -256,8 +252,6 @@ export const BacktestProvider = ({
         navIndex: portfolioData.chartData[index]?.nav || 0,
       }));
 
-      console.log(portfolioData);
-
       setComparePortfolioReturnDiff(
         updatedChartData[updatedChartData.length - 1].nav -
           updatedChartData[updatedChartData.length - 1].navIndex
@@ -285,6 +279,7 @@ export const BacktestProvider = ({
         isEditFunds,
         showCompareSavedPortfolioModal,
         compareSavedPortfolios,
+        selectedTimePeriod,
         setShowCompareSavedPortfolioModal,
         backtestPortfolio,
         changeCompareIndex,
