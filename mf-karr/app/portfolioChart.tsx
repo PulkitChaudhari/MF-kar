@@ -76,11 +76,6 @@ export default function PortfolioChart({
 
   return (
     <div className="relative flex gap-[5rem] flex-col p-2">
-      {isLoading && (
-        <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
-          Loading datadscvfgbryht
-        </div>
-      )}
       <Modal
         isDismissable={true}
         isKeyboardDismissDisabled={true}
@@ -107,13 +102,6 @@ export default function PortfolioChart({
                         type="submit"
                       >
                         <FaCheck />
-                      </Button>
-                      <Button
-                        isIconOnly
-                        variant="bordered"
-                        className="hover:bg-red-200 transition-all"
-                      >
-                        <RxCross2 />
                       </Button>
                     </div>
                   </div>
