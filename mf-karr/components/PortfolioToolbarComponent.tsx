@@ -8,7 +8,7 @@ import {
   GiInjustice,
   RxCross2,
   FaCheck,
-} from "./icons";
+} from "../app/icons";
 
 export default function PortfolioToolbarComponent({
   savePortfolio,

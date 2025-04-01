@@ -2,28 +2,21 @@
 import {
   Navbar as NextUINavbar,
   NavbarContent,
-  NavbarMenu,
-  NavbarMenuToggle,
   NavbarBrand,
   NavbarItem,
-  NavbarMenuItem,
 } from "@nextui-org/navbar";
-import { Button } from "@nextui-org/button";
-import { Kbd } from "@nextui-org/kbd";
 import { Link } from "@nextui-org/link";
-import { Input } from "@nextui-org/input";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
-import { ThemeSwitch } from "@/components/theme-switch";
-import { GithubIcon, SearchIcon, Logo, GMailIcon } from "@/components/icons";
-import { LinkedinIcon } from "lucide-react";
+import { ThemeSwitchComponent } from "@/components/ThemeSwitchComponent";
+import { GithubIcon, GMailIcon, LinkedInIcon } from "@/components/icons";
 import LoginLogoutButton from "@/app/LoginLogoutButton";
 import { useSession } from "next-auth/react";
 
-export const Navbar = () => {
+export const NavbarComponent = () => {
   const { data: session } = useSession();
 
   if (session)
@@ -67,13 +60,13 @@ export const Navbar = () => {
               aria-label="LinkedIn"
               href={siteConfig.links.linkedin}
             >
-              <LinkedinIcon className="text-default-500" />
+              <LinkedInIcon className="text-default-500" />
             </Link>
 
             <Link isExternal aria-label="Github" href={siteConfig.links.github}>
               <GithubIcon className="text-default-500" />
             </Link>
-            <ThemeSwitch />
+            <ThemeSwitchComponent />
             <LoginLogoutButton />
           </NavbarItem>
         </NavbarContent>

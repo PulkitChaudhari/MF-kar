@@ -7,7 +7,7 @@ import {
   ModalContent,
   ModalFooter,
 } from "@nextui-org/react";
-import { CiExport, DeleteIcon } from "./icons";
+import { CiExport, DeleteIcon } from "../app/icons";
 
 export default function LoadPortfolioModalComponent({
   showSavedPortolioModal,

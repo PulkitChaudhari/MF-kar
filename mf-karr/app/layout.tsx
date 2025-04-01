@@ -6,7 +6,7 @@ import { Providers } from "./providers";
 
 import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
-import { Navbar } from "@/components/navbar";
+import { NavbarComponent } from "@/components/NavbarComponent";
 import SessionWrapper from "./sessionwrapper";
 import { useSession } from "next-auth/react";
 
@@ -42,7 +42,7 @@ export default function RootLayout({
         >
           <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
             <div className="relative flex flex-col h-screen">
-              <Navbar />
+              <NavbarComponent />
               <main className="bg-gray-800 flex-1 pt-16 overflow-auto">
                 {children}
               </main>
