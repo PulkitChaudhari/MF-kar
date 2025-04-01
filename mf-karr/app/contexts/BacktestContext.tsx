@@ -258,7 +258,7 @@ export const BacktestProvider = ({
       );
 
       setChartData(updatedChartData);
-      setSelectedCompareIndex("Saved Portfolios");
+      setSelectedCompareIndex(row.portfolioName);
       setShowCompareSavedPortfolioModal(false);
     } catch (error) {
       console.error("Error loading portfolio for comparison:", error);
