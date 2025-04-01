@@ -1,12 +1,14 @@
 "use client";
 import React from "react";
 import { Button, Input } from "@nextui-org/react";
-import { MdModeEditOutline } from "react-icons/md";
-import { TfiSave } from "react-icons/tfi";
-import { CiExport } from "react-icons/ci";
-import { GiInjustice } from "react-icons/gi";
-import { RxCross2 } from "react-icons/rx";
-import { FaCheck } from "react-icons/fa";
+import {
+  MdModeEditOutline,
+  TfiSave,
+  CiExport,
+  GiInjustice,
+  RxCross2,
+  FaCheck,
+} from "./icons";
 
 export default function PortfolioToolbarComponent({
   savePortfolio,

@@ -26,8 +26,7 @@ import {
 } from "@/components/ui/chart";
 import { Button } from "@nextui-org/button";
 import { compareIndexValues } from "./constants";
-import { RxCross2 } from "react-icons/rx";
-import { FaCheck } from "react-icons/fa6";
+import { FaCheck } from "./icons";
 
 export default function PortfolioChart({
   chartData,

@@ -12,7 +12,7 @@ import {
   Card,
 } from "@nextui-org/react";
 
-import { DeleteIcon } from "./DeleteIcon";
+import { DeleteIcon } from "./icons";
 import { columns } from "./constants";
 
 import { Slider } from "@heroui/slider";

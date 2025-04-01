@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useSession } from "next-auth/react";
-import { IoLockClosed, IoReloadOutline } from "react-icons/io5";
+import { IoLockClosed } from "./icons";
 import { useAsyncList } from "@react-stately/data";
 import { addToast } from "@heroui/toast";
 import { usePortfolioContext } from "./contexts/PortfolioContext";
