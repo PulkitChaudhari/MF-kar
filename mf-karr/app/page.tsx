@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useSession } from "next-auth/react";
-import { IoLockClosed } from "react-icons/io5";
+import { IoLockClosed, IoReloadOutline } from "react-icons/io5";
 import { useAsyncList } from "@react-stately/data";
 import { addToast } from "@heroui/toast";
 import { usePortfolioContext } from "./contexts/PortfolioContext";
@@ -22,6 +22,7 @@ import PortfolioSearchComponent from "./PortfolioSearchComponent";
 import PortfolioChart from "./portfolioChart";
 import { AppProvider } from "./contexts/AppProvider";
 import LoginComponent from "./LoginModalComponent";
+import { Spinner } from "@nextui-org/react";
 
 // Component for the main portfolio content
 const PortfolioContent = () => {
@@ -127,8 +128,8 @@ const PortfolioContent = () => {
   const handleLoadPortfolio = async (portfolio: any) => {
     setIsLoading(true);
     try {
-      await loadPortfolio(portfolio, Number(selectedTimePeriod));
       setShowSavedPortolioModal(false);
+      await loadPortfolio(portfolio, Number(selectedTimePeriod));
     } finally {
       setIsLoading(false);
     }
@@ -349,6 +350,7 @@ const PortfolioContent = () => {
         </div>
         {isLoading && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
+            <Spinner />
             Loading data
           </div>
         )}
