@@ -10,18 +10,18 @@ import { useInvestmentContext } from "./contexts/InvestmentContext";
 import { useUIContext } from "./contexts/UIContext";
 import { apiService } from "./services/api.service";
 import { ToastColor } from "./interfaces/interfaces";
-import ReplacePortfolioModalComponent from "./ReplacePortfolioModalComponent";
-import LoadPortfolioModalComponent from "./LoadPortfolioModalComponent";
-import PortfolioNameComponent from "./PortfolioNameComponent";
-import PortfolioToolbarComponent from "./PortfolioToolbarComponent";
-import PortflioDurationComponent from "./PortfolioDurationComponent";
-import PortfolioTable from "./portfolioTable";
-import PortfolioInvestmentAmountComponent from "./PortfolioInvestmentAmountComponent";
-import PortfolioEditBacktestButtonComponent from "./PortfolioEditBacktestButtonComponent";
-import PortfolioSearchComponent from "./PortfolioSearchComponent";
-import PortfolioChart from "./portfolioChart";
+import ReplacePortfolioModalComponent from "../components/ReplacePortfolioModalComponent";
+import LoadPortfolioModalComponent from "../components/LoadPortfolioModalComponent";
+import PortfolioNameComponent from "../components/PortfolioNameComponent";
+import PortfolioToolbarComponent from "../components/PortfolioToolbarComponent";
+import PortflioDurationComponent from "../components/PortfolioDurationComponent";
+import PortfolioInstrumentsComponent from "./PortfolioInstrumentsComponent";
+import PortfolioInvestmentAmountComponent from "../components/PortfolioInvestmentAmountComponent";
+import PortfolioEditBacktestButtonComponent from "../components/PortfolioEditBacktestButtonComponent";
+import PortfolioSearchComponent from "../components/PortfolioSearchComponent";
+import PortfolioChartComponent from "./PortfolioChartComponent";
 import { AppProvider } from "./contexts/AppProvider";
-import LoginComponent from "./LoginModalComponent";
+import LoginComponent from "../components/LoginModalComponent";
 import { Spinner } from "@nextui-org/react";
 
 // Component for the main portfolio content
@@ -270,7 +270,7 @@ const PortfolioContent = () => {
                 setIsAdjustWeightageEnabled={setIsAdjustWeightageEnabled}
               />
             </div>
-            <PortfolioTable
+            <PortfolioInstrumentsComponent
               selectedNavData={selectedInstrumentsData}
               removeMututalFundFn={handleRemoveMutualFund}
               timePeriod={Number(selectedTimePeriod)}
@@ -321,7 +321,7 @@ const PortfolioContent = () => {
                   isLoading={isLoading}
                 />
               ) : (
-                <PortfolioChart
+                <PortfolioChartComponent
                   investmentMode={investmentMode}
                   initialAmount={initialAmount}
                   oldInitialNum={oldInitialNum}

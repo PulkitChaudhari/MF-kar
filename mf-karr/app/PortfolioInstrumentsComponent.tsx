@@ -18,7 +18,7 @@ import { columns } from "./constants";
 import { Slider } from "@heroui/slider";
 import { ValidationError } from "@react-types/shared";
 
-export default function PortfolioTable({
+export default function PortfolioInstrumentsComponent({
   selectedNavData,
   removeMututalFundFn,
   timePeriod,

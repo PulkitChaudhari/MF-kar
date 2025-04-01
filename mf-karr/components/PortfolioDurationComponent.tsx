@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import { Button, DateInput } from "@nextui-org/react";
-import { RxCross2, CalendarIcon } from "./icons";
-import { cagrValues } from "./constants";
+import { RxCross2, CalendarIcon } from "../app/icons";
+import { cagrValues } from "../app/constants";
 
 export default function PortflioDurationComponent({
   isCustomTimePeriod,

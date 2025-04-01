@@ -28,7 +28,7 @@ import { Button } from "@nextui-org/button";
 import { compareIndexValues } from "./constants";
 import { FaCheck } from "./icons";
 
-export default function PortfolioChart({
+export default function PortfolioChartComponent({
   chartData,
   maxDrawdown,
   sharpeRatio,

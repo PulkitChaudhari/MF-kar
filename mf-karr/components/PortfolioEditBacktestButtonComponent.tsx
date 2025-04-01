@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Button } from "@nextui-org/react";
-import { FaRegEdit, VscGraphLine } from "./icons";
+import { FaRegEdit, VscGraphLine } from "../app/icons";
 
 export default function PortfolioEditBacktestButtonComponent({
   isEditFunds,

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Input } from "@nextui-org/react";
-import { MdModeEditOutline } from "./icons";
+import { MdModeEditOutline } from "../app/icons";
 
 export default function PortfolioNameComponent({
   isEditPortfolioName,
