@@ -10,6 +10,7 @@ const checkEnvVars = () => {
   console.log(config.githubSecret);
   console.log(config.googleClientId);
   console.log(config.googleSecret);
+  console.log(config.nextAuthSecret);
 };
 
 // Call the check function
@@ -27,6 +28,7 @@ const handler = NextAuth({
       clientSecret: config.googleSecret as string,
     }),
   ],
+  secret: config.nextAuthSecret,
 });
 
 export { handler as GET, handler as POST };

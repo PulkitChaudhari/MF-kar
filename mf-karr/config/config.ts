@@ -4,4 +4,5 @@ export const config = {
   googleSecret: process.env.AUTH_GOOGLE_CLIENT_SECRET,
   githubClientId: process.env.AUTH_GITHUB_CLIENT_ID,
   githubSecret: process.env.AUTH_GITHUB_CLIENT_SECRET,
+  nextAuthSecret: process.env.NEXT_AUTH_SECRET,
 };
