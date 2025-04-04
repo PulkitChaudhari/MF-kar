@@ -1,3 +1,7 @@
 export const config = {
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL,
+  googleClientId: process.env.AUTH_GOOGLE_CLIENT_ID,
+  googleSecret: process.env.AUTH_GOOGLE_CLIENT_SECRET,
+  githubClientId: process.env.AUTH_GITHUB_CLIENT_ID,
+  githubSecret: process.env.AUTH_GITHUB_CLIENT_SECRET,
 };
