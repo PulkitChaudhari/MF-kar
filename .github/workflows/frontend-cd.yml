@@ -11,14 +11,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Docker Login
-        run: sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
+      - name: Set env
+        run: echo "${{ secrets.AWS_ACCESS_KEY_ID }}" >> $AWS_ACCESS_KEY_ID
+        
+      - name: Test
+        run: echo $AWS_ACCESS_KEY_ID
 
-      - name: Pull latest image
-        run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
+      # - name: Docker Login
+      #   run: sudo docker login -u AWS -p $(aws ecr get-login-password) 715841355249.dkr.ecr.ap-south-1.amazonaws.com
 
-      - name: Remove older image
-        run: sudo docker rm -f mf-karr-container || true
+      # - name: Pull latest image
+      #   run: sudo docker pull 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
 
-      - name: Run Docker Container
-        run: sudo docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://13.232.234.139:8081 -d --name mf-karr-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
+      # - name: Remove older image
+      #   run: sudo docker rm -f mf-karr-container || true
+
+      # - name: Run Docker Container
+      #   run: sudo docker run -p 3000:3000 -e NEXT_PUBLIC_API_URL=http://13.232.234.139:8081 -d --name mf-karr-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
