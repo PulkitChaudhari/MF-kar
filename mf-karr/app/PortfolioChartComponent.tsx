@@ -116,7 +116,7 @@ export default function PortfolioChartComponent({
           <div className="flex flex-row sm:flex-col w-full gap-1">
             <div className="flex items-center gap-3 mb-5">
               <b className="text-lg">Portfolio Returns</b>
-              <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+              <div className="h-[1px] bg-gray-300 flex-grow"></div>
             </div>
             <div className="flex w-full gap-10 flex-col items-center">
               <div className="w-11/12 gap-7 flex flex-col">

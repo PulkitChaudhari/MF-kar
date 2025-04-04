@@ -22,9 +22,9 @@ export default function PortflioDurationComponent({
   return (
     <div className="my-1 flex flex-col gap-1">
       <div className="flex items-center my-2">
-        <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+        <div className="h-[1px] bg-gray-300 flex-grow"></div>
         <b className="mx-3 text-sm whitespace-nowrap">Edit Time period</b>
-        <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+        <div className="h-[1px] bg-gray-300 flex-grow"></div>
       </div>
       <div className="mx-[5px]">
         {isCustomTimePeriod ? (
