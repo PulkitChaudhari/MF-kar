@@ -31,5 +31,5 @@ jobs:
           IMAGE_TAG: latest
         run: |
           cd ./mf-karr
-          docker build --build-arg NEXT_PUBLIC_API_URL=http://65.0.125.66:8081 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --build-arg NEXT_PUBLIC_API_URL=http://13.232.234.139:8081 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

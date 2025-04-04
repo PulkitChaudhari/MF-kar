@@ -18,9 +18,9 @@ export default function PortfolioInvestmentAmountComponent({
   return (
     <div className="my-1 flex flex-col gap-1">
       <div className="flex items-center my-2">
-        <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+        <div className="h-[1px] bg-gray-300 flex-grow"></div>
         <b className="mx-3 text-sm whitespace-nowrap">Investment Amount</b>
-        <div className="h-[1px] bg-gray-300 dark:bg-gray-600 flex-grow"></div>
+        <div className="h-[1px] bg-gray-300 flex-grow"></div>
       </div>
       <div className="flex flex-col gap-2 justify-end">
         <div className="flex w-full gap-2 items-center">

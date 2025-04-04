@@ -234,7 +234,7 @@ const PortfolioContent = () => {
   const oldInitialNum = initialAmount;
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full ">
       <ReplacePortfolioModalComponent
         showSavePortfolioNameModal={showSavePortfolioNameModal}
         modalContent={modalContent}
@@ -249,7 +249,7 @@ const PortfolioContent = () => {
         deletePortfolio={handleDeletePortfolio}
       />
       <div className="w-full h-full flex relative">
-        <div className="gap-2 w-4/12 flex flex-col bg-gray-950 ml-2 mr-1 py-2 my-2 rounded-lg overflow-y-auto">
+        <div className="gap-2 w-4/12 flex flex-col ml-2 mr-1 py-2 my-2 rounded-lg bg-gray-500 dark:bg-black overflow-y-auto">
           <div className="relative flex flex-col gap-2 rounded-lg grow px-5 pt-5">
             <div className="flex items-center gap-2">
               <PortfolioNameComponent
@@ -311,7 +311,7 @@ const PortfolioContent = () => {
           />
         </div>
         <div className="gap-2 h-full w-8/12 flex flex-col">
-          <div className="bg-gray-950 flex flex-col h-full p-5 my-2 ml-1 mr-2 overflow-y-auto rounded-lg">
+          <div className="flex flex-col h-full p-5 my-2 ml-1 mr-2 overflow-y-auto dark:bg-black  rounded-lg">
             <div className="flex flex-col gap-3 w-full">
               {isEditFunds ? (
                 <PortfolioSearchComponent
