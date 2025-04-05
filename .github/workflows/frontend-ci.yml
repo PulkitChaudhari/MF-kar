@@ -27,15 +27,15 @@ jobs:
         id: timestamp
         run: echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
 
-      - name: Build, tag, and push the image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
-        run: |
-          cd ./mf-karr
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$TIMESTAMP .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$TIMESTAMP
+      # - name: Build, tag, and push the image to Amazon ECR
+      #   id: build-image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
+      #   run: |
+      #     cd ./mf-karr
+      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$TIMESTAMP .
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$TIMESTAMP
 
       - name: Delete ECR Images
         env:
@@ -44,4 +44,4 @@ jobs:
         run: |
           aws ecr batch-delete-image \
             --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
-            --image-ids imageDigest=$(aws ecr list-images --repository-name $ECR_REGISTRY/$ECR_REPOSITORY--query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
+            --image-ids imageDigest=$(aws ecr list-images --repository-name $ECR_REGISTRY/$ECR_REPOSITORY --query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
