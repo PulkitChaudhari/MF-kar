@@ -43,5 +43,5 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
         run: |
           aws ecr batch-delete-image \
-            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
-            --image-ids imageDigest=$(aws ecr list-images --repository-name $ECR_REGISTRY/$ECR_REPOSITORY --query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
+            --repository-name glokelov/mf-karr \
+            --image-ids imageDigest=$(aws ecr list-images --repository-name glokelov/mf-karr --query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
