@@ -35,7 +35,7 @@ jobs:
           IMAGE_TAG: ${{ steps.login-ecr.outputs.registry }}_$TIMESTAMP
         run: |
           cd ./mf-karr
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           echo $IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
