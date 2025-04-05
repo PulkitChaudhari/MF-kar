@@ -6,12 +6,6 @@ permissions:
   id-token: write # This is required for requesting the JWT
 
 jobs:
-  set-timestamp:
-    runs-on: ubuntu-latest
-    outputs:
-      steps: ${{ steps.timestamp.outputs }}
-    steps:
-
   Build:
     name: Pushing Frontend Image to AWS ECR
     runs-on: ubuntu-latest
