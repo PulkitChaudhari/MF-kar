@@ -44,4 +44,4 @@ jobs:
         run: |
           aws ecr batch-delete-image \
             --repository-name glokelov/mf-karr \
-            --image-ids imageDigest=$(aws ecr list-images --repository-name glokelov/mf-karr --query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
+            --image-ids imageDigest=$(aws ecr list-images --repository-name glokelov/mf-karr --query 'imageIds[?imageTag!=$TIMESTAMP].imageTag' --output text)
