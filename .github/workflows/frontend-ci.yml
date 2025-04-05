@@ -34,7 +34,7 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
         run: |
           cd ./mf-karr
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$ECR_REPOSITORY-$TIMESTAMP .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$ECR_REPOSITORY-$TIMESTAMP
 
       # - name: Delete ECR Images
