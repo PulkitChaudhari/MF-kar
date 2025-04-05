@@ -38,7 +38,10 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$TIMESTAMP
 
       - name: Delete ECR Images
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
         run: |
           aws ecr batch-delete-image \
-            --repository-name ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }} \
+            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
             --image-ids imageDigest=$(aws ecr list-images --repository-name ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }} --query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
