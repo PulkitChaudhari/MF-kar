@@ -6,6 +6,12 @@ permissions:
   id-token: write # This is required for requesting the JWT
 
 jobs:
+  set-timestamp:
+    runs-on: ubuntu-latest
+    outputs:
+      steps: ${{ steps.timestamp.outputs }}
+    steps:
+
   Build:
     name: Pushing Frontend Image to AWS ECR
     runs-on: ubuntu-latest
@@ -23,21 +29,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Set Timestamp
+        id: timestamp
+        run: echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
+
       - name: Build, tag, and push the image to Amazon ECR
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
-          IMAGE_TAG: latest
+          IMAGE_TAG: $TIMESTAMP
         run: |
           cd ./mf-karr
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      - name: Delete old ECR images
-        uses: agungwa/ECR-Lifecycle-Manager@v1.1.1
-        with:
-          repo_name: glokelov/mf-karr
-          num_to_keep: 1
-          dry_run: true
-          delete_untagged_images: false
+      - name: Delete ECR Images
+        run: |
+          aws ecr batch-delete-image \
+            --repository-name ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }} \
+            --image-ids imageDigest=$(aws ecr list-images --repository-name ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY_NAME }} --query 'imageIds[?imageTag!=`$TIMESTAMP`].imageTag' --output text)
