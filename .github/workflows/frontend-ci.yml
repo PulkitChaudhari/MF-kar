@@ -35,7 +35,7 @@ jobs:
         run: |
           cd ./mf-karr
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$ECR_REPOSITORY-$TIMESTAMP
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:mf-karr-$TIMESTAMP
 
       # - name: Delete ECR Images
       #   env:
