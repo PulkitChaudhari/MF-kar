@@ -33,6 +33,20 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+      - name: Delete ECR Images
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_NAME }}
+          ECR_REPOSITORY: ${{ secrets.UPDATE_REPO_NAME }}
+        run: |
+          UNTAGGED_IMAGES=$(aws ecr list-images \
+            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
+            --filter "tagStatus=UNTAGGED" \
+            --query 'imageIds[*]' \
+            --output json)
+          aws ecr batch-delete-image \
+            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
+            --image-ids "$UNTAGGED_IMAGES"
+
   AWS-ECR-Login-Using-Docker:
     name: Pulling Update Script image to AWS EC2
     runs-on: self-hosted
