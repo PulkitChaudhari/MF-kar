@@ -8,7 +8,6 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { NavbarComponent } from "@/components/NavbarComponent";
 import SessionWrapper from "./sessionwrapper";
-import { useSession } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: {

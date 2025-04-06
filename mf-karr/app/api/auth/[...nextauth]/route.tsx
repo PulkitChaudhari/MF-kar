@@ -11,6 +11,7 @@ const checkEnvVars = () => {
   console.log(config.googleClientId);
   console.log(config.googleSecret);
   console.log(config.nextAuthSecret);
+  console.log(config.nextAuthUrl);
 };
 
 // Call the check function
@@ -18,7 +19,6 @@ checkEnvVars();
 
 const handler = NextAuth({
   providers: [
-    // OAuth authentication providers...
     GitHubProvider({
       clientId: config.githubClientId as string,
       clientSecret: config.githubSecret as string,
@@ -28,6 +28,13 @@ const handler = NextAuth({
       clientSecret: config.googleSecret as string,
     }),
   ],
+  callbacks: {
+    redirect: async ({ url, baseUrl }) => {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
+  },
   secret: config.nextAuthSecret,
 });
 

@@ -31,4 +31,5 @@ jobs:
             -e AUTH_GOOGLE_CLIENT_ID="${{ secrets.AUTH_GOOGLE_CLIENT_ID }}" \
             -e AUTH_GOOGLE_CLIENT_SECRET="${{ secrets.AUTH_GOOGLE_CLIENT_SECRET }}" \
             -e NEXT_AUTH_SECRET="${{ secrets.NEXT_AUTH_SECRET }}" \
+            -e NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
             -d --name mf-karr-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
