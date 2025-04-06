@@ -5,5 +5,5 @@ export const config = {
   githubClientId: process.env.AUTH_GITHUB_CLIENT_ID,
   githubSecret: process.env.AUTH_GITHUB_CLIENT_SECRET,
   nextAuthSecret: process.env.NEXT_AUTH_SECRET,
-  nextAuthUrl: process.env.NEXAUTH_URL,
+  nextAuthUrl: process.env.NEXTAUTH_URL,
 };
