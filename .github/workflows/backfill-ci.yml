@@ -33,14 +33,13 @@ jobs:
 
       - name: Delete ECR Images
         env:
-          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_NAME }}
           ECR_REPOSITORY: ${{ secrets.BACKFILL_REPO_NAME }}
         run: |
           UNTAGGED_IMAGES=$(aws ecr list-images \
-            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
+            --repository-name $ECR_REPOSITORY \
             --filter "tagStatus=UNTAGGED" \
             --query 'imageIds[*]' \
             --output json)
           aws ecr batch-delete-image \
-            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
+            --repository-name $ECR_REPOSITORY \
             --image-ids "$UNTAGGED_IMAGES"
