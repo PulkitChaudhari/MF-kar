@@ -25,10 +25,10 @@ jobs:
       - name: Run Docker Container
         run: |
           sudo docker run -p 3000:3000 \
-            -e NEXT_PUBLIC_API_URL="http://{{ secrets.AWS_EC2_IP }}:8081" \
-            -e AUTH_GITHUB_CLIENT_ID="{{ secrets.AUTH_GITHUB_CLIENT_ID }}" \
-            -e AUTH_GITHUB_CLIENT_SECRET="{{ secrets.AUTH_GITHUB_CLIENT_SECRET }}" \
-            -e AUTH_GOOGLE_CLIENT_ID="{{ secrets.AUTH_GOOGLE_CLIENT_ID }}" \
-            -e AUTH_GOOGLE_CLIENT_SECRET="{{ secrets.AUTH_GOOGLE_CLIENT_SECRET }}" \
-            -e NEXT_AUTH_SECRET="{{ secrets.NEXT_AUTH_SECRET }}" \
+            -e NEXT_PUBLIC_API_URL="http://${{ secrets.AWS_EC2_IP }}:8081" \
+            -e AUTH_GITHUB_CLIENT_ID="${{ secrets.AUTH_GITHUB_CLIENT_ID }}" \
+            -e AUTH_GITHUB_CLIENT_SECRET="${{ secrets.AUTH_GITHUB_CLIENT_SECRET }}" \
+            -e AUTH_GOOGLE_CLIENT_ID="${{ secrets.AUTH_GOOGLE_CLIENT_ID }}" \
+            -e AUTH_GOOGLE_CLIENT_SECRET="${{ secrets.AUTH_GOOGLE_CLIENT_SECRET }}" \
+            -e NEXT_AUTH_SECRET="${{ secrets.NEXT_AUTH_SECRET }}" \
             -d --name mf-karr-container 715841355249.dkr.ecr.ap-south-1.amazonaws.com/glokelov/mf-karr:latest
