@@ -32,17 +32,22 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
+          IMAGE_TAG: latest
         run: |
           cd ./mf-karr
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:mf_karr_$TIMESTAMP .
-          echo $IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:mf_karr_$TIMESTAMP
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
-      # - name: Delete ECR Images
-      #   env:
-      #     ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_NAME }}
-      #     ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
-      #   run: |
-      #     aws ecr batch-delete-image \
-      #       --repository-name glokelov/mf-karr \
-      #       --image-ids imageDigest=$(aws ecr list-images --repository-name glokelov/mf-karr --query 'imageIds[?imageTag!=$ECR_REPOSITORY-$TIMESTAMP].imageTag' --output text)
+      - name: Delete ECR Images
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY_NAME }}
+          ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
+        run: |
+          UNTAGGED_IMAGES=$(aws ecr list-images \
+            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
+            --filter "tagStatus=UNTAGGED" \
+            --query 'imageIds[*]' \
+            --output json)
+          aws ecr batch-delete-image \
+            --repository-name $ECR_REGISTRY/$ECR_REPOSITORY \
+            --image-ids "$UNTAGGED_IMAGES"
