@@ -32,12 +32,11 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ secrets.FRONT_END_REPO_NAME }}
-          IMAGE_TAG: mf_karr_$TIMESTAMP
         run: |
           cd ./mf-karr
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:mf_karr_$TIMESTAMP .
           echo $IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:mf_karr_$TIMESTAMP
 
       # - name: Delete ECR Images
       #   env:
