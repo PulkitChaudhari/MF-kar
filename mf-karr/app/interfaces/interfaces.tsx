@@ -32,6 +32,16 @@ export type PortfolioState = {
   isEditPortfolioName: boolean;
   initialAmount: string;
   investmentMode: string;
+  showSavePortfolioNameModal: boolean;
+  showSavedPortolioModal: boolean;
+  showCompareSavedPortfolioModal: boolean;
+  isCustomTimePeriod: boolean;
+  startDate: any;
+  endDate: any;
+  selectedTimePeriod: string;
+  modalContent: string;
+  userSavedPortfolios: any[];
+  compareSavedPortfolios: any[];
 };
 
 export type PortfolioContextType = PortfolioState & {
@@ -53,6 +63,16 @@ export type PortfolioContextType = PortfolioState & {
   setTableDataWeightageCopy: (data: any[]) => void;
   setInitialAmount: (amount: string) => void;
   setInvestmentMode: (mode: string) => void;
+  setShowSavePortfolioNameModal: (value: boolean) => void;
+  setShowSavedPortolioModal: (value: boolean) => void;
+  setShowCompareSavedPortfolioModal: (value: boolean) => void;
+  setIsCustomTimePeriod: (value: boolean) => void;
+  setStartDate: (date: any) => void;
+  setEndDate: (date: any) => void;
+  setSelectedTimePeriod: (period: string) => void;
+  setModalContent: (content: string) => void;
+  setUserSavedPortfolios: (portfolios: any[]) => void;
+  setCompareSavedPortfolios: (portfolios: any[]) => void;
 };
 
 // Define the context type

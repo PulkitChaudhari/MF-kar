@@ -91,7 +91,6 @@ export const BacktestProvider = ({
         initialAmount,
         investmentMode
       );
-      console.log(data);
 
       setMaxDrawdown(data.metrics.maxDrawdown);
       setSharpeRatio(data.metrics.sharpeRatio);

@@ -1,12 +1,11 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { IoLockClosed } from "../app/icons";
 import { useAsyncList } from "@react-stately/data";
 import { addToast } from "@heroui/toast";
 import { usePortfolioContext } from "../app/contexts/PortfolioContext";
 import { useBacktestContext } from "../app/contexts/BacktestContext";
-import { useUIContext } from "../app/contexts/UIContext";
 import { apiService } from "../app/services/api.service";
 import { ToastColor } from "../app/interfaces/interfaces";
 import ReplacePortfolioModalComponent from "./ReplacePortfolioModalComponent";
@@ -21,11 +20,9 @@ import PortfolioSearchComponent from "./PortfolioSearchComponent";
 import PortfolioChartComponent from "../app/PortfolioChartComponent";
 import LoadingOverlayComponent from "./LoadingOverlayComponent";
 
-// Component for the main portfolio content
 export default function PortfolioContentComponent() {
   const { data: session } = useSession();
 
-  // Get values and functions from contexts
   const {
     selectedInstrumentsData,
     isAdjustWeightageEnabled,
@@ -35,6 +32,18 @@ export default function PortfolioContentComponent() {
     isEditPortfolioName,
     initialAmount,
     investmentMode,
+    showSavePortfolioNameModal,
+    showSavedPortolioModal,
+    isCustomTimePeriod,
+    startDate,
+    endDate,
+    modalContent,
+    userSavedPortfolios,
+    setShowSavePortfolioNameModal,
+    setShowSavedPortolioModal,
+    setIsCustomTimePeriod,
+    setModalContent,
+    setUserSavedPortfolios,
     addInstrument,
     removeMutualFund,
     setIsAdjustWeightageEnabled,
@@ -73,22 +82,7 @@ export default function PortfolioContentComponent() {
     setSelectedTimePeriod,
   } = useBacktestContext();
 
-  const {
-    isLoading,
-    showSavePortfolioNameModal,
-    showSavedPortolioModal,
-    isCustomTimePeriod,
-    startDate,
-    endDate,
-    modalContent,
-    userSavedPortfolios,
-    setIsLoading,
-    setShowSavePortfolioNameModal,
-    setShowSavedPortolioModal,
-    setIsCustomTimePeriod,
-    setModalContent,
-    setUserSavedPortfolios,
-  } = useUIContext();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Function to call savePortfolio with the current user email
   const handleSavePortfolio = async () => {

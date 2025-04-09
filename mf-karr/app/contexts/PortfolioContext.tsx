@@ -7,10 +7,13 @@ import {
   ToastColor,
 } from "../interfaces/interfaces";
 import { addToast } from "@heroui/toast";
+import { parseDate } from "@internationalized/date";
 
 const DEFAULT_PORTFOLIO_NAME = "Your Portfolio Name";
 const DEFAULT_INITIAL_AMOUNT = "100";
 const DEFAULT_INVESTMENT_MODE = "lumpsum";
+const DEFAULT_DATE = parseDate("2024-04-04");
+const DEFAULT_TIME_PERIOD = "1";
 
 const initialState: PortfolioState = {
   selectedInstrumentsData: {},
@@ -23,6 +26,16 @@ const initialState: PortfolioState = {
   // Investment properties
   initialAmount: DEFAULT_INITIAL_AMOUNT,
   investmentMode: DEFAULT_INVESTMENT_MODE,
+  showSavePortfolioNameModal: false,
+  showSavedPortolioModal: false,
+  showCompareSavedPortfolioModal: false,
+  isCustomTimePeriod: false,
+  startDate: DEFAULT_DATE,
+  endDate: DEFAULT_DATE,
+  selectedTimePeriod: DEFAULT_TIME_PERIOD,
+  modalContent: "",
+  userSavedPortfolios: [],
+  compareSavedPortfolios: [],
 };
 
 // Action types
@@ -35,7 +48,17 @@ type ActionType =
   | { type: "SET_TABLE_DATA_WEIGHTAGE_COPY"; payload: any[] }
   | { type: "SET_EDIT_PORTFOLIO_NAME"; payload: boolean }
   | { type: "SET_INITIAL_AMOUNT"; payload: string }
-  | { type: "SET_INVESTMENT_MODE"; payload: string };
+  | { type: "SET_INVESTMENT_MODE"; payload: string }
+  | { type: "SET_SAVE_PORTFOLIO_MODAL"; payload: boolean }
+  | { type: "SET_SAVED_PORTFOLIO_MODAL"; payload: boolean }
+  | { type: "SET_COMPARE_SAVED_PORTFOLIO_MODAL"; payload: boolean }
+  | { type: "SET_CUSTOM_TIME_PERIOD"; payload: boolean }
+  | { type: "SET_START_DATE"; payload: any }
+  | { type: "SET_END_DATE"; payload: any }
+  | { type: "SET_TIME_PERIOD"; payload: string }
+  | { type: "SET_MODAL_CONTENT"; payload: string }
+  | { type: "SET_USER_SAVED_PORTFOLIOS"; payload: any[] }
+  | { type: "SET_COMPARE_SAVED_PORTFOLIOS"; payload: any[] };
 
 // Reducer function
 function portfolioReducer(
@@ -61,6 +84,26 @@ function portfolioReducer(
       return { ...state, initialAmount: action.payload };
     case "SET_INVESTMENT_MODE":
       return { ...state, investmentMode: action.payload };
+    case "SET_SAVE_PORTFOLIO_MODAL":
+      return { ...state, showSavePortfolioNameModal: action.payload };
+    case "SET_SAVED_PORTFOLIO_MODAL":
+      return { ...state, showSavedPortolioModal: action.payload };
+    case "SET_COMPARE_SAVED_PORTFOLIO_MODAL":
+      return { ...state, showCompareSavedPortfolioModal: action.payload };
+    case "SET_CUSTOM_TIME_PERIOD":
+      return { ...state, isCustomTimePeriod: action.payload };
+    case "SET_START_DATE":
+      return { ...state, startDate: action.payload };
+    case "SET_END_DATE":
+      return { ...state, endDate: action.payload };
+    case "SET_TIME_PERIOD":
+      return { ...state, selectedTimePeriod: action.payload };
+    case "SET_MODAL_CONTENT":
+      return { ...state, modalContent: action.payload };
+    case "SET_USER_SAVED_PORTFOLIOS":
+      return { ...state, userSavedPortfolios: action.payload };
+    case "SET_COMPARE_SAVED_PORTFOLIOS":
+      return { ...state, compareSavedPortfolios: action.payload };
     default:
       return state;
   }
@@ -83,6 +126,16 @@ const PortfolioContext = createContext<PortfolioContextType>({
   setTableDataWeightageCopy: () => {},
   setInitialAmount: () => {},
   setInvestmentMode: () => {},
+  setShowSavePortfolioNameModal: () => {},
+  setShowSavedPortolioModal: () => {},
+  setShowCompareSavedPortfolioModal: () => {},
+  setIsCustomTimePeriod: () => {},
+  setStartDate: () => {},
+  setEndDate: () => {},
+  setSelectedTimePeriod: () => {},
+  setModalContent: () => {},
+  setUserSavedPortfolios: () => {},
+  setCompareSavedPortfolios: () => {},
 });
 
 const displayToast = (toastData: { type: ToastColor; title: string }) => {
@@ -125,6 +178,37 @@ export const PortfolioProvider = ({
 
   const setInvestmentMode = (mode: string) =>
     dispatch({ type: "SET_INVESTMENT_MODE", payload: mode });
+
+  const setShowSavePortfolioNameModal = (value: boolean) =>
+    dispatch({ type: "SET_SAVE_PORTFOLIO_MODAL", payload: value });
+
+  const setShowSavedPortolioModal = (value: boolean) => {
+    dispatch({ type: "SET_SAVED_PORTFOLIO_MODAL", payload: value });
+  };
+
+  const setShowCompareSavedPortfolioModal = (value: boolean) =>
+    dispatch({ type: "SET_COMPARE_SAVED_PORTFOLIO_MODAL", payload: value });
+
+  const setIsCustomTimePeriod = (value: boolean) =>
+    dispatch({ type: "SET_CUSTOM_TIME_PERIOD", payload: value });
+
+  const setStartDate = (date: any) =>
+    dispatch({ type: "SET_START_DATE", payload: date });
+
+  const setEndDate = (date: any) =>
+    dispatch({ type: "SET_END_DATE", payload: date });
+
+  const setSelectedTimePeriod = (period: string) =>
+    dispatch({ type: "SET_TIME_PERIOD", payload: period });
+
+  const setModalContent = (content: string) =>
+    dispatch({ type: "SET_MODAL_CONTENT", payload: content });
+
+  const setUserSavedPortfolios = (portfolios: any[]) =>
+    dispatch({ type: "SET_USER_SAVED_PORTFOLIOS", payload: portfolios });
+
+  const setCompareSavedPortfolios = (portfolios: any[]) =>
+    dispatch({ type: "SET_COMPARE_SAVED_PORTFOLIOS", payload: portfolios });
 
   const addInstrument = async (
     instrumentValue: any,
@@ -260,6 +344,16 @@ export const PortfolioProvider = ({
         setTableDataWeightageCopy,
         setInitialAmount,
         setInvestmentMode,
+        setShowSavePortfolioNameModal,
+        setShowSavedPortolioModal,
+        setShowCompareSavedPortfolioModal,
+        setIsCustomTimePeriod,
+        setStartDate,
+        setEndDate,
+        setSelectedTimePeriod,
+        setModalContent,
+        setUserSavedPortfolios,
+        setCompareSavedPortfolios,
       }}
     >
       {children}

@@ -165,17 +165,15 @@ export default function PortfolioChartComponent({
                 <div className="flex gap-2">
                   <div className="flex flex-col w-1/3">
                     <div>Max Drawdown</div>
-                    <div className="text-red-400">
-                      - {maxDrawdown.toFixed(2)}%
-                    </div>
+                    <div className="text-red-400">- {maxDrawdown}%</div>
                   </div>
                   <div className="flex flex-col w-1/3">
                     <div>Sharpe Ratio</div>
-                    <div>{sharpeRatio.toFixed(2)}</div>
+                    <div>{sharpeRatio}</div>
                   </div>
                   <div className="flex flex-col w-1/3">
                     <div>XIRR</div>
-                    <div>{sharpeRatio.toFixed(2)}</div>
+                    <div>{sharpeRatio}</div>
                   </div>
                 </div>
               </div>
