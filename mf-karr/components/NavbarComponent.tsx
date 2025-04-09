@@ -22,7 +22,7 @@ export const NavbarComponent = () => {
   if (session)
     return (
       <NextUINavbar
-        className="fixed top-0 left-0 right-0 z-50 items justify-between max-w-full"
+        className="fixed top-0 left-0 right-0 z-50 items justify-between max-w-full dark:bg-stone-950"
         maxWidth="full"
         position="sticky"
       >

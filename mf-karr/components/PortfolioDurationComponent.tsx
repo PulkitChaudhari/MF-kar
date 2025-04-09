@@ -13,7 +13,7 @@ export default function PortflioDurationComponent() {
   const { selectedTimePeriod, setSelectedTimePeriod } = useBacktestContext();
 
   return (
-    <div className="my-1 flex flex-col gap-1">
+    <div className="mt-1 flex flex-col gap-1">
       <div className="flex items-center my-2">
         <div className="h-[1px] bg-gray-300 flex-grow"></div>
         <b className="mx-3 text-sm whitespace-nowrap">Edit Time period</b>
@@ -29,6 +29,8 @@ export default function PortflioDurationComponent() {
                 <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
               }
               size="sm"
+              variant="flat"
+              className="dark:bg-stone-800"
               value={startDate}
             />
             <DateInput
@@ -38,6 +40,8 @@ export default function PortflioDurationComponent() {
                 <CalendarIcon className="text-2xl text-default-400 pointer-events-none flex-shrink-0" />
               }
               size="sm"
+              variant="flat"
+              className="dark:bg-stone-800"
               value={endDate}
             />
             <Button
@@ -55,10 +59,10 @@ export default function PortflioDurationComponent() {
             {cagrValues.map((year) => {
               return (
                 <Button
-                  variant="bordered"
+                  variant="flat"
+                  className="dark:bg-stone-800 w-full"
                   size="sm"
                   key={year.key}
-                  className="w-full"
                   onPress={() => setSelectedTimePeriod(year.key)}
                   isDisabled={selectedTimePeriod == year.key}
                 >
@@ -66,16 +70,6 @@ export default function PortflioDurationComponent() {
                 </Button>
               );
             })}
-            {/* <Button
-                          className="flex-1"
-                          variant="bordered"
-                          size="sm"
-                          onPress={() => {
-                            setIsCustomTimePeriod(true);
-                          }}
-                        >
-                          Custom
-                        </Button> */}
           </div>
         )}
       </div>

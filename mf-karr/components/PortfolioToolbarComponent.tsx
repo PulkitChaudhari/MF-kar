@@ -86,21 +86,23 @@ export default function PortfolioToolbarComponent({
       <div className="flex gap-2">
         <Button
           isIconOnly
-          variant="bordered"
+          variant="flat"
           onPress={() => handleSavePortfolio()}
           isDisabled={
             isLoading || Object.keys(selectedInstrumentsData).length === 0
           }
           size="sm"
+          className="dark:bg-stone-800"
         >
           <TfiSave />
         </Button>
         <Button
           isIconOnly
-          variant="bordered"
+          variant="flat"
           onPress={() => openPortfolioModal()}
           isDisabled={isLoading}
           size="sm"
+          className="dark:bg-stone-800"
         >
           <CiExport />
         </Button>
@@ -133,13 +135,13 @@ export default function PortfolioToolbarComponent({
         ) : (
           <Button
             isIconOnly
-            variant="bordered"
+            variant="flat"
             onPress={() => setIsAdjustWeightageEnabled(true)}
             isDisabled={
               isLoading || Object.keys(selectedInstrumentsData).length === 0
             }
             size="sm"
-            className="w-full"
+            className="w-full dark:bg-stone-800"
           >
             <GiInjustice />
           </Button>

@@ -12,7 +12,7 @@ export default function PortfolioInvestmentAmountComponent({
     usePortfolioContext();
 
   return (
-    <div className="my-1 flex flex-col gap-1">
+    <div className="mb-1 flex flex-col gap-1">
       <div className="flex items-center my-2">
         <div className="h-[1px] bg-gray-300 flex-grow"></div>
         <b className="mx-3 text-sm whitespace-nowrap">Investment Amount</b>
@@ -23,12 +23,25 @@ export default function PortfolioInvestmentAmountComponent({
           <Input
             type="number"
             value={initialAmount}
+            classNames={{
+              label: "bg-stone-800",
+              input: ["bg-stone-800"],
+              innerWrapper: "bg-stone-800",
+              inputWrapper: [
+                "bg-stone-800",
+                "dark:bg-stone-800",
+                "hover:bg-stone-800",
+                "dark:hover:bg-stone-800",
+                "group-data-[focus=true]:bg-stone-800",
+                "dark:group-data-[focus=true]:bg-stone-800",
+              ],
+            }}
             startContent={
               <div className="pointer-events-none flex items-center">
                 <span className="text-default-400 text-small">₹</span>
               </div>
             }
-            variant="bordered"
+            variant="flat"
             onValueChange={(val) => setInitialAmount(val)}
             name="portfolioName"
             isDisabled={isLoading}
@@ -42,14 +55,36 @@ export default function PortfolioInvestmentAmountComponent({
             fullWidth
             selectedKey={investmentMode}
             size="md"
-            onSelectionChange={(tabIndex) =>
-              setInvestmentMode(tabIndex == 0 ? "lumpsum" : "monthly-sip")
-            }
+            onSelectionChange={(tabIndex) => {
+              setInvestmentMode(tabIndex);
+            }}
             isDisabled={isLoading}
-            variant="bordered"
+            variant="solid"
+            classNames={{
+              base: ["dark:bg-stone-800"],
+              tabList: ["dark:bg-stone-800"],
+              tab: ["dark:bg-stone-800"],
+              panel: [
+                "bg-stone-800",
+                "dark:bg-stone-800",
+                "hover:bg-stone-800",
+                "dark:hover:bg-stone-800",
+              ],
+              wrapper: "dark:bg-stone-800",
+              cursor: "dark:bg-stone-700",
+            }}
+            className="rounded-lg"
           >
-            <Tab key="lumpsum" title="Lumpsum"></Tab>
-            <Tab key="monthly-sip" title="Monthly Sip"></Tab>
+            <Tab
+              key="lumpsum"
+              title="Lumpsum"
+              // className="dark:bg-stone-800"
+            ></Tab>
+            <Tab
+              key="monthly-sip"
+              title="Monthly Sip"
+              // className="dark:bg-stone-800"
+            ></Tab>
           </Tabs>
         </div>
       </div>

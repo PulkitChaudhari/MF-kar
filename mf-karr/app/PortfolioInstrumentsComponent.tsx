@@ -84,7 +84,7 @@ export default function PortfolioInstrumentsComponent({
               return (
                 <div
                   key={row.instrumentCode}
-                  className="flex p-3 m-1 border border-gray-500 hover:border-white transition-colors duration-200 rounded-lg"
+                  className="flex p-3 m-1 border hover:border-gray-300 bg-stone-900 transition-colors duration-200 rounded-lg"
                 >
                   <div className="flex flex-col align-center justify-center grow">
                     <div className="text-sm w-full">{row?.instrumentName}</div>

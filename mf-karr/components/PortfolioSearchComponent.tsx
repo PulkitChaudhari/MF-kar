@@ -56,6 +56,14 @@ export default function PortfolioSearchComponent({
       onSelectionChange={($event) => handleAddInstrument($event)}
       menuTrigger="input"
       className="w-full"
+      // classNames={{
+      //   listbox: ["bg-gray-800"],
+      //   listboxWrapper: ["bg-gray-800"],
+      //   popoverContent: ["bg-gray-800"],
+      //   endContentWrapper: ["bg-gray-800"],
+      //   selectorButton: ["bg-gray-800"],
+      //   clearButton: ["bg-gray-800"],
+      // }}
       listboxProps={{
         emptyContent: "No results found",
       }}

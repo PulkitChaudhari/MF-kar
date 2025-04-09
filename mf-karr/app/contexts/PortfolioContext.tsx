@@ -176,13 +176,14 @@ export const PortfolioProvider = ({
   const setInitialAmount = (amount: string) =>
     dispatch({ type: "SET_INITIAL_AMOUNT", payload: amount });
 
-  const setInvestmentMode = (mode: string) =>
+  const setInvestmentMode = (mode: any) =>
     dispatch({ type: "SET_INVESTMENT_MODE", payload: mode });
 
   const setShowSavePortfolioNameModal = (value: boolean) =>
     dispatch({ type: "SET_SAVE_PORTFOLIO_MODAL", payload: value });
 
   const setShowSavedPortolioModal = (value: boolean) => {
+    console.log(value);
     dispatch({ type: "SET_SAVED_PORTFOLIO_MODAL", payload: value });
   };
 

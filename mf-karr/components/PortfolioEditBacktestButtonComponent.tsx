@@ -38,11 +38,11 @@ export default function PortfolioEditBacktestButtonComponent({
     useBacktestContext();
 
   return (
-    <div className="flex w-full gap-2 px-5">
+    <div className="flex w-full gap-2 px-5 mb-2">
       {isEditFunds ? (
         <Button
-          variant="bordered"
-          className="w-full"
+          variant="flat"
+          className="w-full bg-stone-800"
           onPress={() => handleBacktestPortfolio()}
           isDisabled={
             isLoading || Object.keys(selectedInstrumentsData).length === 0
