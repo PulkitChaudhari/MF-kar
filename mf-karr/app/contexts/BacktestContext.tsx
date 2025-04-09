@@ -168,7 +168,7 @@ export const BacktestProvider = ({
   };
 
   // Function to change compare index
-  const changeCompareIndex = async (data: any, indexKey: any) => {
+  const changeCompareIndex = async (data: any, indexKey: string) => {
     if (indexKey === "nifty_50") {
       await fetchIndexComparison(data, indexKey);
       setSelectedCompareIndex("Nifty 50");

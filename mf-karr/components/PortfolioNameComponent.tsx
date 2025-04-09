@@ -2,18 +2,16 @@
 import React from "react";
 import { Input } from "@nextui-org/react";
 import { MdModeEditOutline } from "../app/icons";
+import { usePortfolioContext } from "@/app/contexts/PortfolioContext";
 
-export default function PortfolioNameComponent({
-  isEditPortfolioName,
-  portfolioName,
-  setIsEditPortfolioName,
-  setPortfolioName,
-}: {
-  isEditPortfolioName: any;
-  portfolioName: any;
-  setPortfolioName: any;
-  setIsEditPortfolioName: any;
-}) {
+export default function PortfolioNameComponent() {
+  const {
+    portfolioName,
+    isEditPortfolioName,
+    setPortfolioName,
+    setIsEditPortfolioName,
+  } = usePortfolioContext();
+
   return (
     <div className="w-1/2">
       <div className="group cursor-pointer">

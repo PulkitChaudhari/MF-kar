@@ -97,7 +97,7 @@ export type BacktestContextType = {
     initialAmount: number,
     investmentMode: string
   ) => Promise<void>;
-  changeCompareIndex: (data: any, indexKey: string) => Promise<void>;
+  changeCompareIndex: (data: any, indexKey: any) => Promise<void>;
   loadComparePortfolio: (portfolio: any) => Promise<void>;
   setIsEditFunds: (value: boolean) => void;
   setSelectedTimePeriod: (timePeriod: string) => void;

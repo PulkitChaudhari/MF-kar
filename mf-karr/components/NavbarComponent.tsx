@@ -29,7 +29,7 @@ export const NavbarComponent = () => {
         <NavbarContent justify="start">
           <NavbarBrand as="li" className="gap-3">
             <NextLink className="flex justify-start gap-1" href="/">
-              <p className="font-bold text-inherit">MF-karr</p>
+              <p className="font-bold text-inherit">MFkarr</p>
             </NextLink>
           </NavbarBrand>
           <ul className="hidden lg:flex gap-4 justify-start ml-2">

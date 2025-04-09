@@ -7,18 +7,43 @@ import {
   ModalContent,
   ModalFooter,
 } from "@nextui-org/react";
+import { usePortfolioContext } from "@/app/contexts/PortfolioContext";
+import { useSession } from "next-auth/react";
+import { addToast } from "@heroui/toast";
+import { ToastColor } from "@/app/interfaces/interfaces";
 
 export default function ReplacePortfolioModalComponent({
-  showSavePortfolioNameModal,
-  modalContent,
-  replacePortfolio,
-  setShowSavePortfolioNameModal,
+  setIsLoading,
 }: {
-  showSavePortfolioNameModal: any;
-  modalContent: any;
-  replacePortfolio: any;
-  setShowSavePortfolioNameModal: any;
+  setIsLoading: any;
 }) {
+  const { data: session } = useSession();
+
+  const {
+    showSavePortfolioNameModal,
+    modalContent,
+    setShowSavePortfolioNameModal,
+    replacePortfolio,
+  } = usePortfolioContext();
+
+  const handleReplacePortfolio = async () => {
+    setIsLoading(true);
+    try {
+      const result = await replacePortfolio(session?.user?.email || "");
+      displayToast(result);
+      setShowSavePortfolioNameModal(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const displayToast = (toastData: { type: ToastColor; title: string }) => {
+    addToast({
+      title: toastData.title,
+      color: toastData.type,
+    });
+  };
+
   return (
     <Modal
       isDismissable={false}
@@ -35,7 +60,7 @@ export default function ReplacePortfolioModalComponent({
           <Button
             variant="bordered"
             className="w-1/2 hover:bg-green-400 transition-all"
-            onPress={() => replacePortfolio()}
+            onPress={() => handleReplacePortfolio()}
           >
             <div className="flex flex-col w-full">Replace</div>
           </Button>

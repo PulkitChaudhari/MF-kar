@@ -1,43 +1,93 @@
 "use client";
 import React from "react";
-import { Button, Input } from "@nextui-org/react";
+import { Button } from "@nextui-org/react";
 import {
-  MdModeEditOutline,
   TfiSave,
   CiExport,
   GiInjustice,
   RxCross2,
   FaCheck,
 } from "../app/icons";
+import { usePortfolioContext } from "@/app/contexts/PortfolioContext";
+import { useSession } from "next-auth/react";
+import { addToast } from "@heroui/toast";
+import { ToastColor } from "@/app/interfaces/interfaces";
+import { apiService } from "@/app/services/api.service";
 
 export default function PortfolioToolbarComponent({
-  savePortfolio,
   isLoading,
-  selectedInstrumentsData,
-  openPortfolioModal,
-  isAdjustWeightageEnabled,
-  isSaveButtonEnabled,
-  onSave,
-  onCancelWeightAdjust,
-  setIsAdjustWeightageEnabled,
+  setIsLoading,
 }: {
-  savePortfolio: any;
-  isLoading: any;
-  selectedInstrumentsData: any;
-  openPortfolioModal: any;
-  isAdjustWeightageEnabled: any;
-  isSaveButtonEnabled: any;
-  onSave: any;
-  onCancelWeightAdjust: any;
-  setIsAdjustWeightageEnabled: any;
+  isLoading: boolean;
+  setIsLoading: any;
 }) {
+  const { data: session } = useSession();
+
+  const {
+    selectedInstrumentsData,
+    isAdjustWeightageEnabled,
+    isSaveButtonEnabled,
+    setIsAdjustWeightageEnabled,
+    onSave,
+    onCancelWeightAdjust,
+    savePortfolio,
+    setModalContent,
+    setShowSavePortfolioNameModal,
+    setUserSavedPortfolios,
+    setShowSavedPortolioModal,
+  } = usePortfolioContext();
+
+  const handleSavePortfolio = async () => {
+    setIsLoading(true);
+    try {
+      const result = await savePortfolio(session?.user?.email || "");
+      if (result.type === "danger" && result.title !== "Duplicate Portfolio") {
+        setModalContent(result.title);
+        setShowSavePortfolioNameModal(true);
+      } else {
+        displayToast(result);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const displayToast = (toastData: { type: ToastColor; title: string }) => {
+    addToast({
+      title: toastData.title,
+      color: toastData.type,
+    });
+  };
+
+  const openPortfolioModal = async () => {
+    setIsLoading(true);
+    try {
+      if (session?.user?.email) {
+        const res = await apiService.getPortfolios(session.user.email);
+        let tempPortfolios: any[] = [];
+        res.forEach((portfolio: any) => {
+          tempPortfolios.push({
+            portfolioName: portfolio[2],
+            instruments: JSON.parse(portfolio[1]),
+          });
+        });
+        setUserSavedPortfolios(tempPortfolios);
+        setShowSavedPortolioModal(true);
+      }
+    } catch (error) {
+      console.error("Error fetching portfolios:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex grow gap-2">
       <div className="flex gap-2">
         <Button
           isIconOnly
           variant="bordered"
-          onPress={() => savePortfolio()}
+          onPress={() => handleSavePortfolio()}
           isDisabled={
             isLoading || Object.keys(selectedInstrumentsData).length === 0
           }

@@ -1,20 +1,16 @@
 "use client";
 import React from "react";
 import { Input, Tab, Tabs } from "@nextui-org/react";
+import { usePortfolioContext } from "@/app/contexts/PortfolioContext";
 
 export default function PortfolioInvestmentAmountComponent({
-  initialAmount,
-  setInitialAmount,
   isLoading,
-  investmentMode,
-  setInvestmentMode,
 }: {
-  initialAmount: any;
-  setInitialAmount: any;
-  isLoading: any;
-  investmentMode: any;
-  setInvestmentMode: any;
+  isLoading: boolean;
 }) {
+  const { initialAmount, investmentMode, setInitialAmount, setInvestmentMode } =
+    usePortfolioContext();
+
   return (
     <div className="my-1 flex flex-col gap-1">
       <div className="flex items-center my-2">
@@ -46,7 +42,9 @@ export default function PortfolioInvestmentAmountComponent({
             fullWidth
             selectedKey={investmentMode}
             size="md"
-            onSelectionChange={setInvestmentMode}
+            onSelectionChange={(tabIndex) =>
+              setInvestmentMode(tabIndex == 0 ? "lumpsum" : "monthly-sip")
+            }
             isDisabled={isLoading}
             variant="bordered"
           >

@@ -1,27 +1,48 @@
 "use client";
 import React from "react";
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-} from "@nextui-org/react";
+import { Button, Modal, ModalBody, ModalContent } from "@nextui-org/react";
 import { CiExport, DeleteIcon } from "../app/icons";
+import { usePortfolioContext } from "@/app/contexts/PortfolioContext";
+import { useSession } from "next-auth/react";
+import { useBacktestContext } from "@/app/contexts/BacktestContext";
 
 export default function LoadPortfolioModalComponent({
-  showSavedPortolioModal,
-  setShowSavedPortolioModal,
-  userSavedPortfolios,
-  loadPortfolio,
-  deletePortfolio,
+  setIsLoading,
 }: {
-  showSavedPortolioModal: any;
-  setShowSavedPortolioModal: any;
-  userSavedPortfolios: any;
-  loadPortfolio: any;
-  deletePortfolio: any;
+  setIsLoading: any;
 }) {
+  const { data: session } = useSession();
+
+  const {
+    showSavedPortolioModal,
+    userSavedPortfolios,
+    setShowSavedPortolioModal,
+    loadPortfolio,
+    deletePortfolio,
+  } = usePortfolioContext();
+
+  const { selectedTimePeriod } = useBacktestContext();
+
+  const handleLoadPortfolio = async (portfolio: any) => {
+    setIsLoading(true);
+    try {
+      setShowSavedPortolioModal(false);
+      await loadPortfolio(portfolio, Number(selectedTimePeriod));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeletePortfolio = async (portfolio: any) => {
+    setIsLoading(true);
+    try {
+      await deletePortfolio(portfolio, session?.user?.email || "");
+      setShowSavedPortolioModal(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal
       isDismissable={true}
@@ -48,7 +69,7 @@ export default function LoadPortfolioModalComponent({
                           isIconOnly
                           variant="bordered"
                           className="hover:bg-green-400 transition-all"
-                          onPress={() => loadPortfolio(row)}
+                          onPress={() => handleLoadPortfolio(row)}
                           type="submit"
                         >
                           <CiExport className="cursor-pointer text-green-500" />
@@ -61,7 +82,7 @@ export default function LoadPortfolioModalComponent({
                           <DeleteIcon
                             className="cursor-pointer text-red-500"
                             onClick={() => {
-                              deletePortfolio(row);
+                              handleDeletePortfolio(row);
                             }}
                           />
                         </Button>

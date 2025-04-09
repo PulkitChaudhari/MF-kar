@@ -1,49 +1,35 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  getKeyValue,
-  Input,
-  Card,
-} from "@nextui-org/react";
+import { Input } from "@nextui-org/react";
 
 import { DeleteIcon } from "./icons";
 import { columns } from "./constants";
 
 import { Slider } from "@heroui/slider";
 import { ValidationError } from "@react-types/shared";
+import { usePortfolioContext } from "./contexts/PortfolioContext";
 
 export default function PortfolioInstrumentsComponent({
-  selectedNavData,
-  removeMututalFundFn,
-  timePeriod,
-  isAdjustWeightageEnabled,
-  isSaveEnabled,
-  tableDataWeightageCopy,
-  setTableDataWeightageCopy,
-  isLoading,
+  setIsLoading,
 }: {
-  selectedNavData: any[];
-  removeMututalFundFn: any;
-  timePeriod: Number;
-  isAdjustWeightageEnabled: boolean;
-  isSaveEnabled: any;
-  tableDataWeightageCopy: any[];
-  setTableDataWeightageCopy: any;
-  isLoading: boolean;
+  setIsLoading: any;
 }) {
+  const {
+    isAdjustWeightageEnabled,
+    tableDataWeightageCopy,
+    isSaveEnabled,
+    setTableDataWeightageCopy,
+    selectedInstrumentsData,
+    selectedTimePeriod,
+    removeMutualFund,
+  } = usePortfolioContext();
+
   const [tableData, setTableData] = useState<any[]>([]);
-  const [tableHeaders, setTableHeaders] = useState<any[]>(columns);
 
   useEffect(() => {
     let tempTableData: any[] = [];
-    Object.keys(selectedNavData).forEach((key: any) => {
-      const instrumentInfo = selectedNavData[key];
+    Object.keys(selectedInstrumentsData).forEach((key: any) => {
+      const instrumentInfo = selectedInstrumentsData[key];
       tempTableData.push({
         instrumentCode: key,
         instrumentName: instrumentInfo.instrumentName,
@@ -52,7 +38,7 @@ export default function PortfolioInstrumentsComponent({
       });
     });
     setTableData(tempTableData);
-  }, [selectedNavData]);
+  }, [selectedInstrumentsData]);
 
   useEffect(() => {
     let toBeTableHeaders = [
@@ -60,9 +46,8 @@ export default function PortfolioInstrumentsComponent({
         return { ...column };
       }),
     ];
-    toBeTableHeaders[1].label = timePeriod + "YR CAGR";
-    setTableHeaders(toBeTableHeaders);
-  }, [timePeriod]);
+    toBeTableHeaders[1].label = Number(selectedTimePeriod) + "YR CAGR";
+  }, [selectedTimePeriod]);
 
   useEffect(() => {
     isSaveEnabled(tableDataWeightageCopy);
@@ -71,19 +56,6 @@ export default function PortfolioInstrumentsComponent({
   useEffect(() => {
     setTableDataWeightageCopy(tableData);
   }, [tableData]);
-
-  function validateWeightage(value: any): true | ValidationError {
-    const valueAsNum: number = Number(value);
-    // Check if the value is between 0 and 100 and has at most 2 decimal places
-    if (
-      valueAsNum >= 0 &&
-      valueAsNum <= 100 &&
-      /^\d+(\.\d{1,2})?$/.test(value)
-    ) {
-      return true;
-    }
-    return "false"; // Return false if the conditions are not met
-  }
 
   function changeWeightage(newValue: number | number[], row: any) {
     const tempCopy = [...tableDataWeightageCopy];
@@ -94,6 +66,15 @@ export default function PortfolioInstrumentsComponent({
     });
     setTableDataWeightageCopy(tempCopy);
   }
+
+  const handleRemoveMutualFund = async (item: any) => {
+    setIsLoading(true);
+    try {
+      await removeMutualFund(item);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex gap-2 flex-col grow">
@@ -134,7 +115,7 @@ export default function PortfolioInstrumentsComponent({
                   <div className="flex items-center">
                     <DeleteIcon
                       className="cursor-pointer text-red-500"
-                      onClick={() => removeMututalFundFn(row)}
+                      onClick={() => handleRemoveMutualFund(row)}
                     />
                   </div>
                 </div>
@@ -174,7 +155,7 @@ export default function PortfolioInstrumentsComponent({
                   <div className="flex items-center">
                     <DeleteIcon
                       className="cursor-pointer text-red-500"
-                      onClick={() => removeMututalFundFn(row)}
+                      onClick={() => handleRemoveMutualFund(row)}
                     />
                   </div>
                 </div>

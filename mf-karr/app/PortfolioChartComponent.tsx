@@ -27,41 +27,29 @@ import {
 import { Button } from "@nextui-org/button";
 import { compareIndexValues } from "./constants";
 import { FaCheck } from "./icons";
+import { useBacktestContext } from "./contexts/BacktestContext";
 
 export default function PortfolioChartComponent({
-  chartData,
-  maxDrawdown,
-  sharpeRatio,
-  initialValue,
-  finalValue,
-  changeCompareIndex,
-  selectedCompareIndex,
-  loadComparePortfolio,
-  showCompareSavedPortfolioModal,
-  setShowCompareSavedPortfolioModal,
-  compareSavedPortfolios,
   isLoading,
-  portfolioMetrics,
-  comparePortfolioReturnDiff,
 }: {
-  initialAmount: String;
-  oldInitialNum: String;
-  investmentMode: String;
-  chartData: any[];
-  maxDrawdown: number;
-  sharpeRatio: number;
-  initialValue: number;
-  finalValue: number;
-  changeCompareIndex: any;
-  selectedCompareIndex: any;
-  loadComparePortfolio: any;
-  showCompareSavedPortfolioModal: any;
-  setShowCompareSavedPortfolioModal: any;
-  compareSavedPortfolios: any;
-  isLoading: any;
-  portfolioMetrics: any[];
-  comparePortfolioReturnDiff: any;
+  isLoading: boolean;
 }) {
+  const {
+    chartData,
+    maxDrawdown,
+    sharpeRatio,
+    initialValue,
+    finalValue,
+    selectedCompareIndex,
+    portfolioMetrics,
+    comparePortfolioReturnDiff,
+    showCompareSavedPortfolioModal,
+    compareSavedPortfolios,
+    changeCompareIndex,
+    loadComparePortfolio,
+    setShowCompareSavedPortfolioModal,
+  } = useBacktestContext();
+
   const chartConfig = {
     desktop: {
       label: "Desktop",

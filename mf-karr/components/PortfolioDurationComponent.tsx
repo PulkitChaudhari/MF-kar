@@ -3,22 +3,15 @@ import React from "react";
 import { Button, DateInput } from "@nextui-org/react";
 import { RxCross2, CalendarIcon } from "../app/icons";
 import { cagrValues } from "../app/constants";
+import { usePortfolioContext } from "@/app/contexts/PortfolioContext";
+import { useBacktestContext } from "@/app/contexts/BacktestContext";
 
-export default function PortflioDurationComponent({
-  isCustomTimePeriod,
-  startDate,
-  endDate,
-  setIsCustomTimePeriod,
-  setSelectedTimePeriod,
-  selectedTimePeriod,
-}: {
-  isCustomTimePeriod: any;
-  startDate: any;
-  endDate: any;
-  setIsCustomTimePeriod: any;
-  setSelectedTimePeriod: any;
-  selectedTimePeriod: any;
-}) {
+export default function PortflioDurationComponent() {
+  const { isCustomTimePeriod, startDate, endDate, setIsCustomTimePeriod } =
+    usePortfolioContext();
+
+  const { selectedTimePeriod, setSelectedTimePeriod } = useBacktestContext();
+
   return (
     <div className="my-1 flex flex-col gap-1">
       <div className="flex items-center my-2">
