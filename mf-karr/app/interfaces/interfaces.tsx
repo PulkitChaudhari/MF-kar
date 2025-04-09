@@ -22,6 +22,92 @@ export interface apiNavData {
   nav: string;
 }
 
+export type PortfolioState = {
+  selectedInstrumentsData: any;
+  isAdjustWeightageEnabled: boolean;
+  portfolioName: string;
+  isSaveButtonEnabled: boolean;
+  toBeData: any[];
+  tableDataWeightageCopy: any[];
+  isEditPortfolioName: boolean;
+  initialAmount: string;
+  investmentMode: string;
+};
+
+export type PortfolioContextType = PortfolioState & {
+  addInstrument: (
+    instrumentValue: any,
+    selectedTimePeriod: string
+  ) => Promise<void>;
+  removeMutualFund: (item: any) => Promise<void>;
+  setIsAdjustWeightageEnabled: (value: boolean) => void;
+  setPortfolioName: (name: string) => void;
+  setIsEditPortfolioName: (value: boolean) => void;
+  isSaveEnabled: (posSelectedInstrumentsData: any[]) => void;
+  onSave: (toBeDataWeightage?: any, instrumentsData?: any) => void;
+  onCancelWeightAdjust: () => void;
+  savePortfolio: (userEmail: string) => Promise<any>;
+  loadPortfolio: (portfolio: any, timePeriod: number) => Promise<void>;
+  replacePortfolio: (userEmail: string) => Promise<any>;
+  deletePortfolio: (portfolio: any, userEmail: string) => Promise<void>;
+  setTableDataWeightageCopy: (data: any[]) => void;
+  setInitialAmount: (amount: string) => void;
+  setInvestmentMode: (mode: string) => void;
+};
+
+// Define the context type
+export type BacktestContextType = {
+  chartData: any[];
+  maxDrawdown: number;
+  sharpeRatio: number;
+  initialValue: number;
+  finalValue: number;
+  selectedCompareIndex: string;
+  portfolioMetrics: any[];
+  comparePortfolioReturnDiff: number;
+  isEditFunds: boolean;
+  showCompareSavedPortfolioModal: boolean;
+  compareSavedPortfolios: any[];
+  selectedTimePeriod: string;
+  // Backtest actions
+  setShowCompareSavedPortfolioModal: (flag: boolean) => void;
+  backtestPortfolio: (
+    selectedInstrumentsData: any,
+    selectedTimePeriod: number,
+    initialAmount: number,
+    investmentMode: string
+  ) => Promise<void>;
+  changeCompareIndex: (data: any, indexKey: string) => Promise<void>;
+  loadComparePortfolio: (portfolio: any) => Promise<void>;
+  setIsEditFunds: (value: boolean) => void;
+  setSelectedTimePeriod: (timePeriod: string) => void;
+};
+
+export type UIContextType = {
+  isLoading: boolean;
+  showSavePortfolioNameModal: boolean;
+  showSavedPortolioModal: boolean;
+  showCompareSavedPortfolioModal: boolean;
+  isCustomTimePeriod: boolean;
+  startDate: any;
+  endDate: any;
+  selectedTimePeriod: string;
+  modalContent: string;
+  userSavedPortfolios: any[];
+  compareSavedPortfolios: any[];
+  setIsLoading: (value: boolean) => void;
+  setShowSavePortfolioNameModal: (value: boolean) => void;
+  setShowSavedPortolioModal: (value: boolean) => void;
+  setShowCompareSavedPortfolioModal: (value: boolean) => void;
+  setIsCustomTimePeriod: (value: boolean) => void;
+  setStartDate: (date: any) => void;
+  setEndDate: (date: any) => void;
+  setSelectedTimePeriod: (period: string) => void;
+  setModalContent: (content: string) => void;
+  setUserSavedPortfolios: (portfolios: any[]) => void;
+  setCompareSavedPortfolios: (portfolios: any[]) => void;
+};
+
 export type ToastColor =
   | "default"
   | "primary"

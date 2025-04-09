@@ -6,7 +6,6 @@ import { useAsyncList } from "@react-stately/data";
 import { addToast } from "@heroui/toast";
 import { usePortfolioContext } from "../app/contexts/PortfolioContext";
 import { useBacktestContext } from "../app/contexts/BacktestContext";
-import { useInvestmentContext } from "../app/contexts/InvestmentContext";
 import { useUIContext } from "../app/contexts/UIContext";
 import { apiService } from "../app/services/api.service";
 import { ToastColor } from "../app/interfaces/interfaces";
@@ -21,7 +20,6 @@ import PortfolioEditBacktestButtonComponent from "./PortfolioEditBacktestButtonC
 import PortfolioSearchComponent from "./PortfolioSearchComponent";
 import PortfolioChartComponent from "../app/PortfolioChartComponent";
 import LoadingOverlayComponent from "./LoadingOverlayComponent";
-import { Spinner } from "@nextui-org/react";
 
 // Component for the main portfolio content
 export default function PortfolioContentComponent() {
@@ -35,6 +33,8 @@ export default function PortfolioContentComponent() {
     isSaveButtonEnabled,
     tableDataWeightageCopy,
     isEditPortfolioName,
+    initialAmount,
+    investmentMode,
     addInstrument,
     removeMutualFund,
     setIsAdjustWeightageEnabled,
@@ -48,6 +48,8 @@ export default function PortfolioContentComponent() {
     replacePortfolio,
     deletePortfolio,
     setTableDataWeightageCopy,
+    setInitialAmount,
+    setInvestmentMode,
   } = usePortfolioContext();
 
   const {
@@ -87,9 +89,6 @@ export default function PortfolioContentComponent() {
     setModalContent,
     setUserSavedPortfolios,
   } = useUIContext();
-
-  const { initialAmount, investmentMode, setInitialAmount, setInvestmentMode } =
-    useInvestmentContext();
 
   // Function to call savePortfolio with the current user email
   const handleSavePortfolio = async () => {

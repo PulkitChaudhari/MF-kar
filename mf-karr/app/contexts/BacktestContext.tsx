@@ -7,34 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import { apiService } from "../services/api.service";
-
-// Define the context type
-type BacktestContextType = {
-  chartData: any[];
-  maxDrawdown: number;
-  sharpeRatio: number;
-  initialValue: number;
-  finalValue: number;
-  selectedCompareIndex: string;
-  portfolioMetrics: any[];
-  comparePortfolioReturnDiff: number;
-  isEditFunds: boolean;
-  showCompareSavedPortfolioModal: boolean;
-  compareSavedPortfolios: any[];
-  selectedTimePeriod: string;
-  // Backtest actions
-  setShowCompareSavedPortfolioModal: (flag: boolean) => void;
-  backtestPortfolio: (
-    selectedInstrumentsData: any,
-    selectedTimePeriod: number,
-    initialAmount: number,
-    investmentMode: string
-  ) => Promise<void>;
-  changeCompareIndex: (data: any, indexKey: string) => Promise<void>;
-  loadComparePortfolio: (portfolio: any) => Promise<void>;
-  setIsEditFunds: (value: boolean) => void;
-  setSelectedTimePeriod: (timePeriod: string) => void;
-};
+import { BacktestContextType } from "../interfaces/interfaces";
 
 // Create the context with default values
 const BacktestContext = createContext<BacktestContextType>({
@@ -118,6 +91,7 @@ export const BacktestProvider = ({
         initialAmount,
         investmentMode
       );
+      console.log(data);
 
       setMaxDrawdown(data.metrics.maxDrawdown);
       setSharpeRatio(data.metrics.sharpeRatio);

@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { PortfolioProvider } from "./PortfolioContext";
 import { BacktestProvider } from "./BacktestContext";
 import { UIProvider } from "./UIContext";
-import { InvestmentProvider } from "./InvestmentContext";
 
 // Combined provider component
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
@@ -14,20 +13,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <UIProvider>
-      <InvestmentProvider>
-        <PortfolioProvider>
-          <BacktestProvider
-            selectedTimePeriodState={[
-              selectedTimePeriod,
-              setSelectedTimePeriod,
-            ]}
-            initialAmountState={[initialAmount, setInitialAmount]}
-            investmentModeState={[investmentMode, setInvestmentMode]}
-          >
-            {children}
-          </BacktestProvider>
-        </PortfolioProvider>
-      </InvestmentProvider>
+      <PortfolioProvider>
+        <BacktestProvider
+          selectedTimePeriodState={[selectedTimePeriod, setSelectedTimePeriod]}
+          initialAmountState={[initialAmount, setInitialAmount]}
+          investmentModeState={[investmentMode, setInvestmentMode]}
+        >
+          {children}
+        </BacktestProvider>
+      </PortfolioProvider>
     </UIProvider>
   );
 };
@@ -36,4 +30,3 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 export * from "./PortfolioContext";
 export * from "./BacktestContext";
 export * from "./UIContext";
-export * from "./InvestmentContext";

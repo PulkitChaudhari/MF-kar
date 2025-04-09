@@ -1,50 +1,89 @@
 "use client";
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useReducer, Dispatch } from "react";
 import { parseDate } from "@internationalized/date";
+import { UIContextType } from "../interfaces/interfaces";
 
-// Define the context type
-type UIContextType = {
-  isLoading: boolean;
-  showSavePortfolioNameModal: boolean;
-  showSavedPortolioModal: boolean;
-  showCompareSavedPortfolioModal: boolean;
-  isCustomTimePeriod: boolean;
-  startDate: any;
-  endDate: any;
-  selectedTimePeriod: string;
-  modalContent: string;
-  userSavedPortfolios: any[];
-  compareSavedPortfolios: any[];
+// Default values
+const DEFAULT_DATE = parseDate("2024-04-04");
+const DEFAULT_TIME_PERIOD = "1";
 
-  // UI actions
-  setIsLoading: (value: boolean) => void;
-  setShowSavePortfolioNameModal: (value: boolean) => void;
-  setShowSavedPortolioModal: (value: boolean) => void;
-  setShowCompareSavedPortfolioModal: (value: boolean) => void;
-  setIsCustomTimePeriod: (value: boolean) => void;
-  setStartDate: (date: any) => void;
-  setEndDate: (date: any) => void;
-  setSelectedTimePeriod: (period: string) => void;
-  setModalContent: (content: string) => void;
-  setUserSavedPortfolios: (portfolios: any[]) => void;
-  setCompareSavedPortfolios: (portfolios: any[]) => void;
-};
-
-// Create the context with default values
-const UIContext = createContext<UIContextType>({
+// Initial state
+const initialState: Omit<
+  UIContextType,
+  | "setIsLoading"
+  | "setShowSavePortfolioNameModal"
+  | "setShowSavedPortolioModal"
+  | "setShowCompareSavedPortfolioModal"
+  | "setIsCustomTimePeriod"
+  | "setStartDate"
+  | "setEndDate"
+  | "setSelectedTimePeriod"
+  | "setModalContent"
+  | "setUserSavedPortfolios"
+  | "setCompareSavedPortfolios"
+> = {
   isLoading: false,
   showSavePortfolioNameModal: false,
   showSavedPortolioModal: false,
   showCompareSavedPortfolioModal: false,
   isCustomTimePeriod: false,
-  startDate: parseDate("2024-04-04"),
-  endDate: parseDate("2024-04-04"),
-  selectedTimePeriod: "1",
+  startDate: DEFAULT_DATE,
+  endDate: DEFAULT_DATE,
+  selectedTimePeriod: DEFAULT_TIME_PERIOD,
   modalContent: "",
   userSavedPortfolios: [],
   compareSavedPortfolios: [],
+};
 
-  // Default functions (will be overridden by provider)
+// Action types
+type ActionType =
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_SAVE_PORTFOLIO_MODAL"; payload: boolean }
+  | { type: "SET_SAVED_PORTFOLIO_MODAL"; payload: boolean }
+  | { type: "SET_COMPARE_SAVED_PORTFOLIO_MODAL"; payload: boolean }
+  | { type: "SET_CUSTOM_TIME_PERIOD"; payload: boolean }
+  | { type: "SET_START_DATE"; payload: any }
+  | { type: "SET_END_DATE"; payload: any }
+  | { type: "SET_TIME_PERIOD"; payload: string }
+  | { type: "SET_MODAL_CONTENT"; payload: string }
+  | { type: "SET_USER_SAVED_PORTFOLIOS"; payload: any[] }
+  | { type: "SET_COMPARE_SAVED_PORTFOLIOS"; payload: any[] };
+
+// Reducer function
+function uiReducer(
+  state: typeof initialState,
+  action: ActionType
+): typeof initialState {
+  switch (action.type) {
+    case "SET_LOADING":
+      return { ...state, isLoading: action.payload };
+    case "SET_SAVE_PORTFOLIO_MODAL":
+      return { ...state, showSavePortfolioNameModal: action.payload };
+    case "SET_SAVED_PORTFOLIO_MODAL":
+      return { ...state, showSavedPortolioModal: action.payload };
+    case "SET_COMPARE_SAVED_PORTFOLIO_MODAL":
+      return { ...state, showCompareSavedPortfolioModal: action.payload };
+    case "SET_CUSTOM_TIME_PERIOD":
+      return { ...state, isCustomTimePeriod: action.payload };
+    case "SET_START_DATE":
+      return { ...state, startDate: action.payload };
+    case "SET_END_DATE":
+      return { ...state, endDate: action.payload };
+    case "SET_TIME_PERIOD":
+      return { ...state, selectedTimePeriod: action.payload };
+    case "SET_MODAL_CONTENT":
+      return { ...state, modalContent: action.payload };
+    case "SET_USER_SAVED_PORTFOLIOS":
+      return { ...state, userSavedPortfolios: action.payload };
+    case "SET_COMPARE_SAVED_PORTFOLIOS":
+      return { ...state, compareSavedPortfolios: action.payload };
+    default:
+      return state;
+  }
+}
+
+const UIContext = createContext<UIContextType>({
+  ...initialState,
   setIsLoading: () => {},
   setShowSavePortfolioNameModal: () => {},
   setShowSavedPortolioModal: () => {},
@@ -60,37 +99,46 @@ const UIContext = createContext<UIContextType>({
 
 // Provider component
 export const UIProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showSavePortfolioNameModal, setShowSavePortfolioNameModal] =
-    useState<boolean>(false);
-  const [showSavedPortolioModal, setShowSavedPortolioModal] =
-    useState<boolean>(false);
-  const [showCompareSavedPortfolioModal, setShowCompareSavedPortfolioModal] =
-    useState<boolean>(false);
-  const [isCustomTimePeriod, setIsCustomTimePeriod] = useState<boolean>(false);
-  const [startDate, setStartDate] = useState<any>(parseDate("2024-04-04"));
-  const [endDate, setEndDate] = useState<any>(parseDate("2024-04-04"));
-  const [selectedTimePeriod, setSelectedTimePeriod] = useState<string>("1");
-  const [modalContent, setModalContent] = useState<string>("");
-  const [userSavedPortfolios, setUserSavedPortfolios] = useState<any[]>([]);
-  const [compareSavedPortfolios, setCompareSavedPortfolios] = useState<any[]>(
-    []
-  );
+  const [state, dispatch] = useReducer(uiReducer, initialState);
+
+  // Create setter functions that use dispatch
+  const setIsLoading = (value: boolean) =>
+    dispatch({ type: "SET_LOADING", payload: value });
+
+  const setShowSavePortfolioNameModal = (value: boolean) =>
+    dispatch({ type: "SET_SAVE_PORTFOLIO_MODAL", payload: value });
+
+  const setShowSavedPortolioModal = (value: boolean) =>
+    dispatch({ type: "SET_SAVED_PORTFOLIO_MODAL", payload: value });
+
+  const setShowCompareSavedPortfolioModal = (value: boolean) =>
+    dispatch({ type: "SET_COMPARE_SAVED_PORTFOLIO_MODAL", payload: value });
+
+  const setIsCustomTimePeriod = (value: boolean) =>
+    dispatch({ type: "SET_CUSTOM_TIME_PERIOD", payload: value });
+
+  const setStartDate = (date: any) =>
+    dispatch({ type: "SET_START_DATE", payload: date });
+
+  const setEndDate = (date: any) =>
+    dispatch({ type: "SET_END_DATE", payload: date });
+
+  const setSelectedTimePeriod = (period: string) =>
+    dispatch({ type: "SET_TIME_PERIOD", payload: period });
+
+  const setModalContent = (content: string) =>
+    dispatch({ type: "SET_MODAL_CONTENT", payload: content });
+
+  const setUserSavedPortfolios = (portfolios: any[]) =>
+    dispatch({ type: "SET_USER_SAVED_PORTFOLIOS", payload: portfolios });
+
+  const setCompareSavedPortfolios = (portfolios: any[]) =>
+    dispatch({ type: "SET_COMPARE_SAVED_PORTFOLIOS", payload: portfolios });
 
   return (
     <UIContext.Provider
       value={{
-        isLoading,
-        showSavePortfolioNameModal,
-        showSavedPortolioModal,
-        showCompareSavedPortfolioModal,
-        isCustomTimePeriod,
-        startDate,
-        endDate,
-        selectedTimePeriod,
-        modalContent,
-        userSavedPortfolios,
-        compareSavedPortfolios,
+        ...state,
         setIsLoading,
         setShowSavePortfolioNameModal,
         setShowSavedPortolioModal,
