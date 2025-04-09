@@ -207,7 +207,6 @@ class ApiService {
   }
 
   async getPortfolios(emailId: string) {
-    console.log(config.apiUrl);
     return this.fetchWithDecryption(
       `${config.apiUrl}/api/portfolio/getPortfolios/${emailId}`
     );

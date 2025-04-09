@@ -3,20 +3,6 @@ import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import { config } from "../../../../config/config";
 
-// Check for required environment variables
-const checkEnvVars = () => {
-  console.log(config.apiUrl);
-  console.log(config.githubClientId);
-  console.log(config.githubSecret);
-  console.log(config.googleClientId);
-  console.log(config.googleSecret);
-  console.log(config.nextAuthSecret);
-  console.log(config.nextAuthUrl);
-};
-
-// Call the check function
-checkEnvVars();
-
 const handler = NextAuth({
   providers: [
     GitHubProvider({

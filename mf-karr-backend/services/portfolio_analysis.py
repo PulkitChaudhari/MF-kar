@@ -2,6 +2,7 @@ import numpy as np
 from datetime import datetime, timedelta
 from services.index_service import IndexService
 from services.portfolio_management import PortfolioManagement
+import numpy_financial as npf
 
 class PortfolioAnalysis:
     def calculate_max_drawdown(self, nav_data):
@@ -82,6 +83,44 @@ class PortfolioAnalysis:
             
         return date_array
     
+    def calculate_xirr(self, chart_data, initial_amount, investment_mode):
+        return -1
+        """Calculate XIRR using numpy-financial library"""
+        if not chart_data or len(chart_data) < 2:
+            return 0
+        
+        try:
+            # Extract dates and values
+            dates = []
+            values = []
+            
+            # Add initial investment as negative (cash outflow)
+            start_date = datetime.strptime(chart_data[0]['date'].split()[0], "%Y-%m-%d")
+            dates.append(start_date)
+            values.append(-initial_amount)
+            
+            # For SIP, add monthly investments
+            if investment_mode == "monthly-sip":
+                # Extract monthly investment dates from chart_data
+                # This would depend on your specific SIP implementation
+                # ...
+                print('heeh')
+            
+            # Add final value as positive (cash inflow)
+            end_date = datetime.strptime(chart_data[-1]['date'].split()[0], "%Y-%m-%d")
+            dates.append(end_date)
+            values.append(chart_data[-1]['nav'])
+            
+            # Calculate XIRR using numpy-financial
+            xirr = npf.xirr(values, dates)
+            
+            # Convert to percentage
+            return round((xirr - 1) * 100, 2)
+            
+        except Exception as e:
+            print(f"Error calculating XIRR: {e}")
+            return 0
+    
     def process_portfolio_data(self, instruments_data, time_period, initial_amount, investment_mode):
         """Process portfolio data and return chart data with metrics"""
         portfolioManagement = PortfolioManagement()
@@ -159,7 +198,7 @@ class PortfolioAnalysis:
         for date_str, value in data_map.items():
             if value is not None:
                 date_obj = datetime.strptime(date_str, "%Y-%m-%d")
-                formatted_date = f"{self.month_mapping[date_obj.month-1]} {str(date_obj.year)[2:]}"
+                formatted_date = f"{self.getOrdinalSuffixedDate(date_obj.day)} {self.month_mapping[date_obj.month-1]} {str(date_obj.year)[2:]}"
                 
                 chart_data.append({
                     "date": formatted_date,
@@ -169,24 +208,41 @@ class PortfolioAnalysis:
         # Calculate metrics
         max_drawdown = self.calculate_max_drawdown(chart_data)
         sharpe_ratio = self.calculate_sharpe_ratio(chart_data)
+        xirr = self.calculate_xirr(chart_data, initial_amount, investment_mode)
         
         final_value = chart_data[-1]['nav'] if chart_data else 100
         
         return {
             "chartData": chart_data,
             "metrics": {
-                "initialValue": initial_amount,
-                "finalValue": final_value,
+                "investedAmount": initial_amount,
+                "finalAmount": final_value,
                 "maxDrawdown": round(max_drawdown, 2),
                 "sharpeRatio": round(sharpe_ratio, 2),
-                "gain": round(((final_value - initial_amount) / initial_amount) * 100, 2)
+                "gain": round(((final_value - initial_amount) / initial_amount) * 100, 2),
+                "xirr": xirr
             }
         }
     
     @property
     def month_mapping(self):
         return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
+    
+    def getOrdinalSuffixedDate(self, date):
+        """Return the appropriate ordinal suffixed date for a given date
+        
+        Args:
+            date: An integer representing the day of the month
+            
+        Returns:
+            A string containing date with the appropriate suffix ordinal variable (st, nd, rd, th)
+        """
+        if 10 <= date % 100 <= 20:
+            return "th"
+        else:
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(date % 10, "th")
+            return suffix
+    
     def process_index_data(self, index_name, time_period, initial_amount, investment_mode):
         """Process index data and return chart data"""
         # Fetch index data from your existing API
