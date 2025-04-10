@@ -14,8 +14,8 @@ const BacktestContext = createContext<BacktestContextType>({
   chartData: [],
   maxDrawdown: 0,
   sharpeRatio: 0,
-  initialValue: 100,
-  finalValue: 100,
+  investedAmount: 100,
+  finalAmount: 100,
   selectedCompareIndex: "Nifty 50",
   portfolioMetrics: [],
   comparePortfolioReturnDiff: 0,
@@ -23,6 +23,8 @@ const BacktestContext = createContext<BacktestContextType>({
   showCompareSavedPortfolioModal: false,
   compareSavedPortfolios: [],
   selectedTimePeriod: "",
+  gain: 0,
+  xirr: 0,
   setShowCompareSavedPortfolioModal: async () => {},
   // Default functions (will be overridden by provider)
   backtestPortfolio: async () => {},
@@ -30,6 +32,8 @@ const BacktestContext = createContext<BacktestContextType>({
   loadComparePortfolio: async () => {},
   setIsEditFunds: () => {},
   setSelectedTimePeriod: () => {},
+  setGain: () => {},
+  setXirr: () => {},
 });
 
 // Provider component
@@ -56,8 +60,8 @@ export const BacktestProvider = ({
   const [chartData, setChartData] = useState<any[]>([]);
   const [maxDrawdown, setMaxDrawdown] = useState<number>(0);
   const [sharpeRatio, setSharpeRatio] = useState<number>(0);
-  const [initialValue, setInitialValue] = useState(100);
-  const [finalValue, setFinalValue] = useState(100);
+  const [investedAmount, setInvestedAmount] = useState(100);
+  const [finalAmount, setFinalAmount] = useState(100);
   const [selectedCompareIndex, setSelectedCompareIndex] =
     useState<string>("Nifty 50");
   const [portfolioMetrics, setPortfolioMetrics] = useState<any[]>([]);
@@ -69,13 +73,15 @@ export const BacktestProvider = ({
   const [compareSavedPortfolios, setCompareSavedPortfolios] = useState<any[]>(
     []
   );
+  const [gain, setGain] = useState<number>(0);
+  const [xirr, setXirr] = useState<number>(0);
 
-  // Use useRef to track previous value
-  const prevInitialAmountRef = useRef<string>();
-  useEffect(() => {
-    prevInitialAmountRef.current = initialAmount;
-  }, [initialAmount]);
-  const oldInitialAmount = prevInitialAmountRef.current;
+  // // Use useRef to track previous value
+  // const prevInitialAmountRef = useRef<string>();
+  // useEffect(() => {
+  //   prevInitialAmountRef.current = initialAmount;
+  // }, [initialAmount]);
+  // const oldInitialAmount = prevInitialAmountRef.current;
 
   // Function to backtest portfolio
   const backtestPortfolio = async (
@@ -91,12 +97,15 @@ export const BacktestProvider = ({
         initialAmount,
         investmentMode
       );
+      console.log(data);
 
       setMaxDrawdown(data.metrics.maxDrawdown);
       setSharpeRatio(data.metrics.sharpeRatio);
-      setInitialValue(data.metrics.initialValue);
-      setFinalValue(data.metrics.finalValue);
+      setInvestedAmount(data.metrics.investedAmount);
+      setFinalAmount(data.metrics.finalAmount);
       setIsEditFunds(false);
+      setGain(data.metrics.gain);
+      setXirr(data.metrics.xirr);
 
       await changeCompareIndex(data, "nifty_50");
       return data;
@@ -244,8 +253,8 @@ export const BacktestProvider = ({
         chartData,
         maxDrawdown,
         sharpeRatio,
-        initialValue,
-        finalValue,
+        investedAmount,
+        finalAmount,
         selectedCompareIndex,
         portfolioMetrics,
         comparePortfolioReturnDiff,
@@ -253,12 +262,16 @@ export const BacktestProvider = ({
         showCompareSavedPortfolioModal,
         compareSavedPortfolios,
         selectedTimePeriod,
+        gain,
+        xirr,
         setShowCompareSavedPortfolioModal,
         backtestPortfolio,
         changeCompareIndex,
         loadComparePortfolio,
         setIsEditFunds,
         setSelectedTimePeriod,
+        setGain,
+        setXirr,
       }}
     >
       {children}

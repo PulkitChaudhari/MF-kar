@@ -238,10 +238,10 @@ class PortfolioAnalysis:
             A string containing date with the appropriate suffix ordinal variable (st, nd, rd, th)
         """
         if 10 <= date % 100 <= 20:
-            return "th"
+            return str(date) + "th"
         else:
             suffix = {1: "st", 2: "nd", 3: "rd"}.get(date % 10, "th")
-            return suffix
+            return str(date) + suffix
     
     def process_index_data(self, index_name, time_period, initial_amount, investment_mode):
         """Process index data and return chart data"""

@@ -80,15 +80,17 @@ export type BacktestContextType = {
   chartData: any[];
   maxDrawdown: number;
   sharpeRatio: number;
-  initialValue: number;
-  finalValue: number;
+  investedAmount: number;
+  finalAmount: number;
   selectedCompareIndex: string;
   portfolioMetrics: any[];
+  gain: number;
   comparePortfolioReturnDiff: number;
   isEditFunds: boolean;
   showCompareSavedPortfolioModal: boolean;
   compareSavedPortfolios: any[];
   selectedTimePeriod: string;
+  xirr: number;
   // Backtest actions
   setShowCompareSavedPortfolioModal: (flag: boolean) => void;
   backtestPortfolio: (
@@ -101,6 +103,8 @@ export type BacktestContextType = {
   loadComparePortfolio: (portfolio: any) => Promise<void>;
   setIsEditFunds: (value: boolean) => void;
   setSelectedTimePeriod: (timePeriod: string) => void;
+  setGain: (gain: number) => void;
+  setXirr: (xirr: number) => void;
 };
 
 export type UIContextType = {

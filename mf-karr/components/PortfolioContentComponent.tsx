@@ -37,7 +37,7 @@ export default function PortfolioContentComponent() {
             <PortflioDurationComponent />
             <PortfolioInvestmentAmountComponent isLoading={isLoading} />
             {!isEditFunds && (
-              <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-[5px] rounded-lg flex flex-col gap-2 text-center items-center justify-center">
                 <IoLockClosed className="text-foreground-400" />
                 Please edit funds to unlock this section
               </div>

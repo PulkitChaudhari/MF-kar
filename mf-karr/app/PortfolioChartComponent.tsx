@@ -17,7 +17,15 @@ import {
   TableHeader,
 } from "@nextui-org/react";
 
-import { Area, AreaChart, CartesianGrid, Line, XAxis, YAxis } from "recharts";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   ChartConfig,
   ChartContainer,
@@ -28,6 +36,7 @@ import { Button } from "@nextui-org/button";
 import { compareIndexValues } from "./constants";
 import { FaCheck } from "./icons";
 import { useBacktestContext } from "./contexts/BacktestContext";
+import { usePortfolioContext } from "./contexts/PortfolioContext";
 
 export default function PortfolioChartComponent({
   isLoading,
@@ -38,17 +47,21 @@ export default function PortfolioChartComponent({
     chartData,
     maxDrawdown,
     sharpeRatio,
-    initialValue,
-    finalValue,
+    investedAmount,
+    finalAmount,
     selectedCompareIndex,
     portfolioMetrics,
     comparePortfolioReturnDiff,
     showCompareSavedPortfolioModal,
     compareSavedPortfolios,
+    gain,
+    xirr,
     changeCompareIndex,
     loadComparePortfolio,
     setShowCompareSavedPortfolioModal,
   } = useBacktestContext();
+
+  const { portfolioName } = usePortfolioContext();
 
   const chartConfig = {
     desktop: {
@@ -60,6 +73,90 @@ export default function PortfolioChartComponent({
       color: "hsl(var(--chart-2))",
     },
   } satisfies ChartConfig;
+
+  const formatXAxis = (dateString: string) => {
+    return dateString.split(" ").slice(1).join(" ");
+  };
+
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active: any;
+    payload: any;
+    label: any;
+  }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-black p-2 shadow-md rounded-md border">
+          <p className="font-bold mb-2">{label}</p>
+          <p className="flex flex-col gap-1">
+            <div className="flex gap-1 items-center">
+              <div
+                style={{
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: payload[0].color,
+                  borderRadius: "2px",
+                }}
+              ></div>
+              {portfolioName} :{" "}
+              <span className="font-medium">{payload[0].value}</span>
+            </div>
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const CompareCustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active: any;
+    payload: any;
+    label: any;
+  }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-black p-2 shadow-md rounded-md border">
+          <p className="font-bold mb-2">{label}</p>
+          <p className="flex flex-col gap-1">
+            <div className="flex gap-1 items-center">
+              <div
+                style={{
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: payload[0].color,
+                  borderRadius: "2px",
+                }}
+              ></div>
+              {portfolioName} :{" "}
+              <span className="font-medium">{payload[0].value}</span>
+            </div>
+            <div className="flex gap-1 items-center">
+              <div
+                style={{
+                  width: "10px",
+                  height: "10px",
+                  backgroundColor: payload[1].color,
+                  borderRadius: "2px",
+                }}
+              ></div>
+              {selectedCompareIndex} :{" "}
+              <span className="font-medium">{payload[1].value}</span>
+            </div>
+          </p>
+        </div>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="relative flex gap-[5rem] flex-col p-2">
@@ -110,45 +207,28 @@ export default function PortfolioChartComponent({
               <div className="w-11/12 gap-7 flex flex-col">
                 <div className="flex gap-2">
                   <div className="flex flex-col w-1/3">
-                    <div>Invested Amount</div> <div>₹ {initialValue}</div>
+                    <div>Invested Amount</div> <div>₹ {investedAmount}</div>
                   </div>
                   <div className="flex flex-col w-1/3">
                     <div>Final Amount</div>{" "}
                     <div
                       className={
-                        finalValue > initialValue
+                        finalAmount > investedAmount
                           ? "text-green-400"
                           : "text-red-400"
                       }
                     >
-                      ₹ {finalValue}
+                      ₹ {finalAmount}
                     </div>
                   </div>
-                  {finalValue < initialValue ? (
-                    <div className="flex flex-col w-1/3">
-                      <div>Loss</div>
-                      <div>
-                        {(((finalValue - initialValue) / 100) * 100).toFixed(2)}
-                      </div>
+                  <div className="flex flex-col w-1/3">
+                    <div>Gain</div>
+                    <div
+                      className={gain < 0 ? "text-red-400" : "text-green-400"}
+                    >
+                      {gain} %
                     </div>
-                  ) : (
-                    <div className="flex flex-col w-1/3">
-                      <div>Gain</div>
-                      <div
-                        className={
-                          finalValue > initialValue
-                            ? "text-green-400"
-                            : "text-red-400"
-                        }
-                      >
-                        {(
-                          ((finalValue - initialValue) / initialValue) *
-                          100
-                        ).toFixed(2)}{" "}
-                        %
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <div className="flex flex-col w-1/3">
@@ -161,7 +241,7 @@ export default function PortfolioChartComponent({
                   </div>
                   <div className="flex flex-col w-1/3">
                     <div>XIRR</div>
-                    <div>{sharpeRatio}</div>
+                    <div>{xirr}</div>
                   </div>
                 </div>
               </div>
@@ -191,9 +271,11 @@ export default function PortfolioChartComponent({
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="date"
+                    tickFormatter={formatXAxis}
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
+                    interval={50}
                   />
                   <YAxis
                     dataKey="nav"
@@ -202,18 +284,23 @@ export default function PortfolioChartComponent({
                     tickMargin={8}
                     domain={[0, "dataMax + 80"]}
                   />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
+                  <Tooltip
+                    content={
+                      <CustomTooltip
+                        active={undefined}
+                        payload={undefined}
+                        label={undefined}
+                      />
+                    }
                   />
                   <Line
                     dataKey="nav"
+                    name={portfolioName}
                     type="monotone"
                     stroke="var(--color-desktop)"
                     strokeWidth={2}
                     dot={false}
                   />
-
                   <defs>
                     <linearGradient
                       id="fillDesktop"
@@ -303,6 +390,8 @@ export default function PortfolioChartComponent({
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="date"
+                    tickFormatter={formatXAxis}
+                    interval={50}
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
@@ -321,12 +410,18 @@ export default function PortfolioChartComponent({
                     tickMargin={8}
                     domain={[0, "dataMax + 40"]}
                   />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent />}
+                  <Tooltip
+                    content={
+                      <CompareCustomTooltip
+                        active={undefined}
+                        payload={undefined}
+                        label={undefined}
+                      />
+                    }
                   />
                   <Line
                     dataKey="nav"
+                    name={portfolioName}
                     type="monotone"
                     stroke="var(--color-desktop)"
                     strokeWidth={2}
@@ -334,6 +429,7 @@ export default function PortfolioChartComponent({
                   />
                   <Line
                     dataKey="navIndex"
+                    name={selectedCompareIndex}
                     type="monotone"
                     stroke="var(--color-mobile)"
                     strokeWidth={2}
